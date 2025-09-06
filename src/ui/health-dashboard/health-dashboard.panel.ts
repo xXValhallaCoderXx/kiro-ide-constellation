@@ -17,7 +17,8 @@ export function showHealthDashboard(context: vscode.ExtensionContext) {
             retainContextWhenHidden: true,
             localResourceRoots: [
                 context.extensionUri,
-                vscode.Uri.joinPath(context.extensionUri, 'media')
+                vscode.Uri.joinPath(context.extensionUri, 'media'),
+                vscode.Uri.joinPath(context.extensionUri, 'dist')
             ]
         }
     );
@@ -31,9 +32,14 @@ export function showHealthDashboard(context: vscode.ExtensionContext) {
 
 function getHtml(context: vscode.ExtensionContext, webview: vscode.Webview): string {
     const nonce = getNonce();
-    const csp = `default-src 'none'; img-src ${webview.cspSource} https:; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}';`;
     const globalCssUri = webview.asWebviewUri(vscode.Uri.joinPath(context.extensionUri, 'media', 'global.css'));
     const cssUri = webview.asWebviewUri(vscode.Uri.joinPath(context.extensionUri, 'media', 'dashboard.css'));
+    
+    // Load the Preact bundle
+    const healthDashboardJsUri = webview.asWebviewUri(vscode.Uri.joinPath(context.extensionUri, 'dist', 'health-dashboard.js'));
+    const jsxRuntimeUri = webview.asWebviewUri(vscode.Uri.joinPath(context.extensionUri, 'dist', 'assets', 'jsxRuntime.module.js'));
+    
+    const csp = `default-src 'none'; img-src ${webview.cspSource} https:; style-src ${webview.cspSource} 'unsafe-inline'; script-src ${webview.cspSource} 'unsafe-inline';`;
 
     return `<!DOCTYPE html>
     <html lang="en">
@@ -41,18 +47,14 @@ function getHtml(context: vscode.ExtensionContext, webview: vscode.Webview): str
         <meta charset="UTF-8" />
         <meta http-equiv="Content-Security-Policy" content="${csp}">
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="${globalCssUri}">
-    <link rel="stylesheet" href="${cssUri}">
+        <link rel="stylesheet" href="${globalCssUri}">
+        <link rel="stylesheet" href="${cssUri}">
         <title>Dashboard</title>
     </head>
     <body>
-        <h2>Health Dashboard</h2>
-        <div class="card">
-            <p>This is a starter dashboard webview. You can render status, metrics, or logs here.</p>
-        </div>
-        <script nonce="${nonce}">
-            // Placeholder for future dashboard scripts
-        </script>
+        <div id="root"></div>
+        <script type="module" src="${jsxRuntimeUri}"></script>
+        <script type="module" src="${healthDashboardJsUri}"></script>
     </body>
     </html>`;
 }

@@ -15,7 +15,8 @@ export class SidebarViewProvider implements vscode.WebviewViewProvider {
             enableScripts: true,
             localResourceRoots: [
                 this.context.extensionUri,
-                vscode.Uri.joinPath(this.context.extensionUri, 'media')
+                vscode.Uri.joinPath(this.context.extensionUri, 'media'),
+                vscode.Uri.joinPath(this.context.extensionUri, 'dist')
             ]
         };
 
@@ -31,7 +32,12 @@ export class SidebarViewProvider implements vscode.WebviewViewProvider {
     private getHtml(webview: vscode.Webview): string {
         const globalCssUri = webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, 'media', 'global.css'));
         const cssUri = webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, 'media', 'sidebar.css'));
-        const csp = `default-src 'none'; img-src ${webview.cspSource} https:; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'unsafe-inline';`;
+        
+        // Load the Preact bundle
+        const sidebarJsUri = webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, 'dist', 'sidebar.js'));
+        const jsxRuntimeUri = webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, 'dist', 'assets', 'jsxRuntime.module.js'));
+        
+        const csp = `default-src 'none'; img-src ${webview.cspSource} https:; style-src ${webview.cspSource} 'unsafe-inline'; script-src ${webview.cspSource} 'unsafe-inline';`;
 
         return `<!DOCTYPE html>
             <html lang="en">
@@ -44,16 +50,9 @@ export class SidebarViewProvider implements vscode.WebviewViewProvider {
                 <title>Kiro Constellation</title>
             </head>
             <body>
-                <h3 class="hello">Hello World</h3>
-                <div class="actions">
-                    <button id="open-dashboard">Open Dashboard</button>
-                </div>
-                <script>
-                    const vscode = acquireVsCodeApi();
-                    document.getElementById('open-dashboard')?.addEventListener('click', () => {
-                        vscode.postMessage({ type: 'openDashboard' });
-                    });
-                </script>
+                <div id="root"></div>
+                <script type="module" src="${jsxRuntimeUri}"></script>
+                <script type="module" src="${sidebarJsUri}"></script>
             </body>
             </html>`;
     }
