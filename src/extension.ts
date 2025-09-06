@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { registerSidebarViews } from './ui/sidebar';
+import { registerHealthDashboard } from './ui/healthdashboard';
 
 export function activate(context: vscode.ExtensionContext) {
 	console.log('Congratulations, your extension "kiro-ide-constellation" is now active!');
@@ -11,6 +12,9 @@ export function activate(context: vscode.ExtensionContext) {
 
 	// Register the side panel view provider(s)
 	registerSidebarViews(context);
+
+	// Register the dashboard command/view
+	registerHealthDashboard(context);
 }
 
 // This method is called when your extension is deactivated
