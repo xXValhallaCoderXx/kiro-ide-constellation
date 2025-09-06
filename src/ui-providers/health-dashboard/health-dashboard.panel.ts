@@ -1,4 +1,9 @@
 import * as vscode from 'vscode';
+import { getNonce } from '../../shared/utils/generate-nonce.utils';
+import { getEntryUris } from '../asset-manifest';
+import { messageBus } from '../../services/messageBus';
+import { Events } from '../../shared/events';
+import { registerWebviewWithBus } from '../../shared/utils/event-bus-register.utils';
 
 let currentPanel: vscode.WebviewPanel | undefined;
 
@@ -17,23 +22,33 @@ export function showHealthDashboard(context: vscode.ExtensionContext) {
             retainContextWhenHidden: true,
             localResourceRoots: [
                 context.extensionUri,
-                vscode.Uri.joinPath(context.extensionUri, 'media')
+                vscode.Uri.joinPath(context.extensionUri, 'media'),
+                vscode.Uri.joinPath(context.extensionUri, 'out')
             ]
         }
     );
 
     currentPanel.onDidDispose(() => {
         currentPanel = undefined;
+        // Announce dashboard closed so listeners (e.g., sidebar) can update UI
+        void messageBus.broadcast({ type: Events.DashboardClosed, payload: undefined });
     }, null, context.subscriptions);
 
     currentPanel.webview.html = getHtml(context, currentPanel.webview);
+
+    // Register dashboard with the central message bus
+    const registration = registerWebviewWithBus('dashboard', currentPanel.webview);
+    currentPanel.onDidDispose(() => {
+        registration.dispose();
+    });
+
 }
 
 function getHtml(context: vscode.ExtensionContext, webview: vscode.Webview): string {
-    const nonce = getNonce();
-    const csp = `default-src 'none'; img-src ${webview.cspSource} https:; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}';`;
+    const { script: scriptUri, css } = getEntryUris(context, webview, 'dashboard');
     const globalCssUri = webview.asWebviewUri(vscode.Uri.joinPath(context.extensionUri, 'media', 'global.css'));
-    const cssUri = webview.asWebviewUri(vscode.Uri.joinPath(context.extensionUri, 'media', 'dashboard.css'));
+    const nonce = getNonce();
+    const csp = `default-src 'none'; img-src ${webview.cspSource} https:; style-src ${webview.cspSource}; script-src 'nonce-${nonce}' ${webview.cspSource} 'strict-dynamic';`;
 
     return `<!DOCTYPE html>
     <html lang="en">
@@ -42,26 +57,12 @@ function getHtml(context: vscode.ExtensionContext, webview: vscode.Webview): str
         <meta http-equiv="Content-Security-Policy" content="${csp}">
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="${globalCssUri}">
-    <link rel="stylesheet" href="${cssUri}">
+    ${css.map((u) => `<link rel="stylesheet" href="${u}">`).join('\n')}
         <title>Dashboard</title>
     </head>
     <body>
-        <h2>Health Dashboard</h2>
-        <div class="card">
-            <p>This is a starter dashboard webview. You can render status, metrics, or logs here.</p>
-        </div>
-        <script nonce="${nonce}">
-            // Placeholder for future dashboard scripts
-        </script>
+        <div id="root"></div>
+        <script type="module" nonce="${nonce}" src="${scriptUri}"></script>
     </body>
     </html>`;
-}
-
-function getNonce(): string {
-    let text = '';
-    const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    for (let i = 0; i < 32; i++) {
-        text += possible.charAt(Math.floor(Math.random() * possible.length));
-    }
-    return text;
 }
