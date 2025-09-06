@@ -37,12 +37,24 @@ const assert = __importStar(require("assert"));
 // You can import and use all API from the 'vscode' module
 // as well as import your extension to test it
 const vscode = __importStar(require("vscode"));
-// import * as myExtension from '../../extension';
+const sidebarViewProvider_1 = require("../ui/sidebar/sidebarViewProvider");
+const healthDashboardPanel_1 = require("../ui/health-dashboard/healthDashboardPanel");
 suite('Extension Test Suite', () => {
     vscode.window.showInformationMessage('Start all tests.');
     test('Sample test', () => {
         assert.strictEqual(-1, [1, 2, 3].indexOf(5));
         assert.strictEqual(-1, [1, 2, 3].indexOf(0));
+    });
+    test('SidebarViewProvider should have correct viewType', () => {
+        assert.strictEqual(sidebarViewProvider_1.SidebarViewProvider.viewType, 'kiroConstellation.sidebar');
+    });
+    test('HealthDashboardPanel should have correct viewType', () => {
+        assert.strictEqual(healthDashboardPanel_1.HealthDashboardPanel.viewType, 'kiroConstellation.healthDashboard');
+    });
+    test('SidebarViewProvider should create instance', () => {
+        const mockContext = {};
+        const provider = new sidebarViewProvider_1.SidebarViewProvider(mockContext);
+        assert.ok(provider);
     });
 });
 //# sourceMappingURL=extension.test.js.map

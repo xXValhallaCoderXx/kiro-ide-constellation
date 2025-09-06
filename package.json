@@ -35,13 +35,19 @@
       {
         "command": "kiro-ide-constellation.helloWorld",
         "title": "Hello World"
+      },
+      {
+        "command": "kiro-ide-constellation.showHealthDashboard",
+        "title": "Show Health Dashboard",
+        "category": "Kiro Constellation"
       }
     ]
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./",
+    "compile": "tsc -p ./ && npm run compile:webview",
+    "compile:webview": "vite build",
+    "watch": "concurrently \"tsc -watch -p ./\" \"vite build --watch\"",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src",
     "test": "vscode-test"
@@ -55,6 +61,10 @@
     "eslint": "^9.25.1",
     "typescript": "^5.8.3",
     "@vscode/test-cli": "^0.0.11",
-    "@vscode/test-electron": "^2.5.2"
+    "@vscode/test-electron": "^2.5.2",
+    "preact": "^10.19.3",
+    "vite": "^5.0.10",
+    "@preact/preset-vite": "^2.7.0",
+    "concurrently": "^7.6.0"
   }
 }

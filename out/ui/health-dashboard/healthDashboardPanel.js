@@ -33,24 +33,58 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SidebarViewProvider = void 0;
+exports.HealthDashboardPanel = void 0;
 const vscode = __importStar(require("vscode"));
 const path = __importStar(require("path"));
-class SidebarViewProvider {
-    context;
-    static viewType = 'kiroConstellation.sidebar';
-    constructor(context) {
-        this.context = context;
-    }
-    resolveWebviewView(webviewView, _context, _token) {
-        webviewView.webview.options = {
+class HealthDashboardPanel {
+    static currentPanel;
+    static viewType = 'kiroConstellation.healthDashboard';
+    _panel;
+    _extensionUri;
+    _disposables = [];
+    static createOrShow(extensionUri) {
+        const column = vscode.window.activeTextEditor
+            ? vscode.window.activeTextEditor.viewColumn
+            : undefined;
+        // If we already have a panel, show it.
+        if (HealthDashboardPanel.currentPanel) {
+            HealthDashboardPanel.currentPanel._panel.reveal(column);
+            return;
+        }
+        // Otherwise, create a new panel.
+        const panel = vscode.window.createWebviewPanel(HealthDashboardPanel.viewType, 'Health Dashboard', column || vscode.ViewColumn.One, {
+            // Enable javascript in the webview
             enableScripts: true,
-            localResourceRoots: [vscode.Uri.file(path.join(this.context.extensionPath, 'out'))]
-        };
-        webviewView.webview.html = this.getHtml(webviewView.webview);
+            // And restrict the webview to only loading content from our extension's `out` directory.
+            localResourceRoots: [vscode.Uri.joinPath(extensionUri, 'out')]
+        });
+        HealthDashboardPanel.currentPanel = new HealthDashboardPanel(panel, extensionUri);
     }
-    getHtml(webview) {
-        const scriptPath = vscode.Uri.file(path.join(this.context.extensionPath, 'out', 'webview.js'));
+    constructor(panel, extensionUri) {
+        this._panel = panel;
+        this._extensionUri = extensionUri;
+        // Set the webview's initial html content
+        this._updateWebview();
+        // Listen for when the panel is disposed
+        // This happens when the user closes the panel or when the panel is closed programatically
+        this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
+    }
+    dispose() {
+        HealthDashboardPanel.currentPanel = undefined;
+        // Clean up our resources
+        this._panel.dispose();
+        while (this._disposables.length) {
+            const x = this._disposables.pop();
+            if (x) {
+                x.dispose();
+            }
+        }
+    }
+    _updateWebview() {
+        this._panel.webview.html = this._getHtmlForWebview(this._panel.webview);
+    }
+    _getHtmlForWebview(webview) {
+        const scriptPath = vscode.Uri.file(path.join(this._extensionUri.fsPath, 'out', 'webview.js'));
         const scriptUri = webview.asWebviewUri(scriptPath);
         const styles = `
             :root { color-scheme: light dark; }
@@ -63,7 +97,7 @@ class SidebarViewProvider {
                 <meta charset="UTF-8" />
                 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
                 <style>${styles}</style>
-                <title>Kiro Constellation</title>
+                <title>Health Dashboard</title>
             </head>
             <body>
                 <div id="root"></div>
@@ -72,5 +106,5 @@ class SidebarViewProvider {
             </html>`;
     }
 }
-exports.SidebarViewProvider = SidebarViewProvider;
-//# sourceMappingURL=sidebarViewProvider.js.map
+exports.HealthDashboardPanel = HealthDashboardPanel;
+//# sourceMappingURL=healthDashboardPanel.js.map
