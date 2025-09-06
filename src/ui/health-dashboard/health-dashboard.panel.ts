@@ -15,6 +15,10 @@ export function showHealthDashboard(context: vscode.ExtensionContext) {
         {
             enableScripts: true,
             retainContextWhenHidden: true,
+            localResourceRoots: [
+                context.extensionUri,
+                vscode.Uri.joinPath(context.extensionUri, 'media')
+            ]
         }
     );
 
@@ -22,20 +26,14 @@ export function showHealthDashboard(context: vscode.ExtensionContext) {
         currentPanel = undefined;
     }, null, context.subscriptions);
 
-    currentPanel.webview.html = getHtml(currentPanel.webview);
+    currentPanel.webview.html = getHtml(context, currentPanel.webview);
 }
 
-function getHtml(webview: vscode.Webview): string {
+function getHtml(context: vscode.ExtensionContext, webview: vscode.Webview): string {
     const nonce = getNonce();
     const csp = `default-src 'none'; img-src ${webview.cspSource} https:; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}';`;
-
-    const styles = `
-        :root { color-scheme: light dark; }
-        body { font-family: var(--vscode-font-family); margin: 0; padding: 16px; color: var(--vscode-foreground); }
-        h2 { margin: 0 0 12px; }
-        p { opacity: 0.9; }
-        .card { border: 1px solid var(--vscode-panel-border); border-radius: 6px; padding: 12px; }
-    `;
+    const globalCssUri = webview.asWebviewUri(vscode.Uri.joinPath(context.extensionUri, 'media', 'global.css'));
+    const cssUri = webview.asWebviewUri(vscode.Uri.joinPath(context.extensionUri, 'media', 'dashboard.css'));
 
     return `<!DOCTYPE html>
     <html lang="en">
@@ -43,7 +41,8 @@ function getHtml(webview: vscode.Webview): string {
         <meta charset="UTF-8" />
         <meta http-equiv="Content-Security-Policy" content="${csp}">
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <style>${styles}</style>
+    <link rel="stylesheet" href="${globalCssUri}">
+    <link rel="stylesheet" href="${cssUri}">
         <title>Dashboard</title>
     </head>
     <body>

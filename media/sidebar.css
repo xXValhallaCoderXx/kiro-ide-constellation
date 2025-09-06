@@ -1,0 +1,7 @@
+.hello {
+    color: var(--vscode-foreground);
+}
+
+.actions {
+    margin-top: 12px;
+}

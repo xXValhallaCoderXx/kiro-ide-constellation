@@ -10,34 +10,37 @@ export class SidebarViewProvider implements vscode.WebviewViewProvider {
         _context: vscode.WebviewViewResolveContext,
         _token: vscode.CancellationToken
     ): void | Thenable<void> {
-        webviewView.webview.options = {
+        const webview = webviewView.webview;
+        webview.options = {
             enableScripts: true,
+            localResourceRoots: [
+                this.context.extensionUri,
+                vscode.Uri.joinPath(this.context.extensionUri, 'media')
+            ]
         };
 
-        webviewView.webview.html = this.getHtml();
+        webview.html = this.getHtml(webview);
 
-        webviewView.webview.onDidReceiveMessage((msg) => {
+        webview.onDidReceiveMessage((msg) => {
             if (msg?.type === 'openDashboard') {
                 vscode.commands.executeCommand('kiro-ide-constellation.openDashboard');
             }
         });
     }
 
-    private getHtml(): string {
-        const styles = `
-            :root { color-scheme: light dark; }
-            body { font-family: var(--vscode-font-family); margin: 0; padding: 12px; }
-            .hello { color: var(--vscode-foreground); }
-            .actions { margin-top: 12px; }
-            button { padding: 6px 10px; cursor: pointer; }
-        `;
+    private getHtml(webview: vscode.Webview): string {
+        const globalCssUri = webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, 'media', 'global.css'));
+        const cssUri = webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, 'media', 'sidebar.css'));
+        const csp = `default-src 'none'; img-src ${webview.cspSource} https:; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'unsafe-inline';`;
 
         return `<!DOCTYPE html>
             <html lang="en">
             <head>
                 <meta charset="UTF-8" />
+                <meta http-equiv="Content-Security-Policy" content="${csp}">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-                <style>${styles}</style>
+                <link rel="stylesheet" href="${globalCssUri}">
+                <link rel="stylesheet" href="${cssUri}">
                 <title>Kiro Constellation</title>
             </head>
             <body>
