@@ -32,7 +32,7 @@ export function showHealthDashboard(context: vscode.ExtensionContext) {
 }
 
 function getHtml(context: vscode.ExtensionContext, webview: vscode.Webview): string {
-    const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(context.extensionUri, 'dist', 'dashboard.js'));
+    const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(context.extensionUri, 'out', 'dashboard.js'));
     const globalCssUri = webview.asWebviewUri(vscode.Uri.joinPath(context.extensionUri, 'media', 'global.css'));
     const nonce = getNonce();
     const csp = `default-src 'none'; img-src ${webview.cspSource} https:; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';`;

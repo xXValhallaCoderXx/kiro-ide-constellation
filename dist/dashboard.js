@@ -1,1 +1,0 @@
-import{u as r,G as t}from"./assets/jsxRuntime.module-BaV8okXf.js";const a="_card_8w8ic_1",c={card:a};function d(){return r("div",{children:[r("h2",{children:"Health Dashboard"}),r("div",{className:c.card,children:r("p",{children:"This is a starter dashboard webview. You can render status, metrics, or logs here."})})]})}const e=document.getElementById("root");e&&t(r(d,{}),e);

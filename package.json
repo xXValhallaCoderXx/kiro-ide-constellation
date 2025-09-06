@@ -50,7 +50,7 @@
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src",
     "test": "vscode-test",
-    "clean": "rimraf out dist",
+    "clean": "rimraf out",
     "clean:web": "find ./web -type f -name '*.js' -delete && find ./web -type f -name '*.js.map' -delete",
     "build": "npm run clean && npm run clean:web && npm run compile",
     "package": "vsce package"
