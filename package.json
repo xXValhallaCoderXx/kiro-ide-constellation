@@ -3,8 +3,13 @@
   "displayName": "kiro-ide-constellation",
   "description": "Kiro IDE Extension",
   "version": "0.0.1",
+  "publisher": "xXValhallaCoderXx",
   "engines": {
     "vscode": "^1.103.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/xXValhallaCoderXx/kiro-ide-constellation"
   },
   "categories": [
     "Other"
@@ -39,12 +44,15 @@
     ]
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
+    "vscode:prepublish": "npm run build",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src",
-    "test": "vscode-test"
+    "test": "vscode-test",
+    "clean": "rimraf out",
+    "build": "npm run clean && npm run compile",
+    "package": "vsce package"
   },
   "devDependencies": {
     "@types/vscode": "^1.103.0",
@@ -55,6 +63,8 @@
     "eslint": "^9.25.1",
     "typescript": "^5.8.3",
     "@vscode/test-cli": "^0.0.11",
-    "@vscode/test-electron": "^2.5.2"
+    "@vscode/test-electron": "^2.5.2",
+    "rimraf": "^6.0.1",
+    "@vscode/vsce": "^3.2.1"
   }
 }
