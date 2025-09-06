@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { SidebarViewProvider } from './sidebarViewProvider';
+import { SidebarViewProvider } from './sidebar.provider';
 
 export function registerSidebarViews(context: vscode.ExtensionContext) {
     const sidebarProvider = new SidebarViewProvider(context);

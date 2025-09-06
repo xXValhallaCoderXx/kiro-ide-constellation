@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
-import { showHealthDashboard } from './healthDashboard';
+import { showHealthDashboard } from './health-dashboard.panel';
+import { OPEN_DASHBOARD_COMMAND } from '../../shared/commands';
 
-export const OPEN_DASHBOARD_COMMAND = 'kiro-ide-constellation.openDashboard';
 
 export function registerHealthDashboard(context: vscode.ExtensionContext) {
     const disposable = vscode.commands.registerCommand(OPEN_DASHBOARD_COMMAND, () => {

@@ -33,10 +33,6 @@
     },
     "commands": [
       {
-        "command": "kiro-ide-constellation.helloWorld",
-        "title": "Hello World"
-      },
-      {
         "command": "kiro-ide-constellation.openDashboard",
         "title": "Kiro: Open Dashboard"
       }
