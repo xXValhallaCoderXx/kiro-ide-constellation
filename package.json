@@ -14,9 +14,26 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
   "main": "./out/extension.js",
   "contributes": {
+    "configuration": {
+      "title": "Kiro Constellation",
+      "properties": {
+        "kiro.mcp.port": {
+          "type": "number",
+          "default": 0,
+          "description": "Port for the built-in MCP server (0 = pick a free port)."
+        },
+        "kiro.mcp.path": {
+          "type": "string",
+          "default": "/mcp",
+          "description": "HTTP path for the built-in MCP server."
+        }
+      }
+    },
     "viewsContainers": {
       "activitybar": [
         {
@@ -40,6 +57,14 @@
       {
         "command": "kiro-ide-constellation.openDashboard",
         "title": "Kiro: Open Dashboard"
+      },
+      {
+        "command": "kiro-ide-constellation.mcp.copyUrl",
+        "title": "Kiro: Copy MCP URL"
+      },
+      {
+        "command": "kiro-ide-constellation.mcp.reregister",
+        "title": "Kiro: Re-register MCP Server"
       }
     ]
   },
@@ -70,5 +95,9 @@
     "rimraf": "^6.0.1",
     "typescript": "^5.9.2",
     "vite": "^7.1.4"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.17.5",
+    "ws": "^8.18.3"
   }
 }
