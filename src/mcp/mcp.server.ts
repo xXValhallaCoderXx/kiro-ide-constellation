@@ -72,7 +72,10 @@ export async function createAndStartMcpServer(options?: {
                 return;
             }
             const url = new URL(req.url, 'http://localhost');
-            if (url.pathname !== path) {
+            // Allow exact, trailing-slash, or suffix match (to support reverse proxy base paths)
+            const p = url.pathname;
+            const ok = p === path || p === `${path}/` || p.endsWith(path);
+            if (!ok) {
                 res.statusCode = 404;
                 res.end('Not Found');
                 return;
