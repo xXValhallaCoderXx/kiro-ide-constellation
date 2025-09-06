@@ -30,6 +30,10 @@ class ExtensionMessageBus {
         if (this.stickyTypes.has(event.type)) {
             this.stickyEvents.set(event.type, event);
         }
+        // If dashboard is closing, clear the sticky opened state
+        if (event.type === Events.DashboardClosed) {
+            this.stickyEvents.delete(Events.DashboardOpened);
+        }
         for (const [, webview] of this.webviews) {
             try {
                 await webview.postMessage(event);

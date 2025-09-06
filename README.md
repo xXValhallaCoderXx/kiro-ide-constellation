@@ -14,24 +14,13 @@ Kiro IDE Constellation adds a custom Activity Bar container and a Sidebar webvie
 2. Click the "Kiro Constellation" icon in the Activity Bar to open the Sidebar.
 3. Click "Open Graph" to launch the Dashboard tab.
 
-### Extension ⇄ Webview Message Bus
+## Docs
 
-This extension includes a centralized, typed message bus for communication between the extension host and webview UIs.
+See the developer docs in `./docs`:
 
-- Shared events live in `src/shared/events.ts` to avoid hard-coded strings.
-- Extension-side bus: `src/services/messageBus.ts` registers webviews and can broadcast or target messages.
-- Webview-side bus: `web/src/services/messageBus.ts` wraps the VS Code API and listens for messages from the extension.
+- Start here: [docs/index.md](./docs/index.md)
+- Topics: events, extension bus, webview bus, lifecycle, and recipes.
 
-Proof-of-concept interactions:
-
-- Sidebar shows an “Emit VS Code Event” button. Clicking it emits `Events.UiEmitToast` with a message. The extension listens and shows a VS Code information toast.
-- When the Dashboard opens via the command `kiro-ide-constellation.openDashboard`, the extension broadcasts `Events.DashboardOpened` with `{ via: 'commandPalette' }`. The Sidebar listens and displays a hint: “Dashboard open via command”.
-
-APIs:
-
-- Webview: `messageBus.emit(Events.OpenDashboard, undefined)` to ask the extension to run the open dashboard command.
-- Extension: `messageBus.broadcast({ type: Events.DashboardOpened, payload: { via: 'commandPalette' } })` to notify all registered webviews.
-- Extension: `messageBus.on(Events.UiEmitToast, (e) => { /* act on e.payload */ })` to handle webview-originated events.
 
 ## Development
 
