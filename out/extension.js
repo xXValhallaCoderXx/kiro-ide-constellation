@@ -37,6 +37,7 @@ exports.activate = activate;
 exports.deactivate = deactivate;
 const vscode = __importStar(require("vscode"));
 const sidebar_1 = require("./ui/sidebar");
+const health_dashboard_panel_1 = require("./ui/health-dashboard.panel");
 function activate(context) {
     console.log('Congratulations, your extension "kiro-ide-constellation" is now active!');
     const disposable = vscode.commands.registerCommand('kiro-ide-constellation.helloWorld', () => {
@@ -45,6 +46,7 @@ function activate(context) {
     context.subscriptions.push(disposable);
     // Register the side panel view provider(s)
     (0, sidebar_1.registerSidebarViews)(context);
+    (0, health_dashboard_panel_1.registerHealthDashboardPanel)(context);
 }
 // This method is called when your extension is deactivated
 function deactivate() { }

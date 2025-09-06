@@ -9,7 +9,11 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onCommand:kiro-ide-constellation.helloWorld",
+    "onCommand:kiro-ide-constellation.openHealthDashboard",
+    "onView:kiroConstellation.sidebar"
+  ],
   "main": "./out/extension.js",
   "contributes": {
     "viewsContainers": {
@@ -35,13 +39,17 @@
       {
         "command": "kiro-ide-constellation.helloWorld",
         "title": "Hello World"
+      },
+      {
+        "command": "kiro-ide-constellation.openHealthDashboard",
+        "title": "Open Health Dashboard"
       }
     ]
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./",
+    "compile": "tsc -p ./ && vite build",
+    "watch": "concurrently \"tsc -watch -p ./\" \"vite build --watch\"",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src",
     "test": "vscode-test"
@@ -55,6 +63,10 @@
     "eslint": "^9.25.1",
     "typescript": "^5.8.3",
     "@vscode/test-cli": "^0.0.11",
-    "@vscode/test-electron": "^2.5.2"
+    "@vscode/test-electron": "^2.5.2",
+    "@preact/preset-vite": "^2.10.2",
+    "concurrently": "^9.0.0",
+    "preact": "^10.19.0",
+    "vite": "^5.2.0"
   }
 }

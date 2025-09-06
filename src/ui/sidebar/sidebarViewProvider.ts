@@ -11,13 +11,17 @@ export class SidebarViewProvider implements vscode.WebviewViewProvider {
         _token: vscode.CancellationToken
     ): void | Thenable<void> {
         webviewView.webview.options = {
-            enableScripts: false,
+            enableScripts: true,
         };
 
-        webviewView.webview.html = this.getHtml();
+        webviewView.webview.html = this.getHtml(webviewView.webview);
     }
 
-    private getHtml(): string {
+    private getHtml(webview: vscode.Webview): string {
+        const scriptUri = webview.asWebviewUri(
+            vscode.Uri.joinPath(this.context.extensionUri, 'out', 'webview.js')
+        );
+
         const styles = `
             :root { color-scheme: light dark; }
             body { font-family: var(--vscode-font-family); margin: 0; padding: 12px; }
@@ -33,7 +37,8 @@ export class SidebarViewProvider implements vscode.WebviewViewProvider {
                 <title>Kiro Constellation</title>
             </head>
             <body>
-                <h3 class="hello">Hello World</h3>
+                <div id="root"></div>
+                <script src="${scriptUri}"></script>
             </body>
             </html>`;
     }

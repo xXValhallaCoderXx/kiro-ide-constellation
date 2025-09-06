@@ -33,22 +33,16 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SidebarViewProvider = void 0;
+exports.registerHealthDashboardPanel = registerHealthDashboardPanel;
 const vscode = __importStar(require("vscode"));
-class SidebarViewProvider {
-    context;
-    static viewType = 'kiroConstellation.sidebar';
-    constructor(context) {
-        this.context = context;
+class HealthDashboardPanel {
+    static viewType = 'kiroConstellation.healthDashboard';
+    static show(context) {
+        const panel = vscode.window.createWebviewPanel(HealthDashboardPanel.viewType, 'Health Dashboard', vscode.ViewColumn.One, { enableScripts: true });
+        panel.webview.html = this.getHtml(panel.webview, context.extensionUri);
     }
-    resolveWebviewView(webviewView, _context, _token) {
-        webviewView.webview.options = {
-            enableScripts: true,
-        };
-        webviewView.webview.html = this.getHtml(webviewView.webview);
-    }
-    getHtml(webview) {
-        const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, 'out', 'webview.js'));
+    static getHtml(webview, extensionUri) {
+        const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, 'out', 'webview.js'));
         const styles = `
             :root { color-scheme: light dark; }
             body { font-family: var(--vscode-font-family); margin: 0; padding: 12px; }
@@ -60,7 +54,7 @@ class SidebarViewProvider {
                 <meta charset="UTF-8" />
                 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
                 <style>${styles}</style>
-                <title>Kiro Constellation</title>
+                <title>Health Dashboard</title>
             </head>
             <body>
                 <div id="root"></div>
@@ -69,5 +63,7 @@ class SidebarViewProvider {
             </html>`;
     }
 }
-exports.SidebarViewProvider = SidebarViewProvider;
-//# sourceMappingURL=sidebarViewProvider.js.map
+function registerHealthDashboardPanel(context) {
+    context.subscriptions.push(vscode.commands.registerCommand('kiro-ide-constellation.openHealthDashboard', () => HealthDashboardPanel.show(context)));
+}
+//# sourceMappingURL=health-dashboard.panel.js.map
