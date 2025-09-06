@@ -1,1 +1,0 @@
-import{u as r,G as t}from"./assets/jsxRuntime.module.js";function o(){return r("div",{children:[r("h2",{children:"Health Dashboard"}),r("div",{class:"card",children:r("p",{children:"This is a starter dashboard webview. You can render status, metrics, or logs here."})})]})}const e=document.getElementById("root");e&&t(r(o,{}),e);
