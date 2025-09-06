@@ -1,5 +1,5 @@
 import { h, render } from 'preact';
-import { HealthDashboard } from './components/HealthDashboard';
+import { HealthDashboard } from './views/HealthDashboard/HealthDashboard';
 
 const root = document.getElementById('root');
 if (root) {

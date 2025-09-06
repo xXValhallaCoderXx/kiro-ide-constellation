@@ -1,8 +1,9 @@
 import * as vscode from 'vscode';
-import { getNonce } from '../../shared/nonce';
+import { getNonce } from '../../shared/utils/generate-nonce.utils';
 import { getEntryUris } from '../asset-manifest';
 import { messageBus } from '../../services/messageBus';
 import { Events } from '../../shared/events';
+import { registerWebviewWithBus } from '../../shared/utils/event-bus-register.utils';
 
 let currentPanel: vscode.WebviewPanel | undefined;
 
@@ -35,16 +36,10 @@ export function showHealthDashboard(context: vscode.ExtensionContext) {
 
     currentPanel.webview.html = getHtml(context, currentPanel.webview);
 
-    // Register dashboard with the central message bus and wire message forwarding
-    const disposables: vscode.Disposable[] = [];
-    const busRegistration = messageBus.register('dashboard', currentPanel.webview);
-    disposables.push(busRegistration);
-    disposables.push(currentPanel.webview.onDidReceiveMessage(async (msg) => {
-        await messageBus.receive('dashboard', msg);
-    }));
-
+    // Register dashboard with the central message bus
+    const registration = registerWebviewWithBus('dashboard', currentPanel.webview);
     currentPanel.onDidDispose(() => {
-        disposables.forEach(d => d.dispose());
+        registration.dispose();
     });
 
 }

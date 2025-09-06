@@ -1,5 +1,5 @@
 import { h, render } from 'preact';
-import { Sidebar } from './components/Sidebar';
+import { Sidebar } from './views/Sidebar/Sidebar';
 
 const root = document.getElementById('root');
 if (root) {

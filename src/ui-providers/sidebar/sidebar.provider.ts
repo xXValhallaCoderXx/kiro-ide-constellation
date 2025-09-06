@@ -1,8 +1,7 @@
 import * as vscode from 'vscode';
-import { getNonce } from '../../shared/nonce';
+import { getNonce } from '../../shared/utils/generate-nonce.utils';
 import { getEntryUris } from '../asset-manifest';
-import { messageBus } from '../../services/messageBus';
-import { Events } from '../../shared/events';
+import { registerWebviewWithBus } from '../../shared/utils/event-bus-register.utils';
 
 export class SidebarViewProvider implements vscode.WebviewViewProvider {
     public static readonly viewType = 'kiroConstellation.sidebar';
@@ -26,17 +25,8 @@ export class SidebarViewProvider implements vscode.WebviewViewProvider {
 
         webview.html = this.getHtml(webview);
 
-    // Register this webview with the central message bus and collect disposables
-    const disposables: vscode.Disposable[] = [];
-    const busRegistration = messageBus.register('sidebar', webview);
-    disposables.push(busRegistration);
-        disposables.push(webview.onDidReceiveMessage(async (msg) => {
-            await messageBus.receive('sidebar', msg);
-        }));
-
-        webviewView.onDidDispose(() => {
-            disposables.forEach(d => d.dispose());
-        });
+        const registration = registerWebviewWithBus('sidebar', webview);
+        webviewView.onDidDispose(() => registration.dispose());
     }
 
     private getHtml(webview: vscode.Webview): string {
