@@ -8,6 +8,7 @@ export default defineConfig({
     // 'out' is relative to the project root.
     outDir: 'out',
     emptyOutDir: true,
+    manifest: true,
     rollupOptions: {
       input: {
         // Paths are relative to the project root.
@@ -17,6 +18,8 @@ export default defineConfig({
       output: {
         // Simplified output naming.
         entryFileNames: '[name].js',
+        // Ensure CSS and other assets have predictable names so the extension can reference them.
+        assetFileNames: '[name][extname]'
       },
     },
   },

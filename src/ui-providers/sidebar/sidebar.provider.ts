@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { getNonce } from '../../shared/nonce';
+import { getEntryUris } from '../asset-manifest';
 
 export class SidebarViewProvider implements vscode.WebviewViewProvider {
     public static readonly viewType = 'kiroConstellation.sidebar';
@@ -17,7 +18,7 @@ export class SidebarViewProvider implements vscode.WebviewViewProvider {
             localResourceRoots: [
                 this.context.extensionUri,
                 vscode.Uri.joinPath(this.context.extensionUri, 'media'),
-                vscode.Uri.joinPath(this.context.extensionUri, 'dist')
+                vscode.Uri.joinPath(this.context.extensionUri, 'out')
             ]
         };
 
@@ -31,10 +32,10 @@ export class SidebarViewProvider implements vscode.WebviewViewProvider {
     }
 
     private getHtml(webview: vscode.Webview): string {
-        const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, 'out', 'sidebar.js'));
+        const { script: scriptUri, css } = getEntryUris(this.context, webview, 'sidebar');
         const globalCssUri = webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, 'media', 'global.css'));
         const nonce = getNonce();
-        const csp = `default-src 'none'; img-src ${webview.cspSource} https:; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';`;
+        const csp = `default-src 'none'; img-src ${webview.cspSource} https:; style-src ${webview.cspSource}; script-src 'nonce-${nonce}' ${webview.cspSource};`;
 
         return `<!DOCTYPE html>
             <html lang="en">
@@ -43,11 +44,12 @@ export class SidebarViewProvider implements vscode.WebviewViewProvider {
                 <meta http-equiv="Content-Security-Policy" content="${csp}">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
                 <link rel="stylesheet" href="${globalCssUri}">
+                ${css.map((u) => `<link rel="stylesheet" href="${u}">`).join('\n')}
                 <title>Kiro Constellation</title>
             </head>
             <body>
                 <div id="root"></div>
-                <script nonce="${nonce}" src="${scriptUri}"></script>
+                <script type="module" nonce="${nonce}" src="${scriptUri}"></script>
             </body>
             </html>`;
     }

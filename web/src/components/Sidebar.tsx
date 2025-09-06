@@ -1,13 +1,10 @@
 import { h } from 'preact';
 import { Button } from './Button';
 import styles from './Sidebar.module.css';
-
-// This is a placeholder for the vscode api.
-declare const vscode: {
-  postMessage(message: any): void;
-};
+import { getVsCodeApi } from '../vscode';
 
 export function Sidebar() {
+  const vscode = getVsCodeApi<{ type: string }>();
   const handleOpenDashboard = () => {
     vscode.postMessage({ type: 'openDashboard' });
   };
@@ -17,7 +14,7 @@ export function Sidebar() {
       <h3 className={styles.hello}>Hello World</h3>
       <div className={styles.actions}>
         <Button id="open-dashboard" onClick={handleOpenDashboard}>
-          Open Dashboard
+          Open Graph
         </Button>
       </div>
     </div>

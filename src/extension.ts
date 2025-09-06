@@ -1,14 +1,13 @@
 import * as vscode from 'vscode';
-import { registerSidebarViews } from './ui/sidebar';
-import { registerHealthDashboard } from './ui/health-dashboard';
+import { registerSidebarViews } from './ui-providers/sidebar';
+import { registerHealthDashboard } from './ui-providers/health-dashboard';
 
 export function activate(context: vscode.ExtensionContext) {
 	console.log('Congratulations, your extension "kiro-ide-constellation" is now active!');
 
-	// Register the side panel view provider(s)
+	// Register the side panel view provider
 	registerSidebarViews(context);
-
-	// Register the dashboard command/view
+	// Register the health dashboard command/view
 	registerHealthDashboard(context);
 }
 

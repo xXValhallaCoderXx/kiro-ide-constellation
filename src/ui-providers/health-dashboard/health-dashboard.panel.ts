@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { getNonce } from '../../shared/nonce';
+import { getEntryUris } from '../asset-manifest';
 
 let currentPanel: vscode.WebviewPanel | undefined;
 
@@ -19,7 +20,7 @@ export function showHealthDashboard(context: vscode.ExtensionContext) {
             localResourceRoots: [
                 context.extensionUri,
                 vscode.Uri.joinPath(context.extensionUri, 'media'),
-                vscode.Uri.joinPath(context.extensionUri, 'dist')
+                vscode.Uri.joinPath(context.extensionUri, 'out')
             ]
         }
     );
@@ -32,10 +33,10 @@ export function showHealthDashboard(context: vscode.ExtensionContext) {
 }
 
 function getHtml(context: vscode.ExtensionContext, webview: vscode.Webview): string {
-    const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(context.extensionUri, 'out', 'dashboard.js'));
+    const { script: scriptUri, css } = getEntryUris(context, webview, 'dashboard');
     const globalCssUri = webview.asWebviewUri(vscode.Uri.joinPath(context.extensionUri, 'media', 'global.css'));
     const nonce = getNonce();
-    const csp = `default-src 'none'; img-src ${webview.cspSource} https:; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';`;
+    const csp = `default-src 'none'; img-src ${webview.cspSource} https:; style-src ${webview.cspSource}; script-src 'nonce-${nonce}' ${webview.cspSource};`;
 
     return `<!DOCTYPE html>
     <html lang="en">
@@ -43,12 +44,13 @@ function getHtml(context: vscode.ExtensionContext, webview: vscode.Webview): str
         <meta charset="UTF-8" />
         <meta http-equiv="Content-Security-Policy" content="${csp}">
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link rel="stylesheet" href="${globalCssUri}">
+    <link rel="stylesheet" href="${globalCssUri}">
+    ${css.map((u) => `<link rel="stylesheet" href="${u}">`).join('\n')}
         <title>Dashboard</title>
     </head>
     <body>
         <div id="root"></div>
-        <script nonce="${nonce}" src="${scriptUri}"></script>
+        <script type="module" nonce="${nonce}" src="${scriptUri}"></script>
     </body>
     </html>`;
 }
