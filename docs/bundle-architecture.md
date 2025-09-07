@@ -8,6 +8,7 @@ This document explains how the extension is built in development vs production, 
 - Extension code (TypeScript) is compiled by `tsc` into `out/`.
 - MCP stdio server is bundled into a single CommonJS file with esbuild at `out/mcp/mcpStdioServer.cjs`.
 - Dev watch builds all three in the background; packaged builds do a clean, one-shot compile.
+- If the VS Code MCP API isn’t available (e.g., in Kiro IDE), the extension falls back to writing a workspace config at `.kiro/settings/mcp.json` that points to the bundled server.
 
 ## Source layout
 
@@ -25,6 +26,33 @@ All build products go to `out/`:
   - `out/sidebar.js`, `out/sidebar.css`
   - `out/dashboard.js`, `out/dashboard.css`
   - Vite manifest: `out/.vite/manifest.json`
+
+## MCP setup (VS Code vs Kiro)
+
+The extension supports two ways to expose the MCP stdio server:
+
+- VS Code (with MCP API): Registers a provider using `vscode.lm.registerMcpServerDefinitionProvider` and `McpStdioServerDefinition`. The server is launched by the host using the resolved Node executable and the bundled entrypoint. Provider id: `kiro-constellation`.
+- Kiro IDE or missing MCP API: Falls back to writing a workspace-local config at `.kiro/settings/mcp.json`. Kiro reads this file and starts the MCP server directly.
+
+Example of the written `mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "kiro-constellation": {
+      "command": "/path/to/node",
+      "args": ["/path/to/workspace/out/mcp/mcpStdioServer.cjs"],
+      "disabled": false
+    }
+  }
+}
+```
+
+Notes:
+- Writes are idempotent: the file is only updated if `command`, first `args` entry (the script path), or `disabled` differ.
+- Logs are prefixed with `[Kiro MCP]` to make diagnosis easy.
+- The config directory can be overridden with `KIRO_MCP_CONFIG_DIR` (relative to the first workspace folder). Default: `.kiro/settings`.
+- The Node binary can be overridden with `KIRO_MCP_NODE`.
 
 ## Development build (watch)
 
@@ -47,6 +75,8 @@ The provider (`src/mcp/mcpProvider.ts`) resolves the server script from these ca
 3. `out/mcp/mcpStdioServer.mjs`
 
 This makes debug resilient even if you built the server a different way. During watch, the `.cjs` bundle is produced continuously, so option 1 should exist.
+
+The same resolution is used when writing the Kiro fallback `mcp.json` if the MCP API is unavailable.
 
 ### Web assets in dev
 
@@ -104,7 +134,17 @@ esbuild src/mcp/mcpStdioServer.ts \
   - Make sure Vite watch is running (it’s part of `npm run watch`).
   - If the manifest is missing on first run, the asset helper falls back to predictable names; a quick restart after the first Vite emit may help.
 
+- `mcp.json` is not created in Kiro:
+  - Ensure a workspace folder is open (the file is written under the first workspace root).
+  - Check the logs for `[Kiro MCP]` messages indicating why the write was skipped or failed.
+  - If you want a different location, set `KIRO_MCP_CONFIG_DIR` (e.g., `export KIRO_MCP_CONFIG_DIR=".kiro/settings"`).
+  - Verify write permissions in the workspace directory.
+
+- Kiro is launching Node from an unexpected path:
+  - Set `KIRO_MCP_NODE` to point to the desired Node binary (e.g., `/opt/homebrew/bin/node`).
+
 ## Notes on Node targets
 
 - Extension TS compiles to ES2022 with `module` set to `Node16` (see `tsconfig.json`).
 - MCP server bundle targets Node 18 for broad compatibility with VS Code’s runtime, but works on newer versions as well. We use `--format=cjs` so it can be executed directly via the host Node (`process.execPath`).
+  - At runtime, the extension resolves Node in this order: `KIRO_MCP_NODE` env → `process.execPath` if it’s Node → common system paths → `node`.
