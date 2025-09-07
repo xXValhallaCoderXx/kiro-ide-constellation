@@ -29,8 +29,12 @@ See the developer docs in `./docs`:
 
 Scripts:
 
-- `npm run watch`  concurrently builds web assets (Vite) and watches extension TypeScript (tsc).
-- `npm run build`  clean build of both.
+- `npm run watch` – concurrently builds web assets (Vite), watches extension TypeScript (tsc), and watches the MCP stdio server bundle with esbuild.
+- `npm run build` – clean build of everything including the MCP bundle.
+- `npm run bundle:mcp` – one-off build of the MCP stdio server to `out/mcp/mcpStdioServer.cjs`.
+
+Troubleshooting (debug):
+- If the debug session logs `Cannot find module .../out/mcp/mcpStdioServer.cjs`, ensure the watcher is running or run `npm run bundle:mcp` once to generate the file.
 
 ### Asset manifest (Vite)
 

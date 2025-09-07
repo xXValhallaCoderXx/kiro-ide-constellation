@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
+import * as fs from 'fs';
 
 export class KiroConstellationMCPProvider {
   constructor(private readonly context: vscode.ExtensionContext) {}
@@ -19,8 +20,15 @@ export class KiroConstellationMCPProvider {
       return [];
     }
 
-  // Use the bundled CJS file so we don't depend on node_modules at runtime
-  const serverScript = path.join(this.context.extensionPath, 'out', 'mcp', 'mcpStdioServer.cjs');
+  // Resolve the bundled server script (.cjs in package, with dev fallbacks)
+  const outMcpDir = path.join(this.context.extensionPath, 'out', 'mcp');
+  const candidates = [
+    path.join(outMcpDir, 'mcpStdioServer.cjs'),
+    path.join(outMcpDir, 'mcpStdioServer.js'),
+    path.join(outMcpDir, 'mcpStdioServer.mjs'),
+  ];
+  const serverScript = candidates.find((p) => fs.existsSync(p)) ?? candidates[0];
+  console.log('Kiro MCP server script resolved to:', serverScript);
     const label = 'Kiro Constellation POC';
     const command = process.execPath; // use the running Node binary
     const args = [serverScript];
