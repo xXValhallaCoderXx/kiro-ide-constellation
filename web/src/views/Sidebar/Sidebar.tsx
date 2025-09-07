@@ -5,6 +5,7 @@ import { messageBus, events } from '../../services/messageBus';
 import { useEffect, useState } from 'preact/hooks';
 
 export function Sidebar() {
+  console.log('[KIRO-CONSTELLATION] Sidebar component initializing');
   const [dashboardOpenedViaCommand, setDashboardOpenedViaCommand] = useState(false);
 
   useEffect(() => {

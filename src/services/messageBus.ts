@@ -9,14 +9,22 @@ class ExtensionMessageBus {
     private readonly stickyTypes = new Set<EventType>([Events.DashboardOpened]);
     private readonly stickyEvents = new Map<EventType, BusEvent>();
 
+    constructor() {
+        console.log('[KIRO-CONSTELLATION] MessageBus initialized');
+    }
+
     register(id: string, webview: vscode.Webview): vscode.Disposable {
+        console.log('[KIRO-CONSTELLATION] MessageBus registering webview:', id);
         this.webviews.set(id, webview);
+        console.log('[KIRO-CONSTELLATION] MessageBus total registered webviews:', this.webviews.size);
+        
         // Replay sticky events to newly registered webview so it can catch up
         for (const [, event] of this.stickyEvents) {
             try {
+                console.log('[KIRO-CONSTELLATION] Replaying sticky event to', id, ':', event.type);
                 void webview.postMessage(event);
-            } catch {
-                // ignore
+            } catch (error) {
+                console.error('[KIRO-CONSTELLATION] Error replaying sticky event:', error);
             }
         }
         return new vscode.Disposable(() => this.unregister(id));

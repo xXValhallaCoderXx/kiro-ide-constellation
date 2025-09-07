@@ -5,7 +5,7 @@
   "version": "0.0.1",
   "publisher": "xXValhallaCoderXx",
   "engines": {
-    "vscode": "^1.103.0"
+    "vscode": "^1.60.0"
   },
   "repository": {
     "type": "git",
@@ -40,6 +40,10 @@
       {
         "command": "kiro-ide-constellation.openDashboard",
         "title": "Kiro: Open Dashboard"
+      },
+      {
+        "command": "kiro-ide-constellation.test",
+        "title": "Kiro: Test Extension"
       }
     ]
   },
@@ -53,7 +57,8 @@
     "clean": "rimraf out",
     "clean:web": "find ./web -type f -name '*.js' -delete && find ./web -type f -name '*.js.map' -delete",
     "build": "npm run clean && npm run clean:web && npm run compile",
-    "package": "vsce package"
+    "package": "vsce package",
+    "debug": "npm run compile && echo 'Extension compiled. Check logs for [KIRO-CONSTELLATION-MINIMAL] messages.'"
   },
   "devDependencies": {
     "@preact/preset-vite": "^2.10.2",
