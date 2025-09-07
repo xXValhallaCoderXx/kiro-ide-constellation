@@ -4,6 +4,7 @@ import { registerHealthDashboard } from './ui-providers/health-dashboard';
 import { showHealthDashboard } from './ui-providers/health-dashboard/health-dashboard.panel';
 import { messageBus } from './services/messageBus';
 import { Events } from './shared/events';
+import { registerMcpProvider } from './mcp/mcpProvider';
 
 export function activate(context: vscode.ExtensionContext) {
 	console.log('Congratulations, your extension "kiro-ide-constellation" is now active!');
@@ -29,6 +30,9 @@ export function activate(context: vscode.ExtensionContext) {
 			await messageBus.broadcast({ type: Events.DashboardOpened, payload: { via: 'other' } });
 		})
 	);
+
+	// Register the MCP server provider (guarded for proposed API availability)
+	registerMcpProvider(context);
 }
 
 // This method is called when your extension is deactivated

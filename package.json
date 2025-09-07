@@ -2,7 +2,7 @@
   "name": "kiro-ide-constellation",
   "displayName": "kiro-ide-constellation",
   "description": "Kiro IDE Extension",
-  "version": "0.0.1",
+  "version": "0.0.5",
   "publisher": "xXValhallaCoderXx",
   "engines": {
     "vscode": "^1.103.0"
@@ -14,7 +14,9 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
   "main": "./out/extension.js",
   "contributes": {
     "viewsContainers": {
@@ -36,6 +38,12 @@
         }
       ]
     },
+    "mcpServerDefinitionProviders": [
+      {
+        "id": "kiro-constellation",
+        "label": "Kiro Constellation"
+      }
+    ],
     "commands": [
       {
         "command": "kiro-ide-constellation.openDashboard",
@@ -70,5 +78,8 @@
     "rimraf": "^6.0.1",
     "typescript": "^5.9.2",
     "vite": "^7.1.4"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.17.5"
   }
 }
