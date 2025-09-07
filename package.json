@@ -53,7 +53,7 @@
   },
   "scripts": {
     "vscode:prepublish": "npm run build",
-    "compile": "vite build --config web/vite.config.ts && tsc -p ./",
+    "compile": "vite build --config web/vite.config.ts && tsc -p ./ && npm run bundle:mcp",
     "watch": "vite build --watch --config web/vite.config.ts & tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src",
@@ -61,7 +61,8 @@
     "clean": "rimraf out",
     "clean:web": "find ./web -type f -name '*.js' -delete && find ./web -type f -name '*.js.map' -delete",
     "build": "npm run clean && npm run clean:web && npm run compile",
-    "package": "vsce package"
+    "package": "vsce package",
+    "bundle:mcp": "esbuild src/mcp/mcpStdioServer.ts --bundle --platform=node --format=cjs --target=node18 --outfile=out/mcp/mcpStdioServer.cjs"
   },
   "devDependencies": {
     "@preact/preset-vite": "^2.10.2",
@@ -74,6 +75,7 @@
     "@vscode/test-electron": "^2.5.2",
     "@vscode/vsce": "^3.2.1",
     "eslint": "^9.25.1",
+    "esbuild": "^0.23.0",
     "preact": "^10.27.1",
     "rimraf": "^6.0.1",
     "typescript": "^5.9.2",

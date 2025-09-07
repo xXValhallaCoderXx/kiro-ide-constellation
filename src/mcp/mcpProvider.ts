@@ -19,7 +19,8 @@ export class KiroConstellationMCPProvider {
       return [];
     }
 
-    const serverScript = path.join(this.context.extensionPath, 'out', 'mcp', 'mcpStdioServer.js');
+  // Use the bundled CJS file so we don't depend on node_modules at runtime
+  const serverScript = path.join(this.context.extensionPath, 'out', 'mcp', 'mcpStdioServer.cjs');
     const label = 'Kiro Constellation POC';
     const command = process.execPath; // use the running Node binary
     const args = [serverScript];
