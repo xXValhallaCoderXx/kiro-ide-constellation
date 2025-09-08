@@ -1,7 +1,7 @@
 import { h } from 'preact';
 import { Button } from '../../components/molecules/Button';
 import styles from './Sidebar.module.css';
-import { messageBus, events } from '../../services/messageBus';
+import { messageBus, events } from '../../services/message-bus.service';
 import { useEffect, useState } from 'preact/hooks';
 
 export function Sidebar() {
