@@ -2,9 +2,9 @@ import * as vscode from 'vscode';
 import { registerSidebarViews } from './ui-providers/sidebar';
 import { registerHealthDashboard } from './ui-providers/health-dashboard';
 import { showHealthDashboard } from './ui-providers/health-dashboard/health-dashboard.panel';
-import { messageBus } from './services/messageBus';
+import { messageBus } from './services/message-bus.service';
 import { Events } from './shared/events';
-import { registerMcpProvider } from './mcp/mcpProvider';
+import { registerMcpProvider } from './mcp/mcp.provider';
 
 export function activate(context: vscode.ExtensionContext) {
 	console.log('Congratulations, your extension "kiro-ide-constellation" is now active!');
