@@ -1,45 +1,26 @@
 # Webview Provider Lifecycle
 
-Providers are responsible for:
+Responsibilities
 
-1. Configuring webview options (CSP, localResourceRoots, etc.).
-2. Producing HTML that loads the built JS/CSS via `getEntryUris`.
-3. Registering the webview with the central message bus.
-4. Forwarding messages from the webview to the bus.
-5. Disposing of resources when the webview is destroyed.
+1) Configure webview options (CSP, localResourceRoots)
+2) Render HTML that loads built JS/CSS via `getEntryUris`
+3) Register the webview with the message bus
+4) Forward messages from the webview to the bus
+5) Dispose everything on webview destroy
 
-## Helper
+Helper
 
-Use the helper to reduce boilerplate:
+- `src/shared/utils/event-bus-register.utils.ts`
+- `registerWebviewWithBus(id, webview, onDispose?) => Disposable`
+  - Registers with the bus, wires `onDidReceiveMessage` → `messageBus.receive(id, msg)`
+  - Disposes wiring and registration
 
-- File: `src/ui-providers/registerWithBus.ts`
-- API: `registerWebviewWithBus(id, webview, onDispose?) => Disposable`
-  - Registers with the bus
-  - Forwards `onDidReceiveMessage` to `messageBus.receive(id, msg)`
-  - Disposes both registration and forwarding when disposed
+Examples
 
-## Sidebar example
+- Sidebar: `registerWebviewWithBus('sidebar', webview)` and dispose on `webviewView.onDidDispose`
+- Dashboard: `registerWebviewWithBus('dashboard', panel.webview)`; on dispose you may broadcast `Events.DashboardClosed` so other UIs update
 
-```ts
-const registration = registerWebviewWithBus("sidebar", webview);
-webviewView.onDidDispose(() => registration.dispose());
-```
+Sticky events
 
-## Dashboard example
-
-```ts
-const registration = registerWebviewWithBus("dashboard", currentPanel.webview);
-currentPanel.onDidDispose(() => {
-  registration.dispose();
-  // If applicable, broadcast a close event so other UIs can update
-  void messageBus.broadcast({
-    type: Events.DashboardClosed,
-    payload: undefined,
-  });
-});
-```
-
-## Sticky events and late joiners
-
-- Some events (like `DashboardOpened`) are sticky; newly registered webviews receive them immediately.
-- When `DashboardClosed` is broadcast, the sticky state for `DashboardOpened` is cleared.
+- `Events.DashboardOpened` is sticky and replays to late joiners
+- Cleared by `Events.DashboardClosed`

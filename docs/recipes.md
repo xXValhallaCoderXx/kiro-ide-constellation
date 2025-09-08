@@ -1,77 +1,39 @@
 # Recipes
 
-## Show a VS Code toast from a webview
+Keep examples short; see code for full context.
 
-- Webview emits an event:
-
-```ts
-messageBus.emit(events.UiEmitToast, { text: "Hello from UI" });
-```
-
-- Extension listens globally (in `activate`):
+Open dashboard from webview (and mark provenance)
 
 ```ts
-context.subscriptions.push(
-  messageBus.on(Events.UiEmitToast, async (e) => {
-    await vscode.window.showInformationMessage(e.payload?.text ?? "Hello");
-  })
-);
-```
-
-## Open a panel from a webview, with provenance
-
-- Webview emits request to open:
-
-```ts
+// webview
 messageBus.emit(events.OpenDashboard, undefined);
-```
 
-- Extension opens and broadcasts provenance:
-
-```ts
-context.subscriptions.push(
-  messageBus.on(Events.OpenDashboard, async () => {
-    showHealthDashboard(context);
-    await messageBus.broadcast({
-      type: Events.DashboardOpened,
-      payload: { via: "other" },
-    });
-  })
-);
-```
-
-- Command palette path:
-
-```ts
-vscode.commands.registerCommand(OPEN_DASHBOARD_COMMAND, async () => {
+// extension
+messageBus.on(Events.OpenDashboard, async () => {
   showHealthDashboard(context);
-  await messageBus.broadcast({
-    type: Events.DashboardOpened,
-    payload: { via: "commandPalette" },
-  });
+  await messageBus.broadcast({ type: Events.DashboardOpened, payload: { via: 'other' } });
 });
 ```
 
-## Keep UI hints in sync with panel lifecycle
-
-- On panel dispose:
+VS Code toast from webview
 
 ```ts
-currentPanel.onDidDispose(() => {
-  void messageBus.broadcast({
-    type: Events.DashboardClosed,
-    payload: undefined,
-  });
+// webview
+messageBus.emit(events.UiEmitToast, { text: 'Hello from UI' });
+
+// extension
+messageBus.on(Events.UiEmitToast, async (e) => {
+  await vscode.window.showInformationMessage(e.payload?.text ?? 'Hello');
 });
 ```
 
-- Sidebar listens:
+Panel lifecycle → UI hint
 
 ```ts
-messageBus.on(events.DashboardOpened, (e) => {
-  setHint(e.payload?.via === "commandPalette");
-});
-messageBus.on(events.DashboardClosed, () => {
-  setHint(false);
-});
+// extension (on panel dispose)
+void messageBus.broadcast({ type: Events.DashboardClosed, payload: undefined });
+
+// webview (sidebar)
+messageBus.on(events.DashboardOpened, (e) => setHint(e.payload?.via === 'commandPalette'));
+messageBus.on(events.DashboardClosed, () => setHint(false));
 ```
