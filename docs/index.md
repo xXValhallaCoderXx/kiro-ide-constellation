@@ -1,26 +1,19 @@
-# Kiro IDE Constellation Docs
+# Kiro IDE Constellation
 
-A developer-focused guide to the extension architecture, message bus, and UI/webview patterns.
-
-- Getting started
-- Events and message contracts
-- Extension-side message bus
-- Webview-side message bus
-- Webview provider lifecycle
-- Recipes
+Short, developer-focused docs for the extension architecture, message bus, and webviews.
 
 ## Overview
 
-Kiro IDE Constellation provides a Sidebar webview and a Dashboard webview built with Preact + Vite. Communication between the extension (Node/VS Code host) and the webviews (browser sandbox) uses a small, typed message bus.
+Two webviews (Sidebar, Dashboard) built with Preact + Vite. Extension ↔ Webviews communicate via a small, typed message bus.
 
-- Shared events live in `src/shared/events.ts` (no hard-coded strings).
-- Extension bus implementation in `src/services/messageBus.ts`.
-- Webview bus wrapper in `web/src/services/messageBus.ts`.
+- Events live in `src/shared/events.ts` (no magic strings)
+- Extension bus: `src/services/message-bus.service.ts`
+- Webview bus: `web/src/services/message-bus.service.ts`
 
 ## Contents
 
 - [Events and message contracts](./events.md)
-- [Extension-side message bus](./extension-bus.md)
-- [Webview-side message bus](./webview-bus.md)
+- [Message bus (extension, webview, HTTP bridge)](./message-bus.md)
 - [Webview provider lifecycle](./lifecycle.md)
+- [Bundle/build architecture](./bundle-architecture.md)
 - [Recipes](./recipes.md)

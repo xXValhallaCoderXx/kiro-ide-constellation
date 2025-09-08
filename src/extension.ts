@@ -2,9 +2,10 @@ import * as vscode from 'vscode';
 import { registerSidebarViews } from './ui-providers/sidebar';
 import { registerHealthDashboard } from './ui-providers/health-dashboard';
 import { showHealthDashboard } from './ui-providers/health-dashboard/health-dashboard.panel';
-import { messageBus } from './services/messageBus';
+import { messageBus } from './services/message-bus.service';
 import { Events } from './shared/events';
-import { registerMcpProvider } from './mcp/mcpProvider';
+import { registerMcpProvider } from './mcp/mcp.provider';
+import { startHttpBridge } from './services/http-bridge.service';
 
 export function activate(context: vscode.ExtensionContext) {
 	console.log('Congratulations, your extension "kiro-ide-constellation" is now active!');
@@ -33,6 +34,9 @@ export function activate(context: vscode.ExtensionContext) {
 
 	// Register the MCP server provider (guarded for proposed API availability)
 	registerMcpProvider(context);
+
+	// Start lightweight HTTP bridge so external processes (e.g., MCP stdio) can emit events
+	startHttpBridge(context);
 }
 
 // This method is called when your extension is deactivated

@@ -8,7 +8,10 @@
 ├── out/                    # Build output directory
 ├── docs/                   # Developer documentation
 ├── media/                  # Static assets (icons, CSS)
-└── scripts/                # Build and utility scripts
+├── node_modules/           # Dependencies
+├── .vscode/                # VS Code workspace settings
+├── .vscode-test/           # VS Code test configuration
+└── .git/                   # Git repository
 ```
 
 ## Extension Code (`src/`)
@@ -17,10 +20,13 @@
 src/
 ├── extension.ts            # Main extension entry point
 ├── mcp/                    # Model Context Protocol integration
-│   ├── mcpProvider.ts      # MCP server definition provider
-│   └── mcpStdioServer.ts   # MCP stdio server implementation
+│   ├── mcp.provider.ts     # MCP server definition provider
+│   ├── mcp-stdio.server.ts # MCP stdio server implementation
+│   └── mcpStdioServer.ts   # MCP stdio server entry point
 ├── services/               # Core extension services
-│   └── messageBus.ts       # Extension-side message bus
+│   ├── http-bridge.service.ts  # HTTP bridge service
+│   └── message-bus.service.ts  # Extension-side message bus
+├── tools/                  # Extension tools (empty directory)
 ├── shared/                 # Shared code between extension and web
 │   ├── commands.ts         # VS Code command definitions
 │   ├── events.ts           # Message bus event types
@@ -41,9 +47,13 @@ web/
 │   ├── main-sidebar.tsx    # Sidebar entry point
 │   ├── main-dashboard.tsx  # Dashboard entry point
 │   ├── components/         # Reusable UI components
+│   │   ├── atoms/          # Atomic components
+│   │   ├── molecules/      # Molecular components
+│   │   └── organisms/      # Organism components
 │   ├── services/           # Web-side services
 │   │   └── messageBus.ts   # Webview message bus wrapper
 │   ├── types/              # Web-specific types
+│   │   └── cssmodule.d.ts  # CSS module type definitions
 │   ├── views/              # Main view components
 │   │   ├── HealthDashboard/
 │   │   └── Sidebar/
@@ -97,6 +107,7 @@ web/
 - **Webview side**: `messageBus.emit(events.EventName, data)`
 - **Listening**: `messageBus.on(Events.EventName, handler)` returns unsubscribe function
 - **Targeted messaging**: `messageBus.sendTo(id, event)` for specific webviews
+- **HTTP Bridge**: Extension includes HTTP bridge service for external communication
 
 ### Provider Lifecycle
 1. Configure webview options (CSP, localResourceRoots)
