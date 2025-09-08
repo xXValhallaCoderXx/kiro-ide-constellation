@@ -65,15 +65,16 @@ export function startHttpBridge(context: vscode.ExtensionContext, opts: HttpBrid
         return;
       }
 
-      // Currently support the dashboard open event; extendable for more types
+        // Route inbound events through the bus 'receive' path so extension handlers fire.
+        // This mirrors how webviews inject events into the bus.
       if (type === Events.OpenDashboard) {
-        await messageBus.broadcast({ type: Events.OpenDashboard, payload: undefined });
+          await messageBus.receive('http-bridge', { type: Events.OpenDashboard, payload: undefined } as any);
       } else {
         // For unknown types, attempt a generic forward if it matches our Events values
         const values = Object.values(Events) as string[];
         if (values.includes(type)) {
           // Note: we cannot ensure type-safety for payload here; consumers should validate.
-          await messageBus.broadcast({ type: type as any, payload: payload as any });
+            await messageBus.receive('http-bridge', { type: type as any, payload: payload as any });
         } else {
           res.statusCode = 400;
           res.end('Unknown event type');
