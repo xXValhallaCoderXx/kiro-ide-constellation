@@ -48,13 +48,17 @@
       {
         "command": "kiro-ide-constellation.openDashboard",
         "title": "Kiro: Open Dashboard"
+      },
+      {
+        "command": "kiro-ide-constellation.pingAndOpen",
+        "title": "Kiro: Ping MCP and Open Dashboard"
       }
     ]
   },
   "scripts": {
     "vscode:prepublish": "npm run build",
-    "compile": "vite build --config web/vite.config.ts && tsc -p ./ && npm run bundle:mcp",
-    "watch": "vite build --watch --config web/vite.config.ts & npm run watch:mcp & tsc -watch -p ./",
+  "compile": "vite build --config web/vite.config.ts && tsc -p ./ && npm run bundle:mcp:http",
+    "watch": "vite build --watch --config web/vite.config.ts & npm run watch:mcp:http & tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src",
     "test": "vscode-test",
@@ -62,8 +66,8 @@
     "clean:web": "find ./web -type f -name '*.js' -delete && find ./web -type f -name '*.js.map' -delete",
     "build": "npm run clean && npm run clean:web && npm run compile",
     "package": "vsce package",
-    "bundle:mcp": "esbuild src/mcp/mcpStdioServer.ts --bundle --platform=node --format=cjs --target=node18 --outfile=out/mcp/mcpStdioServer.cjs",
-    "watch:mcp": "esbuild src/mcp/mcpStdioServer.ts --bundle --platform=node --format=cjs --target=node18 --outfile=out/mcp/mcpStdioServer.cjs --watch"
+  "bundle:mcp:http": "esbuild src/mcp/mcp-http.server.ts --bundle --platform=node --format=cjs --target=node18 --outfile=out/mcp/mcp-http.server.cjs",
+  "watch:mcp:http": "esbuild src/mcp/mcp-http.server.ts --bundle --platform=node --format=cjs --target=node18 --outfile=out/mcp/mcp-http.server.cjs --watch"
   },
   "devDependencies": {
     "@preact/preset-vite": "^2.10.2",
