@@ -5,8 +5,7 @@ import { showHealthDashboard } from './ui-providers/health-dashboard/health-dash
 import { messageBus } from './services/message-bus.service';
 import { Events } from './shared/events';
 import { registerMcpProvider } from './mcp/mcp.provider';
-import { pingMcpAndOpenDashboard } from './services/mcp-bridge-rpc.service';
-import { ensureHttpServerStarted } from './mcp/mcp-http.launcher';
+import { startHttpMcpServer } from './mcp/mcp-http.server';
 import { startHttpEventListener, stopHttpEventListener } from './services/http-event-listener.service';
 
 export function activate(context: vscode.ExtensionContext) {
@@ -37,20 +36,12 @@ export function activate(context: vscode.ExtensionContext) {
 	// Register the MCP server provider (guarded for proposed API availability)
 	registerMcpProvider(context);
 
-	// Register a command to ping MCP and open dashboard on-demand
-	context.subscriptions.push(
-		vscode.commands.registerCommand('kiro-ide-constellation.pingAndOpen', async () => {
-			const ok = await pingMcpAndOpenDashboard(context);
-			if (!ok) {
-				void vscode.window.showErrorMessage('MCP ping failed. See logs for details.');
-			}
-		})
-	);
+	// Removed on-demand ping command; SSE will react to LM-initiated tool completions
 
 	// Note: no auto-ping on activation to avoid opening dashboard at startup.
 
 	// Start HTTP MCP server explicitly (no-op if already running)
-	try { ensureHttpServerStarted(); } catch (e) { console.error('[MCP HTTP] Failed to start:', e); }
+	try { startHttpMcpServer(); } catch (e) { console.error('[MCP HTTP] Failed to start:', e); }
 
 	// File-based watcher removed; SSE listener handles LM-initiated events
 

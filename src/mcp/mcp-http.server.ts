@@ -1,8 +1,6 @@
 import { createServer, IncomingMessage, Server, ServerResponse } from 'http';
 import { parse as parseUrl } from 'url';
-import * as os from 'os';
-import * as fs from 'fs';
-import * as path from 'path';
+// os/fs/path removed after legacy side-channel deletion
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 
@@ -56,16 +54,7 @@ mcp.registerTool(
   async () => {
     const resultText = 'pong';
 
-    // Side-channel: append a JSON line event to ~/.kiro/constellation/events.jsonl
-    try {
-      const dir = path.join(os.homedir(), '.kiro', 'constellation');
-      const file = path.join(dir, 'events.jsonl');
-      fs.mkdirSync(dir, { recursive: true });
-      const line = JSON.stringify({ ts: Date.now(), type: 'tool:completed', tool: 'constellation_ping', result: resultText }) + '\n';
-      fs.appendFileSync(file, line, { encoding: 'utf-8' });
-    } catch (err) {
-      console.error('MCP HTTP server: failed to append completion event:', err);
-    }
+      // Legacy file side-channel removed; SSE handles notifications
 
     // Notify SSE listeners (extension) so UI can react even for LM-initiated calls
     sseBroadcast({ ts: Date.now(), type: 'tool:completed', tool: 'constellation_ping', result: resultText });
