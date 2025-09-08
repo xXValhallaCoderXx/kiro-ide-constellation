@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { messageBus } from '../../services/messageBus';
+import { messageBus } from '../../services/message-bus.service';
 
 /**
  * Registers a webview with the central message bus, forwards messages, and handles disposal.
