@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { getNonce } from '../../shared/utils/generate-nonce.utils';
 import { getEntryUris } from '../asset-manifest';
-import { messageBus } from '../../services/messageBus';
+import { messageBus } from '../../services/message-bus.service';
 import { Events } from '../../shared/events';
 import { registerWebviewWithBus } from '../../shared/utils/event-bus-register.utils';
 

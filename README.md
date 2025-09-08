@@ -36,6 +36,18 @@ Scripts:
 Troubleshooting (debug):
 - If the debug session logs `Cannot find module .../out/mcp/mcpStdioServer.cjs`, ensure the watcher is running or run `npm run bundle:mcp` once to generate the file.
 
+### HTTP Bridge (MCP → Extension)
+
+The extension starts a small HTTP server on `http://127.0.0.1:39237` to accept event posts from external processes (like the MCP stdio server). Posting `{ "type": "openDashboard" }` to `/events` will trigger the Dashboard to open via the internal message bus.
+
+Environment variables:
+- `KIRO_MCP_BRIDGE_HOST` – Host/interface to bind (default `127.0.0.1`)
+- `KIRO_MCP_BRIDGE_PORT` – Port to bind (default `39237`)
+
+Notes and troubleshooting:
+- If the port is already in use, the extension logs a warning and disables the bridge for this session. Set `KIRO_MCP_BRIDGE_PORT` to a free port and reload the window.
+- The MCP stdio server uses these env vars to POST events. Ensure they match if you override the defaults.
+
 ### Asset manifest (Vite)
 
 Vite emits a manifest file at `out/.vite/manifest.json` that maps source entry files to their built assets (JS and CSS). We use this so the VS Code webviews can reference the correct files even if names change (e.g., when hashed or when Vite’s internal layout changes).
