@@ -6,7 +6,7 @@ import { messageBus } from './services/message-bus.service';
 import { Events } from './shared/events';
 import { registerMcpProvider } from './mcp/mcp.provider';
 import { startHttpBridge } from './services/http-bridge.service';
-import { AnalysisService } from './services/AnalysisService';
+import { AnalysisService } from './services/graph-analysis.service';
 
 export function activate(context: vscode.ExtensionContext) {
 	console.log('Congratulations, your extension "kiro-ide-constellation" is now active!');

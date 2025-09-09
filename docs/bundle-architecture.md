@@ -58,15 +58,11 @@ The MCP bundle is a single CJS file (no node_modules at runtime).
 
 ## Analysis engine (dependency-cruiser)
 
-- Added as a production dependency in the extension (packaged by `vsce`).
-- Not bundled into the web or MCP outputs; executed as a separate child process from the extension host.
-- CLI resolution order:
-  1) Extension `node_modules/.bin/depcruise`
-  2) Workspace `node_modules/.bin/depcruise`
-  3) `require.resolve('dependency-cruiser/bin/depcruise.js')` via `node`
-  4) Fallback to `depcruise` on PATH
-- Output is captured as JSON for downstream processing.
-- Stage 1 additionally persists the raw JSON to the workspace at `.constellation/data/graph-data.json` for validation and later stages.
+- Packaged as a production dependency of the extension and executed from the extension host as a child process.
+- Resolution: only the extension’s own `node_modules/.bin/depcruise` is used. If it’s missing, the analysis step logs an error and exits (treat as a packaging issue).
+- Output: JSON captured from stdout and persisted to `.constellation/data/graph-data.json` under the workspace for validation and reuse.
+- Excludes `node_modules` during the scan. Uses `--no-config` when no project config file is found.
+- See also: [Dependency Analysis](./dependency-analysis.md) for processing and symbol indexing details.
 
 ## Node targets
 

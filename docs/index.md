@@ -16,4 +16,5 @@ Two webviews (Sidebar, Dashboard) built with Preact + Vite. Extension ↔ Webvie
 - [Message bus (extension, webview, HTTP bridge)](./message-bus.md)
 - [Webview provider lifecycle](./lifecycle.md)
 - [Bundle/build architecture](./bundle-architecture.md)
+- [Dependency analysis](./dependency-analysis.md)
 - [Recipes](./recipes.md)
