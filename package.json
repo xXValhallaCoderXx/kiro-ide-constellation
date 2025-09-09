@@ -48,6 +48,10 @@
       {
         "command": "kiro-ide-constellation.openDashboard",
         "title": "Kiro: Open Dashboard"
+      },
+      {
+        "command": "kiro-constellation.refreshDependencyGraph",
+        "title": "Kiro: Refresh Dependency Graph"
       }
     ]
   },
@@ -83,6 +87,7 @@
     "vite": "^7.1.4"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.17.5"
+    "@modelcontextprotocol/sdk": "^1.17.5",
+    "dependency-cruiser": "^16.4.0"
   }
 }

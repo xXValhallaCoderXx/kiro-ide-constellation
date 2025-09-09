@@ -56,6 +56,17 @@ The MCP bundle is a single CJS file (no node_modules at runtime).
 - `mcp.json` not created: need an open workspace; check `[Kiro MCP]` logs; verify write permissions; override paths via env.
 - Wrong Node binary: set `KIRO_MCP_NODE`.
 
+## Analysis engine (dependency-cruiser)
+
+- Added as a production dependency in the extension (packaged by `vsce`).
+- Not bundled into the web or MCP outputs; executed as a separate child process from the extension host.
+- CLI resolution order:
+  1) Extension `node_modules/.bin/depcruise`
+  2) Workspace `node_modules/.bin/depcruise`
+  3) `require.resolve('dependency-cruiser/bin/depcruise.js')` via `node`
+  4) Fallback to `depcruise` on PATH
+- Output is captured as JSON for downstream processing.
+
 ## Node targets
 
 - Extension TS → ES2022 (`module: Node16`)
