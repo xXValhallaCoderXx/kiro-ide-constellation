@@ -30,31 +30,15 @@ export class AnalysisService {
       try {
         const raw = fs.readFileSync(cachedPath, 'utf-8');
         this.output.appendLine(`[Analysis] Using cached dependency-cruiser JSON at: ${cachedPath}`);
-        try {
-          const transformed = this.transformToCytoscapeFormat(raw);
-          this.cachedGraphData = transformed;
-          this.output.appendLine(`[Analysis] Transformed graph cached with ${transformed.length} elements (from cache).`);
-        } catch (e) {
-          this.output.appendLine(`[Analysis] Failed to transform cached JSON: ${String(e)}`);
-        }
-        try {
-          this.cachedSymbolIndex = this.buildSymbolIndex(raw);
-          const symbolCount = Object.keys(this.cachedSymbolIndex ?? {}).length;
-          this.output.appendLine(`[Analysis] Symbol index built with ${symbolCount} symbols (from cache).`);
-          this.output.appendLine(`[Analysis] Symbol output ${JSON.stringify(this.cachedSymbolIndex)}`);
-        } catch (e) {
-          this.output.appendLine(`[Analysis] Failed to build symbol index from cache: ${String(e)}`);
-        }
+        this._processRawJson(raw, true);
         return raw;
       } catch (readErr) {
         this.output.appendLine(`[Analysis] Failed to read cached JSON at ${cachedPath}: ${String(readErr)}. Falling back to fresh scan...`);
       }
     }
     const bin = process.platform === 'win32' ? 'depcruise.cmd' : 'depcruise';
-
     let command = '';
     let argsPrefix: string[] = [];
-
     if (this.extensionPath) {
       const extBin = path.join(this.extensionPath, 'node_modules', '.bin', bin);
       if (fs.existsSync(extBin)) {
@@ -62,25 +46,9 @@ export class AnalysisService {
         this.output.appendLine('[Analysis] Using depcruise from extension node_modules/.bin');
       }
     }
-
     if (!command) {
-      const wsBin = path.join(cwd, 'node_modules', '.bin', bin);
-      if (fs.existsSync(wsBin)) {
-        command = wsBin;
-        this.output.appendLine('[Analysis] Using depcruise from workspace node_modules/.bin');
-      }
-    }
-
-    if (!command) {
-      try {
-        const script = require.resolve('dependency-cruiser/bin/depcruise.js');
-        command = process.execPath;
-        argsPrefix = [script];
-        this.output.appendLine('[Analysis] Using Node to run resolved depcruise.js');
-      } catch {
-        command = bin;
-        this.output.appendLine('[Analysis] Falling back to depcruise on PATH');
-      }
+      this.output.appendLine('[Analysis] Error: dependency-cruiser binary not found in extension package.');
+      return '';
     }
 
     const srcPath = path.join(cwd, 'src');
@@ -144,21 +112,7 @@ export class AnalysisService {
             } catch (writeErr) {
               this.output.appendLine(`[Analysis] Failed to write JSON to disk: ${String(writeErr)}`);
             }
-            try {
-              const transformed = this.transformToCytoscapeFormat(stdout);
-              this.cachedGraphData = transformed;
-              this.output.appendLine(`[Analysis] Transformed graph cached with ${transformed.length} elements.`);
-              // this.output.appendLine(JSON.stringify(transformed));
-            } catch (transformErr) {
-              this.output.appendLine(`[Analysis] Failed to transform JSON: ${String(transformErr)}`);
-            }
-            try {
-              this.cachedSymbolIndex = this.buildSymbolIndex(stdout);
-              const symbolCount = Object.keys(this.cachedSymbolIndex).length;
-              this.output.appendLine(`[Analysis] Symbol index built with ${symbolCount} symbols.`);
-            } catch (symErr) {
-              this.output.appendLine(`[Analysis] Failed to build symbol index: ${String(symErr)}`);
-            }
+            this._processRawJson(stdout, false);
             this.output.appendLine('[Analysis] Raw JSON completed:');
             // this.output.appendLine(stdout);
             resolve(stdout);
@@ -180,6 +134,25 @@ export class AnalysisService {
 
   getSymbolIndex(): Record<string, { definedIn?: string; importedBy: string[] }> | undefined {
     return this.cachedSymbolIndex;
+  }
+
+  private _processRawJson(rawJson: string, fromCache: boolean): void {
+    try {
+      const transformed = this.transformToCytoscapeFormat(rawJson);
+      this.cachedGraphData = transformed;
+      const suffix = fromCache ? ' (from cache)' : '';
+      this.output.appendLine(`[Analysis] Transformed graph cached with ${transformed.length} elements${suffix}.`);
+    } catch (e) {
+      this.output.appendLine(`[Analysis] Failed to transform JSON: ${String(e)}`);
+    }
+    try {
+      this.cachedSymbolIndex = this.buildSymbolIndex(rawJson);
+      const symbolCount = Object.keys(this.cachedSymbolIndex ?? {}).length;
+      const suffix = fromCache ? ' (from cache)' : '';
+      this.output.appendLine(`[Analysis] Symbol index built with ${symbolCount} symbols${suffix}.`);
+    } catch (e) {
+      this.output.appendLine(`[Analysis] Failed to build symbol index: ${String(e)}`);
+    }
   }
 
   private transformToCytoscapeFormat(raw: string): Array<{ group: 'nodes' | 'edges'; data: any }> {
@@ -241,10 +214,7 @@ export class AnalysisService {
       return index[name];
     };
 
-    const wf = vscode.workspace.workspaceFolders;
-    const cwd = wf && wf.length > 0 ? wf[0].uri.fsPath : process.cwd();
-
-    // First, use any symbol arrays present in the JSON
+    // Use symbol arrays present in the dependency-cruiser JSON
     for (const mod of modules) {
       const source: string | undefined = mod?.source;
       if (!source) {
@@ -297,119 +267,122 @@ export class AnalysisService {
         }
       }
     }
+    // Fallback: if the JSON didn't contain symbol arrays, parse source files heuristically
+    if (Object.keys(index).length === 0) {
+      const wf = vscode.workspace.workspaceFolders;
+      const cwd = wf && wf.length > 0 ? wf[0].uri.fsPath : process.cwd();
 
-    // If arrays were missing/empty, parse source files to enrich
-    const fileList: string[] = [];
-    for (const mod of modules) {
-      const src: string | undefined = mod?.source;
-      if (src && !/(^|\/)node_modules(\/|$)/.test(src)) {
-        const abs = path.isAbsolute(src) ? src : path.join(cwd, src);
-        fileList.push(abs);
-      }
-    }
-
-    const reExportNamed = /export\s*\{([^}]+)\}/g;
-    const reExportDecl = /export\s+(?:async\s+)?(?:function|class)\s+([A-Za-z_$][\w$]*)/g;
-    const reExportConst = /export\s+(?:const|let|var)\s+([A-Za-z_$][\w$]*)/g;
-    const reExportDefaultNamed = /export\s+default\s+(?:async\s+)?(?:function|class)\s+([A-Za-z_$][\w$]*)/g;
-    const reImportNamed = /import\s*\{([^}]+)\}\s*from\s+['"][^'\"]+['"]/g;
-    const reImportDefault = /import\s+([A-Za-z_$][\w$]*)\s*(?:,\s*\{[^}]*\})?\s*from\s+['"][^'\"]+['"]/g;
-    const reImportAll = /import\s+\*\s+as\s+([A-Za-z_$][\w$]*)\s+from\s+['"][^'\"]+['"]/g;
-
-    // Pass 1: record exports
-    for (const abs of fileList) {
-      let content = '';
-      try {
-        content = fs.readFileSync(abs, 'utf-8');
-      } catch {
-        continue;
-      }
-      const relSource = path.relative(cwd, abs);
-
-      const addExport = (name: string) => {
-        const clean = name.trim();
-        if (!clean) {
-          return;
+      const fileList: string[] = [];
+      for (const mod of modules) {
+        const src: string | undefined = mod?.source;
+        if (src && !/(^|\/)node_modules(\/|$)/.test(src)) {
+          const abs = path.isAbsolute(src) ? src : path.join(cwd, src);
+          fileList.push(abs);
         }
-        const entry = ensureEntry(clean);
-        if (!entry.definedIn) {
-          entry.definedIn = relSource;
-        }
-      };
+      }
 
-      let m: RegExpExecArray | null;
-      while ((m = reExportDecl.exec(content))) {
-        addExport(m[1]);
-      }
-      while ((m = reExportConst.exec(content))) {
-        addExport(m[1]);
-      }
-      while ((m = reExportDefaultNamed.exec(content))) {
-        addExport(m[1]);
-      }
-      while ((m = reExportNamed.exec(content))) {
-        const body = m[1];
-        body.split(',').map((s) => s.trim()).forEach((seg) => {
-          if (!seg) {
+      const reExportNamed = /export\s*\{([^}]+)\}/g;
+      const reExportDecl = /export\s+(?:async\s+)?(?:function|class)\s+([A-Za-z_$][\w$]*)/g;
+      const reExportConst = /export\s+(?:const|let|var)\s+([A-Za-z_$][\w$]*)/g;
+      const reExportDefaultNamed = /export\s+default\s+(?:async\s+)?(?:function|class)\s+([A-Za-z_$][\w$]*)/g;
+      const reImportNamed = /import\s*\{([^}]+)\}\s*from\s+['"][^'\"]+['"]/g;
+      const reImportDefault = /import\s+([A-Za-z_$][\w$]*)\s*(?:,\s*\{[^}]*\})?\s*from\s+['"][^'\"]+['"]/g;
+      const reImportAll = /import\s+\*\s+as\s+([A-Za-z_$][\w$]*)\s+from\s+['"][^'\"]+['"]/g;
+
+      // Pass 1: record exports
+      for (const abs of fileList) {
+        let content = '';
+        try {
+          content = fs.readFileSync(abs, 'utf-8');
+        } catch {
+          continue;
+        }
+        const relSource = path.relative(cwd, abs);
+
+        const addExport = (name: string) => {
+          const clean = name.trim();
+          if (!clean) {
             return;
           }
-          const parts = seg.split(/\s+as\s+/i).map((p) => p.trim());
-          const exportedName = parts.length === 2 ? parts[1] : parts[0];
-          addExport(exportedName);
-        });
-      }
-    }
+          const entry = ensureEntry(clean);
+          if (!entry.definedIn) {
+            entry.definedIn = relSource;
+          }
+        };
 
-    // Pass 2: record imports
-    for (const mod of modules) {
-      const src: string | undefined = mod?.source;
-      if (!src) {
-        continue;
-      }
-      if (/(^|\/)node_modules(\/|$)/.test(src)) {
-        continue;
-      }
-      const abs = path.isAbsolute(src) ? src : path.join(cwd, src);
-      let content = '';
-      try {
-        content = fs.readFileSync(abs, 'utf-8');
-      } catch {
-        continue;
-      }
-      const sourceRel = src;
-
-      const addImportedBy = (name: string) => {
-        const clean = name.trim();
-        if (!clean) {
-          return;
+        let m: RegExpExecArray | null;
+        while ((m = reExportDecl.exec(content))) {
+          addExport(m[1]);
         }
-        const entry = ensureEntry(clean);
-        if (!entry.importedBy.includes(sourceRel)) {
-          entry.importedBy.push(sourceRel);
+        while ((m = reExportConst.exec(content))) {
+          addExport(m[1]);
         }
-      };
-
-      let m: RegExpExecArray | null;
-      while ((m = reImportNamed.exec(content))) {
-        const list = m[1].split(',').map((s) => s.trim()).filter(Boolean);
-        for (const seg of list) {
-          const parts = seg.split(/\s+as\s+/i).map((p) => p.trim());
-          const original = parts[0];
-          const alias = parts.length === 2 ? parts[1] : parts[0];
-          addImportedBy(original);
-          addImportedBy(alias);
+        while ((m = reExportDefaultNamed.exec(content))) {
+          addExport(m[1]);
+        }
+        while ((m = reExportNamed.exec(content))) {
+          const body = m[1];
+          body.split(',').map((s) => s.trim()).forEach((seg) => {
+            if (!seg) {
+              return;
+            }
+            const parts = seg.split(/\s+as\s+/i).map((p) => p.trim());
+            const exportedName = parts.length === 2 ? parts[1] : parts[0];
+            addExport(exportedName);
+          });
         }
       }
-      while ((m = reImportDefault.exec(content))) {
-        const local = m[1];
-        addImportedBy('default');
-        addImportedBy(local);
-      }
-      while ((m = reImportAll.exec(content))) {
+
+      // Pass 2: record imports
+      for (const mod of modules) {
+        const src: string | undefined = mod?.source;
+        if (!src) {
+          continue;
+        }
+        if (/(^|\/)node_modules(\/|$)/.test(src)) {
+          continue;
+        }
+        const abs = path.isAbsolute(src) ? src : path.join(cwd, src);
+        let content = '';
+        try {
+          content = fs.readFileSync(abs, 'utf-8');
+        } catch {
+          continue;
+        }
+        const sourceRel = src;
+
+        const addImportedBy = (name: string) => {
+          const clean = name.trim();
+          if (!clean) {
+            return;
+          }
+          const entry = ensureEntry(clean);
+          if (!entry.importedBy.includes(sourceRel)) {
+            entry.importedBy.push(sourceRel);
+          }
+        };
+
+        let m: RegExpExecArray | null;
+        while ((m = reImportNamed.exec(content))) {
+          const list = m[1].split(',').map((s) => s.trim()).filter(Boolean);
+          for (const seg of list) {
+            const parts = seg.split(/\s+as\s+/i).map((p) => p.trim());
+            const original = parts[0];
+            const alias = parts.length === 2 ? parts[1] : parts[0];
+            addImportedBy(original);
+            addImportedBy(alias);
+          }
+        }
+        while ((m = reImportDefault.exec(content))) {
+          const local = m[1];
+          addImportedBy('default');
+          addImportedBy(local);
+        }
+        while ((m = reImportAll.exec(content))) {
         // Namespace imports ignored for symbol-level mapping
+        }
       }
     }
-
     return index;
   }
 }
