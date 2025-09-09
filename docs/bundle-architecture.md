@@ -66,6 +66,7 @@ The MCP bundle is a single CJS file (no node_modules at runtime).
   3) `require.resolve('dependency-cruiser/bin/depcruise.js')` via `node`
   4) Fallback to `depcruise` on PATH
 - Output is captured as JSON for downstream processing.
+- Stage 1 additionally persists the raw JSON to the workspace at `.constellation/data/graph-data.json` for validation and later stages.
 
 ## Node targets
 

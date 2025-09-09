@@ -105,7 +105,16 @@ export class AnalysisService {
           }
 
           if (code === 0) {
-            this.output.appendLine('[Analysis] Scan completed successfully. Raw JSON follows:');
+            try {
+              const outDir = path.join(cwd, '.constellation', 'data');
+              fs.mkdirSync(outDir, { recursive: true });
+              const outPath = path.join(outDir, 'graph-data.json');
+              fs.writeFileSync(outPath, stdout, 'utf-8');
+              this.output.appendLine(`[Analysis] Scan completed successfully. JSON saved to: ${outPath}`);
+            } catch (writeErr) {
+              this.output.appendLine(`[Analysis] Failed to write JSON to disk: ${String(writeErr)}`);
+            }
+            this.output.appendLine('[Analysis] Raw JSON follows:');
             this.output.appendLine(stdout);
             resolve(stdout);
           } else {
