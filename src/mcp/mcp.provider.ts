@@ -12,17 +12,51 @@ type KiroMcpConfig = {
 
 function resolveServerScript(context: vscode.ExtensionContext): string {
   const outMcpDir = path.join(context.extensionPath, 'out', 'mcp');
+  console.log('[Kiro MCP] Extension path:', context.extensionPath);
+  console.log('[Kiro MCP] MCP directory path:', outMcpDir);
+  
+  // Check if the MCP directory exists
+  if (!fs.existsSync(outMcpDir)) {
+    console.warn('[Kiro MCP] MCP directory does not exist:', outMcpDir);
+  } else {
+    console.log('[Kiro MCP] MCP directory exists, listing contents...');
+    try {
+      const files = fs.readdirSync(outMcpDir);
+      console.log('[Kiro MCP] MCP directory contents:', files);
+    } catch (e) {
+      console.error('[Kiro MCP] Failed to read MCP directory:', e);
+    }
+  }
+  
   const candidates = [
     path.join(outMcpDir, 'mcpStdioServer.cjs'),
     path.join(outMcpDir, 'mcpStdioServer.js'),
     path.join(outMcpDir, 'mcpStdioServer.mjs'),
   ];
-  const existing = candidates.find((p) => fs.existsSync(p));
+  
+  console.log('[Kiro MCP] Checking candidates:', candidates);
+  const existing = candidates.find((p) => {
+    const exists = fs.existsSync(p);
+    console.log('[Kiro MCP] Candidate', p, 'exists:', exists);
+    return exists;
+  });
+  
   const chosen = existing ?? candidates[0];
   console.log('[Kiro MCP] Server script resolved to:', chosen);
   if (!existing) {
     console.warn('[Kiro MCP] Preferred MCP bundle not found yet. Expected one of:', candidates);
+    console.warn('[Kiro MCP] This may indicate a packaging issue or file permission problem.');
+    console.warn('[Kiro MCP] Extension will still attempt to use the first candidate path.');
   }
+  
+  // Additional check: try to access the chosen file to verify it's readable
+  try {
+    const stats = fs.statSync(chosen);
+    console.log('[Kiro MCP] Chosen file stats - size:', stats.size, 'bytes, readable:', stats.isFile());
+  } catch (e) {
+    console.error('[Kiro MCP] Cannot access chosen file:', chosen, 'Error:', e);
+  }
+  
   return chosen;
 }
 
