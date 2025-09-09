@@ -6,6 +6,7 @@ import * as fs from 'node:fs';
 export class AnalysisService {
   private readonly output: vscode.OutputChannel;
   private readonly extensionPath?: string;
+  private cachedGraphData: Array<{ group: 'nodes' | 'edges'; data: any }> | undefined;
 
   constructor(outputChannel?: vscode.OutputChannel, extensionPath?: string) {
     this.output = outputChannel ?? vscode.window.createOutputChannel('Kiro Constellation');
@@ -65,14 +66,15 @@ export class AnalysisService {
     ];
     const hasConfig = possibleConfigs.some((f) => fs.existsSync(path.join(cwd, f)));
 
-    const args = [...argsPrefix, '--output-type', 'json'];
+    const excludePattern = '(^|/|\\\\)node_modules($|/|\\\\)';
+    const args = [...argsPrefix, '--output-type', 'json', '--exclude', excludePattern];
     if (!hasConfig) {
       args.push('--no-config');
     }
     args.push(target);
 
   this.output.appendLine('[Analysis] Starting dependency-cruiser scan...');
-  this.output.appendLine(`[Analysis] CLI: ${command} | cwd: ${cwd} | target: ${target}`);
+    this.output.appendLine(`[Analysis] CLI: ${command} | cwd: ${cwd} | target: ${target} | exclude: ${excludePattern}`);
   this.output.show(true);
 
     return new Promise<string>((resolve) => {
@@ -114,8 +116,16 @@ export class AnalysisService {
             } catch (writeErr) {
               this.output.appendLine(`[Analysis] Failed to write JSON to disk: ${String(writeErr)}`);
             }
-            this.output.appendLine('[Analysis] Raw JSON follows:');
-            this.output.appendLine(stdout);
+            try {
+              const transformed = this.transformToCytoscapeFormat(stdout);
+              this.cachedGraphData = transformed;
+              this.output.appendLine(`[Analysis] Transformed graph cached with ${transformed.length} elements.`);
+              this.output.appendLine(JSON.stringify(transformed));
+            } catch (transformErr) {
+              this.output.appendLine(`[Analysis] Failed to transform JSON: ${String(transformErr)}`);
+            }
+            this.output.appendLine('[Analysis] Raw JSON completed:');
+            // this.output.appendLine(stdout);
             resolve(stdout);
           } else {
             this.output.appendLine(`[Analysis] Scan exited with code ${code ?? 'unknown'}.`);
@@ -127,5 +137,50 @@ export class AnalysisService {
         resolve('');
       }
     });
+  }
+
+  getGraphData(): Array<{ group: 'nodes' | 'edges'; data: any }> | undefined {
+    return this.cachedGraphData;
+  }
+
+  private transformToCytoscapeFormat(raw: string): Array<{ group: 'nodes' | 'edges'; data: any }> {
+    let json: any;
+    try {
+      json = JSON.parse(raw);
+    } catch (e) {
+      throw new Error('Invalid JSON provided to transformer');
+    }
+
+    const modules: Array<any> = Array.isArray(json?.modules) ? json.modules : [];
+
+    const nodeSet = new Set<string>();
+    const elements: Array<{ group: 'nodes' | 'edges'; data: any }> = [];
+
+    for (const mod of modules) {
+      const source: string | undefined = mod?.source;
+      if (!source) {
+        continue;
+      }
+      if (!nodeSet.has(source)) {
+        nodeSet.add(source);
+        elements.push({ group: 'nodes', data: { id: source } });
+      }
+
+      const deps: Array<any> = Array.isArray(mod?.dependencies) ? mod.dependencies : [];
+      for (const dep of deps) {
+        const target: string | undefined = dep?.resolved;
+        if (!target) {
+          continue;
+        }
+        if (!nodeSet.has(target)) {
+          nodeSet.add(target);
+          elements.push({ group: 'nodes', data: { id: target } });
+        }
+        const edgeId = `edge-${source}->${target}`;
+        elements.push({ group: 'edges', data: { id: edgeId, source, target } });
+      }
+    }
+
+    return elements;
   }
 }
