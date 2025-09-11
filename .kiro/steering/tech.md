@@ -1,108 +1,69 @@
-# Technology Stack
+# Technology Stack (Monorepo)
 
-## Core Technologies
+## Core
+- VS Code API: ^1.100.3
+- TypeScript: ^5.9.2
+- Preact (webviews): ^10.27.1
+- Vite (webviews): ^7.1.4 with @preact/preset-vite and manifest
+- esbuild (MCP bundling): ^0.23.0
+- Turborepo: ^2.5.6 (task orchestration)
+- pnpm: workspace manager (pnpm-workspace.yaml)
 
-- **VS Code Extension API**: Built on VS Code ^1.100.3 with TypeScript 5.9.2
-- **Frontend Framework**: Preact 10.27.1 with JSX for webview components
-- **Build System**: Vite 7.1.4 for web assets, TypeScript compiler for extension code, esbuild 0.23.0 for MCP bundling
-- **MCP Integration**: @modelcontextprotocol/sdk ^1.17.5 for AI tool connectivity
-- **Package Management**: npm with package-lock.json for dependency locking
+## Packages and roles
+- packages/extension: VS Code extension host code (tsc → out/)
+- packages/webview: builds to ../extension/out with Vite
+- packages/shared: shared contracts (events, commands, utils)
+- packages/mcp-server: stdio server (bundled to ../extension/out/mcp)
 
-## Project Structure
-
-- **Extension Code**: TypeScript in `src/` compiled to `out/` via tsc
-- **Web UI**: Preact components in `web/src/` built via Vite to `out/`
-- **MCP Server**: Bundled separately with esbuild to `out/mcp/mcpStdioServer.cjs`
-
-## Build Commands
-
-### Development
+## Build and scripts
+Root package.json scripts:
 ```bash
-npm run watch          # Concurrent watch: Vite + tsc + MCP bundle (background processes)
-npm run compile        # Full build: web + extension + MCP
+pnpm build              # turbo run build across packages
+pnpm dev                # turbo run dev --parallel
+pnpm typecheck          # turbo run typecheck
+pnpm lint               # turbo run lint
+pnpm test               # turbo run test
+pnpm watch              # pnpm -r run watch (all packages)
+pnpm package            # build & vsce package (extension vsix)
+```
+MCP utilities:
+```bash
+pnpm bundle:mcp         # node esbuild.mcp.config.js
+pnpm watch:mcp          # node esbuild.mcp.config.js --watch
 ```
 
-### Production
-```bash
-npm run build          # Clean build of everything (runs clean + clean:web + compile)
-npm run package        # Create .vsix package (runs vscode:prepublish -> build)
-```
+## Build architecture
+- Webviews (Vite):
+  - Inputs configured for `src/main-sidebar.tsx` and `src/main-dashboard.tsx`
+  - Output to `packages/extension/out` with manifest
+- Extension (tsc):
+  - Compiles to `packages/extension/out`
+- MCP server (esbuild at repo root):
+  - Bundles `packages/mcp-server/src/server.ts` → `packages/extension/out/mcp/mcpStdioServer.cjs`
 
-### Specific Tasks
-```bash
-npm run bundle:mcp     # Build MCP server bundle only
-npm run watch:mcp      # MCP bundle in watch mode
-npm run clean          # Remove out/ directory using rimraf
-npm run clean:web      # Remove web build artifacts (*.js, *.js.map files)
-npm run lint           # ESLint on src/ directory
-npm run test           # Run VS Code extension tests (runs pretest first)
-npm run pretest        # Compile and lint before testing
-```
+## Configuration
+- tsconfig.base.json: ES2022, common options, composite = true
+- packages/*/tsconfig.json: per-package configs
+- packages/webview/vite.config.ts: manifest + preact preset + output path
+- .vscode/launch.json and tasks.json: Run Extension and build tasks
 
-## Build Architecture
+## Runtime and discovery
+- MCP provider (packages/extension/src/mcp/mcp.provider.ts):
+  - Registers provider via vscode.lm when available
+  - Fallback writes `.kiro/settings/mcp.json` in workspace
+  - Resolves Node path via env + heuristics; resolves server script from bundled out/mcp
+- HTTP bridge (packages/extension/src/services/http-bridge.service.ts):
+  - POST /events with { type, payload? } to inject events into the extension bus
+  - Defaults to 127.0.0.1:39237; safe error handling and limits
 
-### Multi-Target Build System
-- **Web UI**: Vite builds Preact components to `out/` with manifest generation
-- **Extension**: TypeScript compiler (tsc) compiles `src/` to `out/`
-- **MCP Server**: esbuild bundles to single CommonJS file at `out/mcp/mcpStdioServer.cjs`
+## Dependency analysis (POC)
+- Command: `kiro.deps.scan`
+- Service: `packages/extension/src/services/dependency-cruiser.service.ts`
+- Behavior: runs dependency-cruiser via npx with sane defaults, timeout, cancellation
+- Output: `.constellation/data/dependency-analysis.json` within the analyzed folder
 
-### MCP Server Bundling
-The MCP server is bundled into a self-contained ~500KB file to avoid shipping `node_modules`:
-```bash
-esbuild src/mcp/mcpStdioServer.ts --bundle --platform=node --format=cjs --target=node18 --outfile=out/mcp/mcpStdioServer.cjs
-```
-
-### Runtime Resolution
-MCP provider resolves server script from candidates:
-1. `out/mcp/mcpStdioServer.cjs` (preferred)
-2. `out/mcp/mcpStdioServer.js`
-3. `out/mcp/mcpStdioServer.mjs`
-
-## Configuration Files
-
-- `tsconfig.json`: Extension TypeScript config (Node16, ES2022)
-- `web/tsconfig.json`: Web UI TypeScript config (ESNext, Preact JSX)
-- `web/vite.config.ts`: Vite build with manifest generation and Preact preset
-- `eslint.config.mjs`: ESLint configuration with TypeScript parser
-- `package.json`: Project configuration with VS Code extension metadata
-- `.vscodeignore`: Files to exclude from extension package
-
-## Asset Management
-
-Vite generates a manifest at `out/.vite/manifest.json` mapping entry points to built assets. The extension uses `src/ui-providers/asset-manifest.ts` to resolve correct script/CSS URIs for webviews, with fallbacks for development.
-
-### Webview Entry Points
-- `web/src/main-sidebar.tsx` → `out/sidebar.js`, `out/sidebar.css`
-- `web/src/main-dashboard.tsx` → `out/dashboard.js`, `out/dashboard.css`
-
-### Development Fallbacks
-If manifest is missing (first run), asset helper falls back to predictable names. A restart after first Vite emit may help resolve missing assets.
-
-## Troubleshooting
-
-### Common Issues
-- **MCP Error**: `Cannot find module '.../out/mcp/mcpStdioServer.cjs'`
-  - Ensure `npm run watch` is running or run `npm run bundle:mcp` once
-  - Check resolved path in logs: "Kiro MCP server script resolved to: ..."
-  - Verify the `out/mcp/` directory exists after build
-
-- **Missing Webview Assets**: CSS/JS not loading in development
-  - Ensure Vite watch is running (part of `npm run watch`)
-  - Check for manifest file at `out/.vite/manifest.json`
-  - Restart VS Code after first Vite build to resolve asset paths
-
-- **Build Failures**: TypeScript or Vite compilation errors
-  - Run `npm run clean` followed by `npm run build` for fresh build
-  - Check for TypeScript version compatibility (currently 5.9.2)
-  - Ensure all dependencies are installed with `npm install`
-
-- **Extension Not Loading**: Extension fails to activate
-  - Check VS Code version compatibility (requires ^1.100.3)
-  - Verify `out/extension.js` exists after compilation
-  - Check VS Code Developer Console for activation errors
-
-### Development Tips
-- Use `npm run watch` for continuous development with hot reloading
-- The extension activates on startup, so restart VS Code to test changes
-- MCP server runs as a separate bundled process for isolation
-- Webview components use Preact for lightweight React-like development
+## Troubleshooting quick refs
+- MCP bundle missing → run `pnpm bundle:mcp` or `pnpm build`
+- Web assets missing → run `pnpm -r run dev` (webview builds into extension/out), reload window
+- Bridge port busy → set KIRO_MCP_BRIDGE_PORT to a free port and reload
+- Node path issues for MCP → set KIRO_MCP_NODE

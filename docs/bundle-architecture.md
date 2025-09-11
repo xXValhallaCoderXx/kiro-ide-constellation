@@ -1,4 +1,6 @@
-# Bundle & Build
+# Bundle & Build (moved)
+
+This document has been renamed. Please see: [Build & bundling](./build-and-bundling.md)
 
 How the extension, web UI, and MCP server are produced in dev and prod.
 

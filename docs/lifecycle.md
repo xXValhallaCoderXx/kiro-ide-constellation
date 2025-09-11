@@ -10,7 +10,7 @@ Responsibilities
 
 Helper
 
-- `src/shared/utils/event-bus-register.utils.ts`
+- `packages/extension/src/services/webview-bus-register.utils.ts`
 - `registerWebviewWithBus(id, webview, onDispose?) => Disposable`
   - Registers with the bus, wires `onDidReceiveMessage` → `messageBus.receive(id, msg)`
   - Disposes wiring and registration

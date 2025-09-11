@@ -1,69 +1,24 @@
 {
-  "name": "kiro-ide-constellation",
-  "displayName": "kiro-ide-constellation",
-  "description": "Kiro IDE Extension",
+  "name": "kiro-ide-constellation-workspace",
+  "private": true,
   "version": "0.0.5",
-  "publisher": "xXValhallaCoderXx",
-  "engines": {
-    "vscode": "^1.100.3"
-  },
   "repository": {
     "type": "git",
     "url": "https://github.com/xXValhallaCoderXx/kiro-ide-constellation"
   },
-  "categories": [
-    "Other"
-  ],
-  "activationEvents": [
-    "onStartupFinished"
-  ],
-  "main": "./out/extension.js",
-  "contributes": {
-    "viewsContainers": {
-      "activitybar": [
-        {
-          "id": "kiroConstellation",
-          "title": "Kiro Constellation",
-          "icon": "./media/kiro.svg"
-        }
-      ]
-    },
-    "views": {
-      "kiroConstellation": [
-        {
-          "id": "kiroConstellation.sidebar",
-          "name": "Sidebar",
-          "type": "webview",
-          "icon": "./media/kiro.svg"
-        }
-      ]
-    },
-    "mcpServerDefinitionProviders": [
-      {
-        "id": "kiro-constellation",
-        "label": "Kiro Constellation"
-      }
-    ],
-    "commands": [
-      {
-        "command": "kiro-ide-constellation.openDashboard",
-        "title": "Kiro: Open Dashboard"
-      }
-    ]
-  },
   "scripts": {
-    "vscode:prepublish": "npm run build",
-    "compile": "vite build --config web/vite.config.ts && tsc -p ./ && npm run bundle:mcp",
-    "watch": "vite build --watch --config web/vite.config.ts & npm run watch:mcp & tsc -watch -p ./",
-    "pretest": "npm run compile && npm run lint",
-    "lint": "eslint src",
-    "test": "vscode-test",
-    "clean": "rimraf out",
-    "clean:web": "find ./web -type f -name '*.js' -delete && find ./web -type f -name '*.js.map' -delete",
-    "build": "npm run clean && npm run clean:web && npm run compile",
-    "package": "vsce package",
-    "bundle:mcp": "esbuild src/mcp/mcp-stdio.server.ts --bundle --platform=node --format=cjs --target=node18 --outfile=out/mcp/mcpStdioServer.cjs",
-    "watch:mcp": "esbuild src/mcp/mcp-stdio.server.ts --bundle --platform=node --format=cjs --target=node18 --outfile=out/mcp/mcpStdioServer.cjs --watch"
+    "build": "turbo run build",
+    "dev": "turbo run dev --parallel",
+    "typecheck": "turbo run typecheck",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "watch": "pnpm -r run watch",
+    "package": "pnpm --filter kiro-ide-constellation run package:root",
+    "bundle:mcp": "node esbuild.mcp.config.js",
+    "watch:mcp": "node esbuild.mcp.config.js --watch",
+    "analyze:mcp": "esbuild packages/mcp-server/src/server.ts --bundle --platform=node --format=cjs --target=node18 --metafile=mcp-meta.json --outfile=packages/extension/out/mcp/mcpStdioServer.cjs && esbuild-visualizer --metadata ./mcp-meta.json --open",
+    "analyze": "bash scripts/analyze-bundles.sh",
+    "clean": "rimraf packages/**/out && rimraf node_modules"
   },
   "devDependencies": {
     "@preact/preset-vite": "^2.10.2",
@@ -75,14 +30,15 @@
     "@vscode/test-cli": "^0.0.11",
     "@vscode/test-electron": "^2.5.2",
     "@vscode/vsce": "^3.2.1",
-    "eslint": "^9.25.1",
     "esbuild": "^0.23.0",
+    "esbuild-visualizer": "^0.6.0",
+    "eslint": "^9.25.1",
     "preact": "^10.27.1",
     "rimraf": "^6.0.1",
+    "rollup-plugin-visualizer": "^5.12.0",
+    "turbo": "^2.5.6",
     "typescript": "^5.9.2",
     "vite": "^7.1.4"
   },
-  "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.17.5"
-  }
+  "packageManager": "pnpm@8.0.0"
 }

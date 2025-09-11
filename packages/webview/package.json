@@ -1,0 +1,17 @@
+{
+  "name": "@kiro/webview",
+  "version": "0.0.5",
+  "private": true,
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite build --watch",
+    "typecheck": "echo 'typecheck via app tsconfig'",
+    "lint": "eslint src --ext .ts,.tsx",
+    "test": "echo 'no tests yet'"
+  },
+  "dependencies": {
+    "@kiro/shared": "workspace:*",
+    "preact": "^10.27.1"
+  }
+}
+

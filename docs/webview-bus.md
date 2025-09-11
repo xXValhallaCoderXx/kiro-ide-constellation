@@ -1,4 +1,8 @@
-# Webview-side Message Bus
+# Webview-side Message Bus (moved)
+
+This document has been consolidated into ./messaging.md.
+
+Please see: [Messaging](./messaging.md)
 
 File: `web/src/services/messageBus.ts`
 
