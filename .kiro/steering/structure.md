@@ -1,116 +1,99 @@
-# Project Structure
+# Project Structure (Monorepo)
 
-## Root Directory Organization
+This repository uses a pnpm/Turbo monorepo with four packages: the VS Code extension, webview UI, shared contracts, and the MCP stdio server.
 
-```
-├── src/                    # Extension TypeScript source
-├── web/                    # Webview UI source (Preact)
-├── out/                    # Build output directory
-├── docs/                   # Developer documentation
-├── media/                  # Static assets (icons, CSS)
-├── node_modules/           # Dependencies
-├── .vscode/                # VS Code workspace settings
-├── .vscode-test/           # VS Code test configuration
-└── .git/                   # Git repository
-```
-
-## Extension Code (`src/`)
+## Root Layout
 
 ```
-src/
-├── extension.ts            # Main extension entry point
-├── mcp/                    # Model Context Protocol integration
-│   ├── mcp.provider.ts     # MCP server definition provider
-│   ├── mcp-stdio.server.ts # MCP stdio server implementation
-│   └── mcpStdioServer.ts   # MCP stdio server entry point
-├── services/               # Core extension services
-│   ├── http-bridge.service.ts  # HTTP bridge service
-│   └── message-bus.service.ts  # Extension-side message bus
-├── tools/                  # Extension tools (empty directory)
-├── shared/                 # Shared code between extension and web
-│   ├── commands.ts         # VS Code command definitions
-│   ├── events.ts           # Message bus event types
-│   └── utils/              # Utility functions
-├── types/                  # TypeScript type definitions
-├── ui-providers/           # Webview providers and panels
-│   ├── asset-manifest.ts   # Vite asset resolution helper
-│   ├── health-dashboard/   # Dashboard webview provider
-│   └── sidebar/            # Sidebar webview provider
-└── test/                   # Extension tests
+├── packages/
+│   ├── extension/          # VS Code extension (activation, UI providers, services)
+│   ├── webview/            # Webview UI (Vite/Preact), builds into extension/out
+│   ├── shared/             # Shared contracts (events, commands, utils)
+│   └── mcp-server/         # MCP stdio server (bundled by esbuild)
+├── docs/                   # Developer docs (architecture, MCP, messaging)
+├── scripts/                # Helper scripts (prepare vsix, analyze bundles)
+├── esbuild.mcp.config.js   # MCP esbuild bundler
+├── tsconfig.base.json      # Base TS config (composite, ES2022)
+├── pnpm-workspace.yaml     # pnpm workspace
+├── .vscode/                # Workspace launch/tasks
+└── .kiro/steering/         # Kiro agent steering docs
 ```
 
-## Web UI (`web/`)
+## Extension Package (packages/extension)
 
 ```
-web/
+packages/extension/
 ├── src/
-│   ├── main-sidebar.tsx    # Sidebar entry point
-│   ├── main-dashboard.tsx  # Dashboard entry point
-│   ├── components/         # Reusable UI components
-│   │   ├── atoms/          # Atomic components
-│   │   ├── molecules/      # Molecular components
-│   │   └── organisms/      # Organism components
-│   ├── services/           # Web-side services
-│   │   └── messageBus.ts   # Webview message bus wrapper
-│   ├── types/              # Web-specific types
-│   │   └── cssmodule.d.ts  # CSS module type definitions
-│   ├── views/              # Main view components
-│   │   ├── HealthDashboard/
-│   │   └── Sidebar/
-│   └── vscode.ts           # VS Code API wrapper
-├── tsconfig.json           # Web TypeScript config
-└── vite.config.ts          # Vite build configuration
+│   ├── extension.ts                      # Extension activation
+│   ├── mcp/
+│   │   └── mcp.provider.ts               # MCP provider + fallback writer
+│   ├── services/
+│   │   ├── message-bus.service.ts        # Extension message bus
+│   │   ├── webview-bus-register.utils.ts # Register webviews with bus
+│   │   ├── http-bridge.service.ts        # Local HTTP bridge
+│   │   └── dependency-cruiser.service.ts # Dependency scan POC (writes to .constellation/data)
+│   ├── shared/
+│   │   └── runtime.ts                    # Extension-local event/nonce utilities
+│   └── ui-providers/
+│       ├── asset-manifest.ts             # Vite manifest loader
+│       ├── sidebar/                      # Sidebar provider
+│       └── health-dashboard/             # Dashboard provider/panel
+├── out/                                  # Built extension output (tsc)
+│   └── mcp/mcpStdioServer.cjs            # MCP bundle (from root esbuild)
+└── package.json                          # Contributes views, commands, MCP provider
 ```
 
-## Architecture Patterns
+Notes:
+- Web assets are built by the webview package into packages/extension/out.
+- The dependency scan command id is `kiro.deps.scan`; output JSON is saved to `.constellation/data/dependency-analysis.json` in the analyzed folder.
 
-### Message Bus Communication
-- **Shared Events**: `src/shared/events.ts` defines all message types with `Events` enum and `EventPayloads` type mapping
-- **Extension Bus**: `src/services/messageBus.ts` handles extension-side messaging with sticky event support
-- **Web Bus**: `web/src/services/messageBus.ts` wraps VS Code webview API with `acquireVsCodeApi`
-- **Type Safety**: All messages are strongly typed with payload interfaces
+## Webview Package (packages/webview)
 
-### Sticky Events System
-- State-like events (e.g., `DashboardOpened`) are replayed to late-joining webviews
-- Sticky events cleared by opposing events (e.g., `DashboardClosed` clears `DashboardOpened`)
-- Configured in `stickyTypes` set in `src/services/messageBus.ts`
+```
+packages/webview/
+├── src/
+│   ├── services/
+│   │   └── message-bus.service.ts   # Webview-side message bus
+│   ├── types/
+│   │   └── cssmodule.d.ts           # CSS module typings
+│   └── vscode.ts                    # acquireVsCodeApi wrapper
+├── vite.config.ts                   # Builds to ../extension/out, manifest enabled
+└── package.json
+```
 
-### UI Provider Pattern
-- Each webview has a dedicated provider in `src/ui-providers/`
-- Providers use `registerWebviewWithBus(id, webview)` helper for lifecycle management
-- Asset resolution via `getEntryUris(context, webview, entry)` from `asset-manifest.ts`
-- HTML generation includes correct `<script>` and `<link>` tags for Vite-built assets
+Vite inputs are configured for `src/main-sidebar.tsx` and `src/main-dashboard.tsx`; add those entry files as your UI evolves.
 
-### MCP Integration
-- MCP server bundled separately to `out/mcp/mcpStdioServer.cjs` (self-contained ~500KB)
-- Provider registers with VS Code's MCP API when available
-- Fallback configuration written to `.kiro/settings/mcp.json` for Kiro IDE discovery
-- Runtime path resolution with multiple candidate locations
+## Shared Package (packages/shared)
 
-## Naming Conventions
+```
+packages/shared/
+├── src/
+│   ├── shared/
+│   │   ├── events.ts               # Central events + payloads
+│   │   ├── commands.ts             # Command ids
+│   │   └── utils/generate-nonce.utils.ts
+│   └── index.ts                    # Barrel exports
+└── package.json
+```
 
-- **Files**: kebab-case for directories, camelCase for TypeScript files
-- **Components**: PascalCase for Preact components
-- **Events**: PascalCase constants in `Events` enum
-- **CSS Modules**: Component.module.css pattern for scoped styles
-- **Webview IDs**: Use consistent identifiers like "sidebar", "dashboard" for message bus registration
+## MCP Server Package (packages/mcp-server)
 
-## Development Patterns
+```
+packages/mcp-server/
+├── src/
+│   └── server.ts                  # MCP stdio server entry
+└── package.json
+```
 
-### Adding New Webview Entry Points
-1. Add input entry in `web/vite.config.ts` under `rollupOptions.input`
-2. Create `web/src/main-<name>.tsx` file rendering Preact component to `#root`
-3. In webview provider, call `getEntryUris(context, webview, '<name>')` for asset URIs
+Bundled by `esbuild.mcp.config.js` at the repo root; output goes to `packages/extension/out/mcp/mcpStdioServer.cjs`.
 
-### Message Bus Usage
-- **Extension side**: `messageBus.broadcast({ type: Events.EventName, payload: data })`
-- **Webview side**: `messageBus.emit(events.EventName, data)`
-- **Listening**: `messageBus.on(Events.EventName, handler)` returns unsubscribe function
-- **Targeted messaging**: `messageBus.sendTo(id, event)` for specific webviews
-- **HTTP Bridge**: Extension includes HTTP bridge service for external communication
+## Cross-cutting Architecture
 
-### Provider Lifecycle
-1. Configure webview options (CSP, localResourceRoots)
-2. Generate HTML with `getEntryUris` for JS/CSS injection
-3. Register with bus using `registerWebviewWithBus(id, webview)`
-4. Handle disposal to clean up resources and broadcast close events
+- Message Bus
+  - Shared contracts: `packages/shared/src/shared/events.ts`
+  - Extension bus: `packages/extension/src/services/message-bus.service.ts`
+  - Webview bus: `packages/webview/src/services/message-bus.service.ts`
+- HTTP Bridge: `packages/extension/src/services/http-bridge.service.ts` (POST /events)
+- MCP Provider: `packages/extension/src/mcp/mcp.provider.ts`
+- Web assets manifest: `packages/extension/src/ui-providers/asset-manifest.ts`
+- Dev utility: dependency-cruiser POC command (`kiro.deps.scan`) writes JSON to `.constellation/data/`.
