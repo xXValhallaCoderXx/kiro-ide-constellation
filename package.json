@@ -40,8 +40,5 @@
     "typescript": "^5.9.2",
     "vite": "^7.1.4"
   },
-  "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.17.5"
-  },
   "packageManager": "pnpm@8.0.0"
 }

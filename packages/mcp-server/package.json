@@ -9,7 +9,7 @@
     "lint": "echo 'no lint'",
     "test": "echo 'no tests'"
   },
-  "dependencies": {
+  "devDependencies": {
     "@modelcontextprotocol/sdk": "^1.17.5"
   }
 }
