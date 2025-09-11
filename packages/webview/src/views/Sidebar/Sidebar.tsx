@@ -38,7 +38,7 @@ export function Sidebar() {
       <h3 className={styles.hello}>Hello World</h3>
       <div className={styles.actions}>
         <Button id="open-dashboard" onClick={handleOpenDashboard}>
-          Open Graph
+          Open Graphsss
         </Button>
         <Button id="emit-vscode-event" onClick={handleEmitToast}>
           Emit VS Code Event

@@ -1,0 +1,20 @@
+# Exclude development-only files from the VSIX
+src/**
+**/*.map
+**/*.tsbuildinfo
+.turbo/**
+
+# Keep runtime output and media
+#!out/**
+#!media/**
+
+# Keep workspace-local shared dependency if present
+#!node_modules/@kiro/shared/**
+
+# Ignore tests and misc
+**/*.test.*
+**/*.spec.*
+**/__tests__/**
+.vscode/**
+README.md
+

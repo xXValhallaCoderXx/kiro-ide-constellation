@@ -54,7 +54,12 @@
     "lint": "eslint src --ext .ts,.tsx",
     "test": "echo 'no tests yet'",
     "prepackage": "bash ../../scripts/prepare-vsix.sh",
-    "package": "vsce package --no-dependencies --allow-missing-repository"
+    "package": "vsce package --no-dependencies --allow-missing-repository",
+    "package:root": "vsce package --no-dependencies --allow-missing-repository --out ../../kiro-ide-constellation.vsix"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/xXValhallaCoderXx/kiro-ide-constellation"
   },
   "dependencies": {
     "@kiro/shared": "workspace:*"

@@ -4,3 +4,5 @@ out/
 .vscode-test/
 .github
 .kiro/settings/mcp.json
+.turbo/**
+.turbo-build.log

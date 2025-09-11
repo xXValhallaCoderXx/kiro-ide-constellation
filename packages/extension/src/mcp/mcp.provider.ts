@@ -66,21 +66,52 @@ function resolveNodeCommand(): string {
     return fromEnv;
   }
 
+  // In VS Code server environments, process.execPath points to VS Code's node binary
+  // We need to find the system Node.js instead
   const execBase = path.basename(process.execPath).toLowerCase();
-  if (execBase.includes('node')) {
+  if (execBase.includes('node') && !process.execPath.includes('vscode-server')) {
+    console.log('[Kiro MCP] Using process.execPath:', process.execPath);
     return process.execPath;
   }
 
+  // Try common Node.js installation paths, including nvm paths
   const common = [
+    // Check nvm paths first (most common in development)
+    path.join(process.env.HOME || '', '.nvm/versions/node/v22.17.0/bin/node'),
+    path.join(process.env.HOME || '', '.nvm/versions/node/*/bin/node'),
+    // Standard system paths
     '/opt/homebrew/bin/node',
     '/usr/local/bin/node',
     '/usr/bin/node',
   ];
+  
   for (const p of common) {
-    if (fs.existsSync(p)) {
+    if (p.includes('*')) {
+      // Handle glob pattern for nvm versions
+      const nvmDir = path.dirname(path.dirname(p));
+      if (fs.existsSync(nvmDir)) {
+        try {
+          const versions = fs.readdirSync(nvmDir).filter(v => v.startsWith('v'));
+          if (versions.length > 0) {
+            const latestVersion = versions.sort().pop();
+            const nodePath = path.join(nvmDir, latestVersion!, 'bin/node');
+            if (fs.existsSync(nodePath)) {
+              console.log('[Kiro MCP] Using nvm node:', nodePath);
+              return nodePath;
+            }
+          }
+        } catch (e) {
+          // Continue to next option
+        }
+      }
+    } else if (fs.existsSync(p)) {
+      console.log('[Kiro MCP] Using system node:', p);
       return p;
     }
   }
+  
+  // Fallback to 'node' command and hope it's in PATH
+  console.log('[Kiro MCP] Falling back to "node" command in PATH');
   return 'node';
 }
 

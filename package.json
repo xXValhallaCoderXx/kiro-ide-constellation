@@ -13,7 +13,7 @@
     "lint": "turbo run lint",
     "test": "turbo run test",
     "watch": "pnpm -r run watch",
-    "package": "pnpm --filter kiro-ide-constellation run package",
+    "package": "pnpm --filter kiro-ide-constellation run package:root",
     "bundle:mcp": "node esbuild.mcp.config.js",
     "watch:mcp": "node esbuild.mcp.config.js --watch",
     "analyze:mcp": "esbuild packages/mcp-server/src/server.ts --bundle --platform=node --format=cjs --target=node18 --metafile=mcp-meta.json --outfile=packages/extension/out/mcp/mcpStdioServer.cjs && esbuild-visualizer --metadata ./mcp-meta.json --open",
