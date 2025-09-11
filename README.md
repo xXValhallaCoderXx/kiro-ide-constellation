@@ -19,19 +19,22 @@ Kiro IDE Constellation adds a custom Activity Bar container and a Sidebar webvie
 See the developer docs in `./docs`:
 
 - Start here: [docs/index.md](./docs/index.md)
-- Topics: events, extension bus, webview bus, lifecycle, and recipes.
+- Key topics: events, messaging, lifecycle, build & bundling, MCP overview/architecture/tools, and recipes.
 
 
 ## Development
 
-- Web UI is in `web/` and built with Vite/Preact to `out/`.
-- Extension code is under `src/` and compiled by `tsc` to `out/`.
+- Monorepo layout:
+  - Extension code: packages/extension (compiled by tsc to packages/extension/out)
+  - Web UI (Vite/Preact): packages/webview (build outputs into packages/extension/out)
+  - Shared contracts/types: packages/shared
+  - MCP stdio server: packages/mcp-server (bundled to packages/extension/out/mcp/mcpStdioServer.cjs)
 
 Scripts:
 
-- `npm run watch` – concurrently builds web assets (Vite), watches extension TypeScript (tsc), and watches the MCP stdio server bundle with esbuild.
-- `npm run build` – clean build of everything including the MCP bundle.
-- `npm run bundle:mcp` – one-off build of the MCP stdio server to `out/mcp/mcpStdioServer.cjs`.
+- `pnpm dev` – run dev/watch processes across packages (Vite watch, tsc watch, MCP esbuild watch)
+- `pnpm build` – build all packages including the MCP bundle (Turbo)
+- `pnpm bundle:mcp` – one-off build of the MCP stdio server to packages/extension/out/mcp/mcpStdioServer.cjs
 
 Troubleshooting (debug):
 - If the debug session logs `Cannot find module .../out/mcp/mcpStdioServer.cjs`, ensure the watcher is running or run `npm run bundle:mcp` once to generate the file.
@@ -50,17 +53,17 @@ Notes and troubleshooting:
 
 ### Asset manifest (Vite)
 
-Vite emits a manifest file at `out/.vite/manifest.json` that maps source entry files to their built assets (JS and CSS). We use this so the VS Code webviews can reference the correct files even if names change (e.g., when hashed or when Vite’s internal layout changes).
+Vite emits a manifest file at `packages/extension/out/.vite/manifest.json` that maps source entry files to their built assets (JS and CSS). We use this so the VS Code webviews can reference the correct files even if names change.
 
-- Config: see `web/vite.config.ts` where `build.manifest = true` and entries are defined for `web/src/main-sidebar.tsx` and `web/src/main-dashboard.tsx`.
-- Loader: `src/ui-providers/asset-manifest.ts` exports `getEntryUris(context, webview, entry)` which returns:
+- Config: see `packages/webview/vite.config.ts` where `build.manifest = true` and entries are defined for `src/main-sidebar.tsx` and `src/main-dashboard.tsx`.
+- Loader: `packages/extension/src/ui-providers/asset-manifest.ts` exports `getEntryUris(context, webview, entry)` which returns:
 	- `script`: a `vscode.Uri` pointing to the built JS file for the entry
 	- `css`: an array of `vscode.Uri` values for any generated CSS files
 - Providers use `getEntryUris` to inject the correct `<script type="module">` and `<link rel="stylesheet">` tags. If the manifest is missing (e.g., first run in watch), the helper falls back to predictable names like `out/sidebar.js` and `out/sidebar.css`.
 
 Adding a new UI entry point:
-1. Add an input entry in `web/vite.config.ts` under `rollupOptions.input`.
-2. Create the corresponding `web/src/main-<name>.tsx` file that renders your Preact component into `#root`.
+1. Add an input entry in `packages/webview/vite.config.ts` under `rollupOptions.input`.
+2. Create the corresponding `packages/webview/src/main-<name>.tsx` file that renders your Preact component into `#root`.
 3. In your webview provider, call `getEntryUris(context, webview, '<name>')` and include the returned URIs in your HTML.
 
 ## Requirements

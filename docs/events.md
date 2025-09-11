@@ -1,6 +1,6 @@
 # Events and contracts
 
-All events are centralized in `src/shared/events.ts` for type safety across extension and webviews.
+All events are centralized in `packages/shared/src/shared/events.ts` for type safety across extension and webviews.
 
 Define events
 
@@ -17,4 +17,4 @@ Sticky
 
 - Sticky events replay to late-joining webviews
 - Current: `Events.DashboardOpened` (cleared by `Events.DashboardClosed`)
-- To add one, extend `stickyTypes` in `src/services/message-bus.service.ts`
+- To add one, extend `stickyTypes` in `packages/extension/src/services/message-bus.service.ts`

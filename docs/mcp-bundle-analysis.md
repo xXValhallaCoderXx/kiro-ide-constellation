@@ -1,4 +1,9 @@
-# MCP Bundle Analysis
+# Removed
+
+This document has been superseded by:
+- MCP overview: ./mcp/overview.md
+- MCP architecture: ./mcp/architecture.md
+- MCP tools: ./mcp/tools.md
 
 Use this document to record findings from esbuild and Vite visualizers.
 

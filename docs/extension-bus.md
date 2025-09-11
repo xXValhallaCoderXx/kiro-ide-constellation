@@ -1,4 +1,8 @@
-# Extension-side Message Bus
+# Extension-side Message Bus (moved)
+
+This document has been consolidated into ./messaging.md.
+
+Please see: [Messaging](./messaging.md)
 
 File: `src/services/message-bus.service.ts`
 

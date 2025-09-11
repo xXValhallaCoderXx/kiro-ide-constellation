@@ -5,10 +5,10 @@ Keep examples short; see code for full context.
 Open dashboard from webview (and mark provenance)
 
 ```ts
-// webview
+// webview (packages/webview/…)
 messageBus.emit(events.OpenDashboard, undefined);
 
-// extension
+// extension (packages/extension/src/extension.ts or a module it imports)
 messageBus.on(Events.OpenDashboard, async () => {
   showHealthDashboard(context);
   await messageBus.broadcast({ type: Events.DashboardOpened, payload: { via: 'other' } });
@@ -18,10 +18,10 @@ messageBus.on(Events.OpenDashboard, async () => {
 VS Code toast from webview
 
 ```ts
-// webview
+// webview (packages/webview/…)
 messageBus.emit(events.UiEmitToast, { text: 'Hello from UI' });
 
-// extension
+// extension (packages/extension/src/extension.ts)
 messageBus.on(Events.UiEmitToast, async (e) => {
   await vscode.window.showInformationMessage(e.payload?.text ?? 'Hello');
 });
