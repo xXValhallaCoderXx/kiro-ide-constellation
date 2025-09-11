@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { getNonce } from '@kiro/shared';
+import { getNonce } from '../../shared/runtime';
 import { getEntryUris } from '../asset-manifest';
 import { registerWebviewWithBus } from '../../services/webview-bus-register.utils';
 

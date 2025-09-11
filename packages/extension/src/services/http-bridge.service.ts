@@ -1,7 +1,7 @@
 import * as http from 'node:http';
 import type * as vscode from 'vscode';
 import { messageBus } from './message-bus.service';
-import { Events } from '@kiro/shared';
+import { Events } from '../shared/runtime';
 
 export interface HttpBridgeOptions {
   host?: string; // defaults to 127.0.0.1

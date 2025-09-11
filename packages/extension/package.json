@@ -11,7 +11,9 @@
     "Other"
   ],
   "activationEvents": [
-    "onStartupFinished"
+    "onStartupFinished",
+    "onCommand:kiro-ide-constellation.openDashboard",
+    "onView:kiroConstellation.sidebar"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -54,6 +56,7 @@
     "lint": "eslint src --ext .ts,.tsx",
     "test": "echo 'no tests yet'",
     "prepackage": "bash ../../scripts/prepare-vsix.sh",
+    "prepackage:root": "bash ../../scripts/prepare-vsix.sh",
     "package": "vsce package --no-dependencies --allow-missing-repository",
     "package:root": "vsce package --no-dependencies --allow-missing-repository --out ../../kiro-ide-constellation.vsix"
   },
@@ -61,6 +64,10 @@
     "type": "git",
     "url": "https://github.com/xXValhallaCoderXx/kiro-ide-constellation"
   },
+  "files": [
+    "out/**",
+    "media/**"
+  ],
   "dependencies": {
     "@kiro/shared": "workspace:*"
   }

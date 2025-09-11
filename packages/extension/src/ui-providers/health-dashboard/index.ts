@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { showHealthDashboard } from './health-dashboard.panel';
-import { OPEN_DASHBOARD_COMMAND, Events } from '@kiro/shared';
+import { OPEN_DASHBOARD_COMMAND, Events } from '../../shared/runtime';
 import { messageBus } from '../../services/message-bus.service';
 
 
