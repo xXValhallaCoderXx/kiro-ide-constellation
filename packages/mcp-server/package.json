@@ -4,7 +4,10 @@
   "private": true,
   "scripts": {
     "build": "node ../../esbuild.mcp.config.js",
-    "watch": "node ../../esbuild.mcp.config.js --watch"
+    "dev": "node ../../esbuild.mcp.config.js --watch",
+    "typecheck": "echo 'no tsconfig'",
+    "lint": "echo 'no lint'",
+    "test": "echo 'no tests'"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.17.5"

@@ -1,0 +1,10 @@
+
+> @kiro/mcp-server@0.0.5 build /home/odin/Dungeon/Personal/kiro-ide-constellation/packages/mcp-server
+> node ../../esbuild.mcp.config.js
+
+
+  ../extension/out/mcp/mcpStdioServer.cjs      236.0kb
+  ../extension/out/mcp/mcpStdioServer.cjs.map  789.8kb
+
+⚡ Done in 45ms
+[MCP] Build completed → packages/extension/out/mcp/mcpStdioServer.cjs

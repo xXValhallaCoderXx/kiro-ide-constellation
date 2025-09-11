@@ -1,0 +1,16 @@
+
+> @kiro/webview@0.0.5 build /home/odin/Dungeon/Personal/kiro-ide-constellation/packages/webview
+> vite build
+
+vite v7.1.4 building for production...
+transforming...
+✓ 13 modules transformed.
+rendering chunks...
+computing gzip size...
+../extension/out/.vite/manifest.json                    0.62 kB │ gzip: 0.21 kB
+../extension/out/sidebar.css                            0.08 kB │ gzip: 0.10 kB
+../extension/out/dashboard.css                          0.11 kB │ gzip: 0.12 kB
+../extension/out/dashboard.js                           0.38 kB │ gzip: 0.29 kB
+../extension/out/sidebar.js                             4.01 kB │ gzip: 1.88 kB
+../extension/out/assets/jsxRuntime.module-BRObJjNp.js  10.61 kB │ gzip: 4.51 kB
+✓ built in 194ms
