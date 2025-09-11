@@ -62,8 +62,9 @@
     "clean:web": "find ./web -type f -name '*.js' -delete && find ./web -type f -name '*.js.map' -delete",
     "build": "npm run clean && npm run clean:web && npm run compile",
     "package": "vsce package",
-    "bundle:mcp": "esbuild src/mcp/mcp-stdio.server.ts --bundle --platform=node --format=cjs --target=node18 --outfile=out/mcp/mcpStdioServer.cjs",
-    "watch:mcp": "esbuild src/mcp/mcp-stdio.server.ts --bundle --platform=node --format=cjs --target=node18 --outfile=out/mcp/mcpStdioServer.cjs --watch"
+    "bundle:mcp": "node esbuild.mcp.config.js",
+    "watch:mcp": "node esbuild.mcp.config.js --watch",
+    "analyze:mcp": "esbuild src/mcp/mcp-stdio.server.ts --bundle --platform=node --format=cjs --target=node18 --metafile=mcp-meta.json --outfile=out/mcp/mcpStdioServer.cjs && esbuild-visualizer --metadata ./mcp-meta.json --open"
   },
   "devDependencies": {
     "@preact/preset-vite": "^2.10.2",
@@ -77,12 +78,15 @@
     "@vscode/vsce": "^3.2.1",
     "eslint": "^9.25.1",
     "esbuild": "^0.23.0",
+    "esbuild-visualizer": "^0.6.0",
     "preact": "^10.27.1",
     "rimraf": "^6.0.1",
+    "rollup-plugin-visualizer": "^5.12.0",
     "typescript": "^5.9.2",
     "vite": "^7.1.4"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.17.5"
-  }
+  },
+  "packageManager": "pnpm@8.0.0"
 }

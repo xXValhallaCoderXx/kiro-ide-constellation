@@ -1,0 +1,14 @@
+{
+  "name": "@kiro/webview",
+  "version": "0.0.5",
+  "private": true,
+  "scripts": {
+    "build": "vite build",
+    "watch": "vite build --watch"
+  },
+  "dependencies": {
+    "@kiro/shared": "workspace:*",
+    "preact": "^10.27.1"
+  }
+}
+

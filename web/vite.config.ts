@@ -1,8 +1,17 @@
 import { defineConfig } from 'vite';
 import preact from '@preact/preset-vite';
+import { visualizer } from 'rollup-plugin-visualizer';
 
 export default defineConfig({
-  plugins: [preact()],
+  plugins: [
+    preact(),
+    visualizer({
+      filename: './bundle-stats.html',
+      gzipSize: true,
+      brotliSize: true,
+      template: 'treemap'
+    })
+  ],
   // No 'root' property, so it defaults to the project root.
   build: {
     // 'out' is relative to the project root.
@@ -21,6 +30,12 @@ export default defineConfig({
         // Ensure CSS and other assets have predictable names so the extension can reference them.
         assetFileNames: '[name][extname]'
       },
+      treeshake: {
+        moduleSideEffects: false,
+        propertyReadSideEffects: false,
+        tryCatchDeoptimization: false,
+      }
     },
+    chunkSizeWarningLimit: 500
   },
 });
