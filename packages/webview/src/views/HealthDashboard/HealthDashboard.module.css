@@ -1,6 +1,15 @@
-.card {
-    border: 1px solid var(--vscode-panel-border);
-    border-radius: 6px;
-    padding: 12px;
-    background-color: red;
+.root {
+  height: 100vh;
+  display: grid;
+  grid-template-rows: auto 1fr;
+}
+
+.banner {
+  padding: 8px 12px;
+  color: var(--vscode-descriptionForeground);
+}
+
+.graph {
+  height: 100%;
+  border-top: 1px solid var(--vscode-panel-border);
 }

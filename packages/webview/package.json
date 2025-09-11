@@ -11,7 +11,11 @@
   },
   "dependencies": {
     "@kiro/shared": "workspace:*",
-    "preact": "^10.27.1"
+    "preact": "^10.27.1",
+    "cytoscape": "^3.28.1"
+  },
+  "devDependencies": {
+    "@types/cytoscape": "^3.21.0"
   }
 }
 

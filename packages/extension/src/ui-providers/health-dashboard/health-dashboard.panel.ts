@@ -3,6 +3,7 @@ import { getNonce, Events } from '../../shared/runtime';
 import { getEntryUris } from '../asset-manifest';
 import { messageBus } from '../../services/message-bus.service';
 import { registerWebviewWithBus } from '../../services/webview-bus-register.utils';
+import { loadDependencyGraphElements } from '../../services/dep-graph.service';
 
 let currentPanel: vscode.WebviewPanel | undefined;
 
@@ -41,6 +42,26 @@ export function showHealthDashboard(context: vscode.ExtensionContext) {
         registration.dispose();
     });
 
+    // Immediately try to load and send graph data
+    void sendGraphDataToDashboard(context);
+
+    // Listen for explicit graph requests from webview
+    context.subscriptions.push(
+        messageBus.on(Events.DepsRequestGraph, async () => {
+            await sendGraphDataToDashboard(context);
+        })
+    );
+}
+
+async function sendGraphDataToDashboard(context: vscode.ExtensionContext) {
+    try {
+        const elements = await loadDependencyGraphElements(context);
+        const payload = elements ?? { nodes: [], edges: [] };
+        await messageBus.sendTo('dashboard', { type: Events.DepsGraphData, payload });
+    } catch (e) {
+        console.error('[Dashboard] Failed to load graph data:', e);
+        void vscode.window.showInformationMessage('Kiro: Could not load dependency graph.');
+    }
 }
 
 function getHtml(context: vscode.ExtensionContext, webview: vscode.Webview): string {

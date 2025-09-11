@@ -9,6 +9,9 @@
 **/.turbo/
 **/turbo-build.log
 
+# Visualizer reports
+**/bundle-stats.html
+
 node_modules/
 out/
 *.vsix
@@ -17,3 +20,5 @@ out/
 .kiro/settings/mcp.json
 .turbo/**
 .turbo-build.log
+
+.constellation

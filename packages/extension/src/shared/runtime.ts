@@ -1,8 +1,14 @@
+// Graph element contracts used by the extension runtime
+export type GraphNode = { id: string; label?: string; group?: string };
+export type GraphEdge = { id: string; source: string; target: string };
+
 export const Events = {
   OpenDashboard: 'openDashboard',
   UiEmitToast: 'ui:emitToast',
   DashboardOpened: 'dashboard:opened',
   DashboardClosed: 'dashboard:closed',
+  DepsRequestGraph: 'deps:requestGraph',
+  DepsGraphData: 'deps:graphData',
 } as const;
 
 export type EventType = typeof Events[keyof typeof Events];
@@ -12,6 +18,8 @@ export type EventPayloads = {
   [Events.UiEmitToast]: { text: string };
   [Events.DashboardOpened]: { via: 'commandPalette' | 'other' };
   [Events.DashboardClosed]: { } | undefined;
+  [Events.DepsRequestGraph]: { } | undefined;
+  [Events.DepsGraphData]: { nodes: GraphNode[]; edges: GraphEdge[] };
 };
 
 export type BusEvent<K extends EventType = EventType> = {
