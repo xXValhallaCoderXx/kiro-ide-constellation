@@ -9,6 +9,9 @@
 **/.turbo/
 **/turbo-build.log
 
+# Visualizer reports
+**/bundle-stats.html
+
 node_modules/
 out/
 *.vsix
