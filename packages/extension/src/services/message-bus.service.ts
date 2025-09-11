@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { BusEvent, EventType, Events } from '../shared/events';
+import { BusEvent, EventType, Events } from '@kiro/shared';
 
 type Handler<K extends EventType = EventType> = (event: BusEvent<K> & { source: string }) => void | Promise<void>;
 

@@ -1,4 +1,4 @@
-import { Events, EventType, BusEvent, EventPayloads } from '../../../src/shared/events';
+import { Events, EventType, BusEvent, EventPayloads } from '../../../shared/src/shared/events';
 import { getVsCodeApi } from '../vscode';
 
 type Handler<K extends EventType = EventType> = (event: BusEvent<K>) => void | Promise<void>;

@@ -1,9 +1,8 @@
 import * as vscode from 'vscode';
-import { getNonce } from '../../shared/utils/generate-nonce.utils';
+import { getNonce, Events } from '@kiro/shared';
 import { getEntryUris } from '../asset-manifest';
 import { messageBus } from '../../services/message-bus.service';
-import { Events } from '../../shared/events';
-import { registerWebviewWithBus } from '../../shared/utils/event-bus-register.utils';
+import { registerWebviewWithBus } from '../../services/webview-bus-register.utils';
 
 let currentPanel: vscode.WebviewPanel | undefined;
 

@@ -1,7 +1,7 @@
 import * as http from 'node:http';
 import type * as vscode from 'vscode';
 import { messageBus } from './message-bus.service';
-import { Events } from '../shared/events';
+import { Events } from '@kiro/shared';
 
 export interface HttpBridgeOptions {
   host?: string; // defaults to 127.0.0.1
@@ -30,8 +30,8 @@ export function startHttpBridge(context: vscode.ExtensionContext, opts: HttpBrid
       }
 
       // Read and parse JSON body (limit ~1MB)
-      const chunks: Buffer[] = [];
       let total = 0;
+      let raw = '';
       await new Promise<void>((resolve, reject) => {
         req.on('data', (chunk: Buffer) => {
           total += chunk.length;
@@ -39,16 +39,16 @@ export function startHttpBridge(context: vscode.ExtensionContext, opts: HttpBrid
             reject(new Error('Payload too large'));
             return;
           }
-          chunks.push(chunk);
+          raw += chunk.toString('utf8');
         });
         req.on('end', () => resolve());
         req.on('error', (err) => reject(err));
       });
 
       let body: any = undefined;
-      if (chunks.length > 0) {
+      if (raw.length > 0) {
         try {
-          body = JSON.parse(Buffer.concat(chunks).toString('utf8'));
+          body = JSON.parse(raw);
         } catch {
           res.statusCode = 400;
           res.end('Invalid JSON');

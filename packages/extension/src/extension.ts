@@ -3,7 +3,7 @@ import { registerSidebarViews } from './ui-providers/sidebar';
 import { registerHealthDashboard } from './ui-providers/health-dashboard';
 import { showHealthDashboard } from './ui-providers/health-dashboard/health-dashboard.panel';
 import { messageBus } from './services/message-bus.service';
-import { Events } from './shared/events';
+import { Events } from '@kiro/shared';
 import { registerMcpProvider } from './mcp/mcp.provider';
 import { startHttpBridge } from './services/http-bridge.service';
 

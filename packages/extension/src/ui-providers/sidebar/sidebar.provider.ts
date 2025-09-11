@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
-import { getNonce } from '../../shared/utils/generate-nonce.utils';
+import { getNonce } from '@kiro/shared';
 import { getEntryUris } from '../asset-manifest';
-import { registerWebviewWithBus } from '../../shared/utils/event-bus-register.utils';
+import { registerWebviewWithBus } from '../../services/webview-bus-register.utils';
 
 export class SidebarViewProvider implements vscode.WebviewViewProvider {
     public static readonly viewType = 'kiroConstellation.sidebar';

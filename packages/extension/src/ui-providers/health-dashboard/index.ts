@@ -1,8 +1,7 @@
 import * as vscode from 'vscode';
 import { showHealthDashboard } from './health-dashboard.panel';
-import { OPEN_DASHBOARD_COMMAND } from '../../shared/commands';
+import { OPEN_DASHBOARD_COMMAND, Events } from '@kiro/shared';
 import { messageBus } from '../../services/message-bus.service';
-import { Events } from '../../shared/events';
 
 
 export function registerHealthDashboard(context: vscode.ExtensionContext) {
