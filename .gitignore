@@ -1,3 +1,14 @@
+# Ignore build metadata and cache (added by Agent Mode)
+
+# TypeScript incremental build info
+*.tsbuildinfo
+**/*.tsbuildinfo
+
+# Turborepo cache & logs
+.turbo/
+**/.turbo/
+**/turbo-build.log
+
 node_modules/
 out/
 *.vsix

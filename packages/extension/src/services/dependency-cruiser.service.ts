@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import { spawn, type ChildProcess } from 'child_process';
 import * as fs from 'fs/promises';
+import { CONSTELLATION_DIR, CONSTELLATION_DATA_DIR } from '../shared/runtime';
 
 // Minimal subset of dependency-cruiser JSON we'll read for the POC
 interface DepCruiserSummaryViolation {
@@ -115,7 +116,7 @@ export class DependencyCruiserService {
     }
 
     // Exclude heavy/irrelevant folders by default (regex)
-    const excludeRe = 'node_modules|(^|/)out/|(^|/)dist/|\\.turbo|\\.git|\\.vite|\\.vscode|\\.tsbuildinfo$|\\.vsix|(^|/)coverage/';
+    const excludeRe = 'node_modules|(^|/)out/|(^|/)dist/|\\.turbo|\\.git|\\.vite|\\.vscode|\\.tsbuildinfo$|\\.vsix|(^|/)coverage/|(^|/)\\.constellation/';
     args.push('--exclude', excludeRe);
 
     // Include-only when we can narrow scope further
@@ -155,9 +156,11 @@ export class DependencyCruiserService {
     this.output.appendLine(`Dependencies: ${totalDeps}`);
     this.output.appendLine(`Violations: ${summary.violations.length}`);
 
-    // Write JSON next to the analyzed project for easy inspection
-    const outPath = path.join(target.dir, 'dependency-analysis.json');
+    // Write JSON into .constellation/data for the analyzed project
+    const outDir = path.join(target.dir, CONSTELLATION_DIR, CONSTELLATION_DATA_DIR);
+    const outPath = path.join(outDir, 'dependency-analysis.json');
     try {
+      await fs.mkdir(outDir, { recursive: true });
       await fs.writeFile(outPath, JSON.stringify(result, null, 2), 'utf-8');
       this.output.appendLine('');
       this.output.appendLine(`Saved JSON → ${outPath}`);

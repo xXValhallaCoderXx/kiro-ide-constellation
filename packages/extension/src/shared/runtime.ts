@@ -21,6 +21,10 @@ export type BusEvent<K extends EventType = EventType> = {
 
 export const OPEN_DASHBOARD_COMMAND = 'kiro-ide-constellation.openDashboard';
 
+// Constellation workspace data locations
+export const CONSTELLATION_DIR = '.constellation';
+export const CONSTELLATION_DATA_DIR = 'data';
+
 export function getNonce(): string {
   let text = '';
   const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
