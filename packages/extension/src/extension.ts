@@ -6,6 +6,7 @@ import { messageBus } from './services/message-bus.service';
 import { Events } from './shared/runtime';
 import { registerMcpProvider } from './mcp/mcp.provider';
 import { startHttpBridge } from './services/http-bridge.service';
+import { DependencyCruiserService } from './services/dependency-cruiser.service';
 
 export function activate(context: vscode.ExtensionContext) {
 	console.log('Congratulations, your extension "kiro-ide-constellation" is now active!');
@@ -37,6 +38,15 @@ export function activate(context: vscode.ExtensionContext) {
 
 	// Start lightweight HTTP bridge so external processes (e.g., MCP stdio) can emit events
 	startHttpBridge(context);
+
+	// Dependency analysis (POC) — command-driven
+	const depCruiser = new DependencyCruiserService(context);
+	context.subscriptions.push(
+		vscode.commands.registerCommand('kiro.deps.scan', async () => {
+			await depCruiser.analyze();
+		})
+	);
+	context.subscriptions.push(depCruiser);
 }
 
 // This method is called when your extension is deactivated

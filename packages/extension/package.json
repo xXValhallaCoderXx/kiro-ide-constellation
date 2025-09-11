@@ -13,6 +13,7 @@
   "activationEvents": [
     "onStartupFinished",
     "onCommand:kiro-ide-constellation.openDashboard",
+    "onCommand:kiro.deps.scan",
     "onView:kiroConstellation.sidebar"
   ],
   "main": "./out/extension.js",
@@ -46,6 +47,10 @@
       {
         "command": "kiro-ide-constellation.openDashboard",
         "title": "Kiro: Open Dashboard"
+      },
+      {
+        "command": "kiro.deps.scan",
+        "title": "Kiro: Dependency Scan (POC)"
       }
     ]
   },
