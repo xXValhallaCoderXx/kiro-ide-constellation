@@ -1,0 +1,938 @@
+{
+  "version": 1,
+  "generatedAt": "2025-09-13T22:13:55.983Z",
+  "workspaceRoot": "/home/odin/Dungeon/Personal/kiro-ide-constellation",
+  "depcruise": {
+    "modules": [
+      {
+        "source": "eslint.config.mjs",
+        "dependencies": [
+          {
+            "module": "@typescript-eslint/parser",
+            "moduleSystem": "es6",
+            "dynamic": false,
+            "exoticallyRequired": false,
+            "dependencyTypes": [
+              "unknown"
+            ],
+            "resolved": "@typescript-eslint/parser",
+            "coreModule": false,
+            "followable": false,
+            "couldNotResolve": true,
+            "matchesDoNotFollow": false,
+            "circular": false,
+            "valid": true
+          }
+        ],
+        "dependents": [],
+        "orphan": false,
+        "valid": true
+      },
+      {
+        "source": "@typescript-eslint/parser",
+        "followable": false,
+        "coreModule": false,
+        "couldNotResolve": true,
+        "matchesDoNotFollow": false,
+        "dependencyTypes": [
+          "unknown"
+        ],
+        "dependencies": [],
+        "dependents": [
+          "eslint.config.mjs"
+        ],
+        "orphan": false,
+        "valid": true
+      },
+      {
+        "source": "scripts/mcp-clean.mjs",
+        "dependencies": [
+          {
+            "module": "fs/promises",
+            "moduleSystem": "es6",
+            "dynamic": false,
+            "exoticallyRequired": false,
+            "dependencyTypes": [
+              "core",
+              "import"
+            ],
+            "protocol": "node:",
+            "resolved": "fs/promises",
+            "coreModule": true,
+            "followable": false,
+            "couldNotResolve": false,
+            "matchesDoNotFollow": false,
+            "circular": false,
+            "valid": true
+          },
+          {
+            "module": "os",
+            "moduleSystem": "es6",
+            "dynamic": false,
+            "exoticallyRequired": false,
+            "dependencyTypes": [
+              "core",
+              "import"
+            ],
+            "protocol": "node:",
+            "resolved": "os",
+            "coreModule": true,
+            "followable": false,
+            "couldNotResolve": false,
+            "matchesDoNotFollow": false,
+            "circular": false,
+            "valid": true
+          },
+          {
+            "module": "path",
+            "moduleSystem": "es6",
+            "dynamic": false,
+            "exoticallyRequired": false,
+            "dependencyTypes": [
+              "core",
+              "import"
+            ],
+            "protocol": "node:",
+            "resolved": "path",
+            "coreModule": true,
+            "followable": false,
+            "couldNotResolve": false,
+            "matchesDoNotFollow": false,
+            "circular": false,
+            "valid": true
+          }
+        ],
+        "dependents": [],
+        "orphan": false,
+        "valid": true
+      },
+      {
+        "source": "fs/promises",
+        "followable": false,
+        "coreModule": true,
+        "couldNotResolve": false,
+        "matchesDoNotFollow": false,
+        "dependencyTypes": [
+          "core",
+          "import"
+        ],
+        "dependencies": [],
+        "dependents": [
+          "scripts/mcp-clean.mjs",
+          "src/services/mcp-config.service.ts"
+        ],
+        "orphan": false,
+        "valid": true
+      },
+      {
+        "source": "os",
+        "followable": false,
+        "coreModule": true,
+        "couldNotResolve": false,
+        "matchesDoNotFollow": false,
+        "dependencyTypes": [
+          "core",
+          "import"
+        ],
+        "dependencies": [],
+        "dependents": [
+          "scripts/mcp-clean.mjs",
+          "src/services/mcp-config.service.ts"
+        ],
+        "orphan": false,
+        "valid": true
+      },
+      {
+        "source": "path",
+        "followable": false,
+        "coreModule": true,
+        "couldNotResolve": false,
+        "matchesDoNotFollow": false,
+        "dependencyTypes": [
+          "core",
+          "import"
+        ],
+        "dependencies": [],
+        "dependents": [
+          "scripts/mcp-clean.mjs",
+          "src/services/dependency-cruiser.service.ts",
+          "src/services/mcp-config.service.ts",
+          "webview-ui/vite.config.ts"
+        ],
+        "orphan": false,
+        "valid": true
+      },
+      {
+        "source": "src/extension.ts",
+        "dependencies": [
+          {
+            "module": "./services/dependency-cruiser.service.js",
+            "moduleSystem": "cjs",
+            "dynamic": false,
+            "exoticallyRequired": false,
+            "dependencyTypes": [
+              "local",
+              "require"
+            ],
+            "resolved": "src/services/dependency-cruiser.service.ts",
+            "coreModule": false,
+            "followable": true,
+            "couldNotResolve": false,
+            "matchesDoNotFollow": false,
+            "circular": false,
+            "valid": true
+          },
+          {
+            "module": "./services/extension-config.service.js",
+            "moduleSystem": "cjs",
+            "dynamic": false,
+            "exoticallyRequired": false,
+            "dependencyTypes": [
+              "local",
+              "require"
+            ],
+            "resolved": "src/services/extension-config.service.ts",
+            "coreModule": false,
+            "followable": true,
+            "couldNotResolve": false,
+            "matchesDoNotFollow": false,
+            "circular": false,
+            "valid": true
+          },
+          {
+            "module": "./services/mcp-config.service.js",
+            "moduleSystem": "cjs",
+            "dynamic": false,
+            "exoticallyRequired": false,
+            "dependencyTypes": [
+              "local",
+              "require"
+            ],
+            "resolved": "src/services/mcp-config.service.ts",
+            "coreModule": false,
+            "followable": true,
+            "couldNotResolve": false,
+            "matchesDoNotFollow": false,
+            "circular": false,
+            "valid": true
+          },
+          {
+            "module": "./services/node-version.service.js",
+            "moduleSystem": "cjs",
+            "dynamic": false,
+            "exoticallyRequired": false,
+            "dependencyTypes": [
+              "local",
+              "require"
+            ],
+            "resolved": "src/services/node-version.service.ts",
+            "coreModule": false,
+            "followable": true,
+            "couldNotResolve": false,
+            "matchesDoNotFollow": false,
+            "circular": false,
+            "valid": true
+          },
+          {
+            "module": "./services/webview.service.js",
+            "moduleSystem": "es6",
+            "dynamic": true,
+            "exoticallyRequired": false,
+            "dependencyTypes": [
+              "local",
+              "dynamic-import"
+            ],
+            "resolved": "src/services/webview.service.ts",
+            "coreModule": false,
+            "followable": true,
+            "couldNotResolve": false,
+            "matchesDoNotFollow": false,
+            "circular": false,
+            "valid": true
+          },
+          {
+            "module": "./side-panel-view-provider.js",
+            "moduleSystem": "cjs",
+            "dynamic": false,
+            "exoticallyRequired": false,
+            "dependencyTypes": [
+              "local",
+              "require"
+            ],
+            "resolved": "src/side-panel-view-provider.ts",
+            "coreModule": false,
+            "followable": true,
+            "couldNotResolve": false,
+            "matchesDoNotFollow": false,
+            "circular": false,
+            "valid": true
+          }
+        ],
+        "dependents": [],
+        "orphan": false,
+        "valid": true
+      },
+      {
+        "source": "src/services/dependency-cruiser.service.ts",
+        "dependencies": [
+          {
+            "module": "child_process",
+            "moduleSystem": "cjs",
+            "dynamic": false,
+            "exoticallyRequired": false,
+            "dependencyTypes": [
+              "core",
+              "require"
+            ],
+            "resolved": "child_process",
+            "coreModule": true,
+            "followable": false,
+            "couldNotResolve": false,
+            "matchesDoNotFollow": false,
+            "circular": false,
+            "valid": true
+          },
+          {
+            "module": "fs",
+            "moduleSystem": "cjs",
+            "dynamic": false,
+            "exoticallyRequired": false,
+            "dependencyTypes": [
+              "core",
+              "require"
+            ],
+            "resolved": "fs",
+            "coreModule": true,
+            "followable": false,
+            "couldNotResolve": false,
+            "matchesDoNotFollow": false,
+            "circular": false,
+            "valid": true
+          },
+          {
+            "module": "path",
+            "moduleSystem": "cjs",
+            "dynamic": false,
+            "exoticallyRequired": false,
+            "dependencyTypes": [
+              "core",
+              "require"
+            ],
+            "resolved": "path",
+            "coreModule": true,
+            "followable": false,
+            "couldNotResolve": false,
+            "matchesDoNotFollow": false,
+            "circular": false,
+            "valid": true
+          }
+        ],
+        "dependents": [
+          "src/extension.ts"
+        ],
+        "orphan": false,
+        "valid": true
+      },
+      {
+        "source": "child_process",
+        "followable": false,
+        "coreModule": true,
+        "couldNotResolve": false,
+        "matchesDoNotFollow": false,
+        "dependencyTypes": [
+          "core",
+          "require"
+        ],
+        "dependencies": [],
+        "dependents": [
+          "src/services/dependency-cruiser.service.ts",
+          "src/services/mcp-config.service.ts"
+        ],
+        "orphan": false,
+        "valid": true
+      },
+      {
+        "source": "fs",
+        "followable": false,
+        "coreModule": true,
+        "couldNotResolve": false,
+        "matchesDoNotFollow": false,
+        "dependencyTypes": [
+          "core",
+          "require"
+        ],
+        "dependencies": [],
+        "dependents": [
+          "src/services/dependency-cruiser.service.ts"
+        ],
+        "orphan": false,
+        "valid": true
+      },
+      {
+        "source": "src/services/extension-config.service.ts",
+        "dependencies": [
+          {
+            "module": "../shared/constants.js",
+            "moduleSystem": "cjs",
+            "dynamic": false,
+            "exoticallyRequired": false,
+            "dependencyTypes": [
+              "local",
+              "require"
+            ],
+            "resolved": "src/shared/constants.ts",
+            "coreModule": false,
+            "followable": true,
+            "couldNotResolve": false,
+            "matchesDoNotFollow": false,
+            "circular": false,
+            "valid": true
+          }
+        ],
+        "dependents": [
+          "src/extension.ts"
+        ],
+        "orphan": false,
+        "valid": true
+      },
+      {
+        "source": "src/shared/constants.ts",
+        "dependencies": [],
+        "dependents": [
+          "src/services/extension-config.service.ts",
+          "src/mcp.server.ts"
+        ],
+        "orphan": false,
+        "valid": true
+      },
+      {
+        "source": "src/services/mcp-config.service.ts",
+        "dependencies": [
+          {
+            "module": "child_process",
+            "moduleSystem": "cjs",
+            "dynamic": false,
+            "exoticallyRequired": false,
+            "dependencyTypes": [
+              "core",
+              "require"
+            ],
+            "protocol": "node:",
+            "resolved": "child_process",
+            "coreModule": true,
+            "followable": false,
+            "couldNotResolve": false,
+            "matchesDoNotFollow": false,
+            "circular": false,
+            "valid": true
+          },
+          {
+            "module": "fs/promises",
+            "moduleSystem": "cjs",
+            "dynamic": false,
+            "exoticallyRequired": false,
+            "dependencyTypes": [
+              "core",
+              "require"
+            ],
+            "protocol": "node:",
+            "resolved": "fs/promises",
+            "coreModule": true,
+            "followable": false,
+            "couldNotResolve": false,
+            "matchesDoNotFollow": false,
+            "circular": false,
+            "valid": true
+          },
+          {
+            "module": "os",
+            "moduleSystem": "cjs",
+            "dynamic": false,
+            "exoticallyRequired": false,
+            "dependencyTypes": [
+              "core",
+              "require"
+            ],
+            "protocol": "node:",
+            "resolved": "os",
+            "coreModule": true,
+            "followable": false,
+            "couldNotResolve": false,
+            "matchesDoNotFollow": false,
+            "circular": false,
+            "valid": true
+          },
+          {
+            "module": "path",
+            "moduleSystem": "cjs",
+            "dynamic": false,
+            "exoticallyRequired": false,
+            "dependencyTypes": [
+              "core",
+              "require"
+            ],
+            "protocol": "node:",
+            "resolved": "path",
+            "coreModule": true,
+            "followable": false,
+            "couldNotResolve": false,
+            "matchesDoNotFollow": false,
+            "circular": false,
+            "valid": true
+          }
+        ],
+        "dependents": [
+          "src/extension.ts"
+        ],
+        "orphan": false,
+        "valid": true
+      },
+      {
+        "source": "src/services/node-version.service.ts",
+        "dependencies": [],
+        "dependents": [
+          "src/extension.ts"
+        ],
+        "orphan": false,
+        "valid": true
+      },
+      {
+        "source": "src/services/webview.service.ts",
+        "dependencies": [],
+        "dependents": [
+          "src/extension.ts",
+          "src/side-panel-view-provider.ts"
+        ],
+        "orphan": false,
+        "valid": true
+      },
+      {
+        "source": "src/side-panel-view-provider.ts",
+        "dependencies": [
+          {
+            "module": "./services/messenger.service.js",
+            "moduleSystem": "es6",
+            "dynamic": true,
+            "exoticallyRequired": false,
+            "dependencyTypes": [
+              "local",
+              "dynamic-import"
+            ],
+            "resolved": "src/services/messenger.service.ts",
+            "coreModule": false,
+            "followable": true,
+            "couldNotResolve": false,
+            "matchesDoNotFollow": false,
+            "circular": false,
+            "valid": true
+          },
+          {
+            "module": "./services/webview.service.js",
+            "moduleSystem": "cjs",
+            "dynamic": false,
+            "exoticallyRequired": false,
+            "dependencyTypes": [
+              "local",
+              "require"
+            ],
+            "resolved": "src/services/webview.service.ts",
+            "coreModule": false,
+            "followable": true,
+            "couldNotResolve": false,
+            "matchesDoNotFollow": false,
+            "circular": false,
+            "valid": true
+          }
+        ],
+        "dependents": [
+          "src/extension.ts"
+        ],
+        "orphan": false,
+        "valid": true
+      },
+      {
+        "source": "src/services/messenger.service.ts",
+        "dependencies": [],
+        "dependents": [
+          "src/side-panel-view-provider.ts"
+        ],
+        "orphan": false,
+        "valid": true
+      },
+      {
+        "source": "src/mcp.server.ts",
+        "dependencies": [
+          {
+            "module": "./shared/constants.js",
+            "moduleSystem": "cjs",
+            "dynamic": false,
+            "exoticallyRequired": false,
+            "dependencyTypes": [
+              "local",
+              "require"
+            ],
+            "resolved": "src/shared/constants.ts",
+            "coreModule": false,
+            "followable": true,
+            "couldNotResolve": false,
+            "matchesDoNotFollow": false,
+            "circular": false,
+            "valid": true
+          },
+          {
+            "module": "@modelcontextprotocol/sdk/server/mcp.js",
+            "moduleSystem": "cjs",
+            "dynamic": false,
+            "exoticallyRequired": false,
+            "dependencyTypes": [
+              "unknown"
+            ],
+            "resolved": "@modelcontextprotocol/sdk/server/mcp.js",
+            "coreModule": false,
+            "followable": false,
+            "couldNotResolve": true,
+            "matchesDoNotFollow": false,
+            "circular": false,
+            "valid": true
+          },
+          {
+            "module": "@modelcontextprotocol/sdk/server/stdio.js",
+            "moduleSystem": "cjs",
+            "dynamic": false,
+            "exoticallyRequired": false,
+            "dependencyTypes": [
+              "unknown"
+            ],
+            "resolved": "@modelcontextprotocol/sdk/server/stdio.js",
+            "coreModule": false,
+            "followable": false,
+            "couldNotResolve": true,
+            "matchesDoNotFollow": false,
+            "circular": false,
+            "valid": true
+          }
+        ],
+        "dependents": [],
+        "orphan": false,
+        "valid": true
+      },
+      {
+        "source": "@modelcontextprotocol/sdk/server/mcp.js",
+        "followable": false,
+        "coreModule": false,
+        "couldNotResolve": true,
+        "matchesDoNotFollow": false,
+        "dependencyTypes": [
+          "unknown"
+        ],
+        "dependencies": [],
+        "dependents": [
+          "src/mcp.server.ts"
+        ],
+        "orphan": false,
+        "valid": true
+      },
+      {
+        "source": "@modelcontextprotocol/sdk/server/stdio.js",
+        "followable": false,
+        "coreModule": false,
+        "couldNotResolve": true,
+        "matchesDoNotFollow": false,
+        "dependencyTypes": [
+          "unknown"
+        ],
+        "dependencies": [],
+        "dependents": [
+          "src/mcp.server.ts"
+        ],
+        "orphan": false,
+        "valid": true
+      },
+      {
+        "source": "src/test/extension.test.ts",
+        "dependencies": [
+          {
+            "module": "assert",
+            "moduleSystem": "cjs",
+            "dynamic": false,
+            "exoticallyRequired": false,
+            "dependencyTypes": [
+              "core",
+              "require"
+            ],
+            "resolved": "assert",
+            "coreModule": true,
+            "followable": false,
+            "couldNotResolve": false,
+            "matchesDoNotFollow": false,
+            "circular": false,
+            "valid": true
+          }
+        ],
+        "dependents": [],
+        "orphan": false,
+        "valid": true
+      },
+      {
+        "source": "assert",
+        "followable": false,
+        "coreModule": true,
+        "couldNotResolve": false,
+        "matchesDoNotFollow": false,
+        "dependencyTypes": [
+          "core",
+          "require"
+        ],
+        "dependencies": [],
+        "dependents": [
+          "src/test/extension.test.ts"
+        ],
+        "orphan": false,
+        "valid": true
+      },
+      {
+        "source": "webview-ui/src/components/App.tsx",
+        "dependencies": [
+          {
+            "module": "../views/GraphView",
+            "moduleSystem": "cjs",
+            "dynamic": false,
+            "exoticallyRequired": false,
+            "dependencyTypes": [
+              "local",
+              "require"
+            ],
+            "resolved": "webview-ui/src/views/GraphView.tsx",
+            "coreModule": false,
+            "followable": true,
+            "couldNotResolve": false,
+            "matchesDoNotFollow": false,
+            "circular": false,
+            "valid": true
+          },
+          {
+            "module": "../views/SidePanelView",
+            "moduleSystem": "cjs",
+            "dynamic": false,
+            "exoticallyRequired": false,
+            "dependencyTypes": [
+              "local",
+              "require"
+            ],
+            "resolved": "webview-ui/src/views/SidePanelView.tsx",
+            "coreModule": false,
+            "followable": true,
+            "couldNotResolve": false,
+            "matchesDoNotFollow": false,
+            "circular": false,
+            "valid": true
+          }
+        ],
+        "dependents": [
+          "webview-ui/src/main.tsx"
+        ],
+        "orphan": false,
+        "valid": true
+      },
+      {
+        "source": "webview-ui/src/views/GraphView.tsx",
+        "dependencies": [],
+        "dependents": [
+          "webview-ui/src/components/App.tsx"
+        ],
+        "orphan": false,
+        "valid": true
+      },
+      {
+        "source": "webview-ui/src/views/SidePanelView.tsx",
+        "dependencies": [
+          {
+            "module": "../components/Button",
+            "moduleSystem": "cjs",
+            "dynamic": false,
+            "exoticallyRequired": false,
+            "dependencyTypes": [
+              "local",
+              "require"
+            ],
+            "resolved": "webview-ui/src/components/Button.tsx",
+            "coreModule": false,
+            "followable": true,
+            "couldNotResolve": false,
+            "matchesDoNotFollow": false,
+            "circular": false,
+            "valid": true
+          },
+          {
+            "module": "../services/messenger",
+            "moduleSystem": "cjs",
+            "dynamic": false,
+            "exoticallyRequired": false,
+            "dependencyTypes": [
+              "local",
+              "require"
+            ],
+            "resolved": "webview-ui/src/services/messenger.ts",
+            "coreModule": false,
+            "followable": true,
+            "couldNotResolve": false,
+            "matchesDoNotFollow": false,
+            "circular": false,
+            "valid": true
+          }
+        ],
+        "dependents": [
+          "webview-ui/src/components/App.tsx"
+        ],
+        "orphan": false,
+        "valid": true
+      },
+      {
+        "source": "webview-ui/src/components/Button.tsx",
+        "dependencies": [],
+        "dependents": [
+          "webview-ui/src/views/SidePanelView.tsx"
+        ],
+        "orphan": false,
+        "valid": true
+      },
+      {
+        "source": "webview-ui/src/services/messenger.ts",
+        "dependencies": [],
+        "dependents": [
+          "webview-ui/src/views/SidePanelView.tsx"
+        ],
+        "orphan": false,
+        "valid": true
+      },
+      {
+        "source": "webview-ui/src/main.tsx",
+        "dependencies": [
+          {
+            "module": "./components/App.tsx",
+            "moduleSystem": "cjs",
+            "dynamic": false,
+            "exoticallyRequired": false,
+            "dependencyTypes": [
+              "local",
+              "require"
+            ],
+            "resolved": "webview-ui/src/components/App.tsx",
+            "coreModule": false,
+            "followable": true,
+            "couldNotResolve": false,
+            "matchesDoNotFollow": false,
+            "circular": false,
+            "valid": true
+          },
+          {
+            "module": "./styles/global.css",
+            "moduleSystem": "cjs",
+            "dynamic": false,
+            "exoticallyRequired": false,
+            "dependencyTypes": [
+              "local",
+              "require"
+            ],
+            "resolved": "webview-ui/src/styles/global.css",
+            "coreModule": false,
+            "followable": false,
+            "couldNotResolve": false,
+            "matchesDoNotFollow": false,
+            "circular": false,
+            "valid": true
+          }
+        ],
+        "dependents": [],
+        "orphan": false,
+        "valid": true
+      },
+      {
+        "source": "webview-ui/src/styles/global.css",
+        "followable": false,
+        "coreModule": false,
+        "couldNotResolve": false,
+        "matchesDoNotFollow": false,
+        "dependencyTypes": [
+          "local",
+          "require"
+        ],
+        "dependencies": [],
+        "dependents": [
+          "webview-ui/src/main.tsx"
+        ],
+        "orphan": false,
+        "valid": true
+      },
+      {
+        "source": "webview-ui/src/types/vscode-webview.d.ts",
+        "dependencies": [],
+        "dependents": [],
+        "orphan": true,
+        "valid": true
+      },
+      {
+        "source": "webview-ui/vite.config.ts",
+        "dependencies": [
+          {
+            "module": "path",
+            "moduleSystem": "cjs",
+            "dynamic": false,
+            "exoticallyRequired": false,
+            "dependencyTypes": [
+              "core",
+              "require"
+            ],
+            "protocol": "node:",
+            "resolved": "path",
+            "coreModule": true,
+            "followable": false,
+            "couldNotResolve": false,
+            "matchesDoNotFollow": false,
+            "circular": false,
+            "valid": true
+          }
+        ],
+        "dependents": [],
+        "orphan": false,
+        "valid": true
+      }
+    ],
+    "summary": {
+      "violations": [],
+      "error": 0,
+      "warn": 0,
+      "info": 0,
+      "ignore": 0,
+      "totalCruised": 31,
+      "totalDependenciesCruised": 31,
+      "optionsUsed": {
+        "baseDir": "/home/odin/Dungeon/Personal/kiro-ide-constellation",
+        "combinedDependencies": false,
+        "detectJSDocImports": false,
+        "exclude": {
+          "path": "node_modules|dist|out|build|coverage|\\.git|\\.vscode|\\.constellation"
+        },
+        "exoticRequireStrings": [],
+        "externalModuleResolutionStrategy": "node_modules",
+        "metrics": false,
+        "moduleSystems": [
+          "es6",
+          "cjs",
+          "tsd",
+          "amd"
+        ],
+        "outputTo": "-",
+        "outputType": "json",
+        "preserveSymlinks": false,
+        "skipAnalysisNotInRules": false,
+        "tsConfig": {
+          "fileName": "/home/odin/Dungeon/Personal/kiro-ide-constellation/tsconfig.json"
+        },
+        "tsPreCompilationDeps": false,
+        "args": "."
+      },
+      "ruleSetUsed": {}
+    }
+  }
+}
