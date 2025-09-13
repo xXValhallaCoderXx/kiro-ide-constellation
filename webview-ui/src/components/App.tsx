@@ -1,16 +1,13 @@
-import { GraphDashboard } from './GraphDashboard'
-import { Button } from './Button'
+import { SidePanelView } from '../views/SidePanelView'
+import { GraphView } from '../views/GraphView'
 
 export function App() {
-  return (
-    <div>
-      <h1>Hello world</h1>
-      <p>Welcome to Kiro Constellationsss.</p>
-      <GraphDashboard />
-      <div style={{ marginTop: 8 }}>
-        <Button onClick={() => console.log('clicked')}>Sample Button</Button>
-      </div>
-    </div>
-  )
+  const root = document.getElementById('root') as HTMLElement | null
+  const view = root?.dataset.view ?? 'sidepanel'
+
+  if (view === 'graph') {
+    return <GraphView />
+  }
+  return <SidePanelView />
 }
 

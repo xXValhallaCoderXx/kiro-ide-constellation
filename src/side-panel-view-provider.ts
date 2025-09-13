@@ -7,6 +7,13 @@ export class SidePanelViewProvider implements vscode.WebviewViewProvider {
 
   resolveWebviewView(webviewView: vscode.WebviewView): void | Thenable<void> {
     const { webview } = webviewView;
+
+    // Handle messages from the webview (e.g., open Graph View)
+    webview.onDidReceiveMessage((msg) => {
+      if (msg?.type === 'open-graph-view') {
+        void vscode.commands.executeCommand('constellation.openGraphView');
+      }
+    });
     webview.options = {
       enableScripts: true,
       localResourceRoots: [
@@ -39,7 +46,7 @@ export class SidePanelViewProvider implements vscode.WebviewViewProvider {
   </style>
 </head>
 <body>
-  <div id="root">Hello world</div>
+  <div id="root" data-view="sidepanel"></div>
   <script nonce="${nonce}" src="${scriptUri}"></script>
 </body>
 </html>`;

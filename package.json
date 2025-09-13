@@ -31,7 +31,8 @@
     "commands": [
       { "command": "constellation.selfTest", "title": "Constellation: Self-test MCP server" },
       { "command": "constellation.openUserMcpConfig", "title": "Constellation: Open user MCP config" },
-      { "command": "constellation.scanDependencies", "title": "Constellation: Scan Dependencies" }
+      { "command": "constellation.scanDependencies", "title": "Constellation: Scan Dependencies" },
+      { "command": "constellation.openGraphView", "title": "Constellation: Open Graph View" }
     ],
     "configuration": {
       "title": "Constellation",

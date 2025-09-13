@@ -4,6 +4,7 @@ import { upsertUserMcpConfig, maybeWriteWorkspaceConfig, selfTest } from "./serv
 import { isNodeVersionSupported } from "./services/node-version.service.js";
 import { SidePanelViewProvider } from "./side-panel-view-provider.js";
 import { runScan } from "./services/dependency-cruiser.service.js";
+import * as path from "node:path";
 
 export async function activate(context: vscode.ExtensionContext) {
   try {
@@ -86,6 +87,45 @@ export async function activate(context: vscode.ExtensionContext) {
               console.error('Manual dependency scan failed:', err?.message ?? String(err));
               void vscode.window.showErrorMessage(`Dependency scan failed: ${err?.message ?? String(err)}`);
             }
+          }),
+          vscode.commands.registerCommand("constellation.openGraphView", async () => {
+            // Open a new editor tab with a webview that renders GraphView
+            const panel = vscode.window.createWebviewPanel(
+              'constellation.graph',
+              'Constellation Graph',
+              vscode.ViewColumn.Active,
+              {
+                enableScripts: true,
+                localResourceRoots: [
+                  vscode.Uri.joinPath(context.extensionUri, 'out'),
+                  vscode.Uri.joinPath(context.extensionUri, 'out', 'ui'),
+                ],
+              }
+            );
+
+            const scriptUri = panel.webview.asWebviewUri(
+              vscode.Uri.joinPath(context.extensionUri, 'out', 'ui', 'main.js')
+            );
+            const styleUri = panel.webview.asWebviewUri(
+              vscode.Uri.joinPath(context.extensionUri, 'out', 'ui', 'style.css')
+            );
+            const nonce = Math.random().toString(36).slice(2);
+
+            panel.webview.html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${panel.webview.cspSource} https:; style-src 'unsafe-inline' ${panel.webview.cspSource}; script-src 'nonce-${nonce}' ${panel.webview.cspSource};" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="${styleUri}" />
+  <title>Constellation Graph</title>
+  <style>body,html{margin:0;padding:0}#root{padding:8px;font-family: var(--vscode-font-family); color: var(--vscode-foreground);}</style>
+</head>
+<body>
+  <div id="root" data-view="graph"></div>
+  <script nonce="${nonce}" src="${scriptUri}"></script>
+</body>
+</html>`;
           })
         );
       } catch (err: any) {
