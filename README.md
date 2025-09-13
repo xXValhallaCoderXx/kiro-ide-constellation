@@ -32,6 +32,7 @@ Docs
 - docs/usage.md — build/run/verify and open the side panel UI
 - docs/configuration.md — user vs workspace config, settings
 - docs/development.md — dev loop, watchers (tsc + Vite), debug profiles
+- docs/events.md — event/messaging patterns (webview messaging + HTTP bridge)
 - docs/troubleshooting.md — common issues (including blank side panel)
 
 License

@@ -131,11 +131,11 @@ function spawnScanProcess(cliPath: string, cliArgs: string[], cwd: string): Prom
             cwd
         });
 
-        // Set up 60-second timeout
+        // Set up 30-second timeout (Requirements: R2.4)
         timeoutHandle = setTimeout(() => {
             if (!isResolved) {
                 isResolved = true;
-                console.warn('Dependency scan timed out after 60 seconds, killing process');
+                console.warn('Dependency scan timed out after 30 seconds, killing process');
                 child.kill('SIGTERM');
 
                 // Force kill if SIGTERM doesn't work
@@ -147,7 +147,7 @@ function spawnScanProcess(cliPath: string, cliArgs: string[], cwd: string): Prom
 
                 reject(new Error('Scan process timed out'));
             }
-        }, 60000);
+        }, 30000);
 
         // Collect stdout data
         child.stdout?.on('data', (data: Buffer) => {

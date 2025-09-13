@@ -4,11 +4,14 @@ import { upsertUserMcpConfig, maybeWriteWorkspaceConfig, selfTest } from "./serv
 import { isNodeVersionSupported } from "./services/node-version.service.js";
 import { SidePanelViewProvider } from "./side-panel-view-provider.js";
 import { runScan } from "./services/dependency-cruiser.service.js";
+import { startHttpBridge } from "./services/http-bridge.service.js";
+
+let graphPanel: vscode.WebviewPanel | undefined;
 
 export async function activate(context: vscode.ExtensionContext) {
   try {
     // Register side panel webview provider (visible when user clicks the Activity Bar icon)
-    const provider = new SidePanelViewProvider(context.extensionUri);
+    const provider = new SidePanelViewProvider(context.extensionUri, context);
     context.subscriptions.push(
       vscode.window.registerWebviewViewProvider(SidePanelViewProvider.viewType, provider)
     );
@@ -28,15 +31,19 @@ export async function activate(context: vscode.ExtensionContext) {
         // Path to compiled MCP server file
         const serverJs = vscode.Uri.joinPath(context.extensionUri, "out", "mcp.server.js").fsPath;
 
+        // Start local HTTP bridge for webview commands
+        const { port: bridgePort, token: bridgeToken } = await startHttpBridge(context);
+
         // Server ID (namespacing)
         const serverId = getEffectiveServerId();
 
         // Write/merge Kiro MCP user config
         const nodeBin = resolveNodeBin();
-        const userCfgPath = await upsertUserMcpConfig(nodeBin, serverJs, serverId);
+        const extraEnv = { CONSTELLATION_BRIDGE_PORT: String(bridgePort), CONSTELLATION_BRIDGE_TOKEN: bridgeToken };
+        const userCfgPath = await upsertUserMcpConfig(nodeBin, serverJs, serverId, extraEnv);
 
         // Optionally write workspace config
-        await maybeWriteWorkspaceConfig(nodeBin, serverJs, serverId);
+        await maybeWriteWorkspaceConfig(nodeBin, serverJs, serverId, extraEnv);
 
         // Self-test: can we boot the server quickly?
         const okTest = await selfTest(nodeBin, serverJs);
@@ -86,6 +93,59 @@ export async function activate(context: vscode.ExtensionContext) {
               console.error('Manual dependency scan failed:', err?.message ?? String(err));
               void vscode.window.showErrorMessage(`Dependency scan failed: ${err?.message ?? String(err)}`);
             }
+          }),
+          vscode.commands.registerCommand("constellation.openGraphView", async () => {
+            // Singleton: if already open, just reveal
+            if (graphPanel) {
+              graphPanel.reveal(vscode.ViewColumn.Active, true);
+              return;
+            }
+            graphPanel = vscode.window.createWebviewPanel(
+              'constellation.graphPanel',
+              'Constellation Graph',
+              vscode.ViewColumn.Active,
+              {
+                enableScripts: true,
+                retainContextWhenHidden: true,
+                localResourceRoots: [
+                  vscode.Uri.joinPath(context.extensionUri, 'out'),
+                  vscode.Uri.joinPath(context.extensionUri, 'out', 'ui'),
+                ],
+              }
+            );
+            
+            // Set up message handling for graph panel
+            const messageDisposable = graphPanel.webview.onDidReceiveMessage((msg) => {
+              import('./services/messenger.service.js').then(({ handleWebviewMessage }) =>
+                handleWebviewMessage(msg, {
+                  revealGraphView: () => void vscode.commands.executeCommand('constellation.openGraphView'),
+                  log: (s) => console.log(s),
+                  postMessage: (message) => graphPanel?.webview.postMessage(message),
+                  extensionContext: context,
+                  openFile: async (path: string) => {
+                    try {
+                      const doc = await vscode.workspace.openTextDocument(vscode.Uri.file(path));
+                      await vscode.window.showTextDocument(doc);
+                    } catch (error) {
+                      console.error('Failed to open file:', path, error);
+                    }
+                  },
+                  triggerScan: async () => {
+                    const { runScan } = await import('./services/dependency-cruiser.service.js');
+                    await runScan(context);
+                  }
+                })
+              ).catch(() => {/* ignore */})
+            });
+            
+            const { renderHtml } = await import('./services/webview.service.js');
+            graphPanel.webview.html = renderHtml(graphPanel.webview, context.extensionUri, 'graph', 'Constellation Graph');
+            
+            // Ensure proper cleanup of message handlers on panel disposal
+            graphPanel.onDidDispose(() => { 
+              messageDisposable.dispose();
+              graphPanel = undefined; 
+            });
           })
         );
       } catch (err: any) {
