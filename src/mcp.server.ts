@@ -1,8 +1,9 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
+import { DEFAULT_SERVER_ID, getServerIdFromEnv } from "./shared/constants.js";
 
-const SERVER_ID = process.env.CONSTELLATION_SERVER_ID ?? "constellation-mcp";
+const SERVER_ID = getServerIdFromEnv() ?? DEFAULT_SERVER_ID;
 
 const server = new McpServer({
   name: SERVER_ID,
@@ -28,7 +29,7 @@ server.registerTool(
     description: "Replies with the same text you send.",
     inputSchema: { message: z.string() },
   },
-  async ({ message }) => ({ content: [{ type: "text", text: `Response: ${message}` }] })
+  async ({ message }) => ({ content: [{ type: "text", text: message }] })
 );
 
 async function main() {
@@ -47,3 +48,4 @@ main().catch((err) => {
   console.error(err);
   process.exit(1);
 });
+
