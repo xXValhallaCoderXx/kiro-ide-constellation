@@ -1,1 +1,0 @@
-export const OPEN_DASHBOARD_COMMAND = 'kiro-ide-constellation.openDashboard';
