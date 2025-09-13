@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import { renderHtml } from "./services/webview.service.js";
 
 export class SidePanelViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = "constellation.sidePanel";
@@ -22,42 +23,6 @@ export class SidePanelViewProvider implements vscode.WebviewViewProvider {
       ],
     };
 
-    const scriptUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this.extensionUri, "out", "ui", "main.js")
-    );
-    const styleUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this.extensionUri, "out", "ui", "style.css")
-    );
-
-    const nonce = getNonce();
-
-    webview.html = /* html */ `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${webview.cspSource} https:; style-src 'unsafe-inline' ${webview.cspSource}; script-src 'nonce-${nonce}' ${webview.cspSource};" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="${styleUri}" />
-  <title>Constellation</title>
-  <style>
-    /* Minimal fallback styling */
-    body, html { padding: 0; margin: 0; }
-    #root { padding: 8px; font-family: var(--vscode-font-family); color: var(--vscode-foreground); }
-  </style>
-</head>
-<body>
-  <div id="root" data-view="sidepanel"></div>
-  <script nonce="${nonce}" src="${scriptUri}"></script>
-</body>
-</html>`;
+    webview.html = renderHtml(webview, this.extensionUri, "sidepanel", "Constellation");
   }
-}
-
-function getNonce() {
-  let text = "";
-  const possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  for (let i = 0; i < 32; i++) {
-    text += possible.charAt(Math.floor(Math.random() * possible.length));
-  }
-  return text;
 }

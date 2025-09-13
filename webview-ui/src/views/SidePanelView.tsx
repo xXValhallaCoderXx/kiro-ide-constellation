@@ -1,7 +1,7 @@
 import { Button } from '../components/Button'
 
-// Simple event service for cross-view communication
-const vscodeApi = acquireVsCodeApi?.() as any | undefined
+// Simple event service for cross-view communication (typed via global declaration in src/types)
+const vscodeApi = typeof acquireVsCodeApi === 'function' ? acquireVsCodeApi() : undefined
 
 export function SidePanelView() {
   const openGraph = () => {
