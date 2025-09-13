@@ -4,7 +4,7 @@ import * as os from "node:os";
 import * as path from "node:path";
 import { spawn } from "node:child_process";
 
-export async function upsertUserMcpConfig(nodeBin: string, serverJs: string, serverId: string): Promise<string> {
+export async function upsertUserMcpConfig(nodeBin: string, serverJs: string, serverId: string, extraEnv: Record<string, string> = {}): Promise<string> {
   const userDir = path.join(os.homedir(), ".kiro", "settings");
   const userCfgPath = path.join(userDir, "mcp.json");
   await fs.mkdir(userDir, { recursive: true });
@@ -21,7 +21,7 @@ export async function upsertUserMcpConfig(nodeBin: string, serverJs: string, ser
   cfg.mcpServers[serverId] = {
     command: nodeBin,
     args: [serverJs],
-    env: { CONSTELLATION_SERVER_ID: serverId },
+    env: { CONSTELLATION_SERVER_ID: serverId, ...extraEnv },
     disabled: false,
     autoApprove: ["ping", "echo"],
   };
@@ -30,7 +30,7 @@ export async function upsertUserMcpConfig(nodeBin: string, serverJs: string, ser
   return userCfgPath;
 }
 
-export async function maybeWriteWorkspaceConfig(nodeBin: string, serverJs: string, serverId: string): Promise<void> {
+export async function maybeWriteWorkspaceConfig(nodeBin: string, serverJs: string, serverId: string, extraEnv: Record<string, string> = {}): Promise<void> {
   const writeWorkspace = vscode.workspace
     .getConfiguration("constellation")
     .get<boolean>("writeWorkspaceMcpConfig", false);
@@ -59,7 +59,7 @@ export async function maybeWriteWorkspaceConfig(nodeBin: string, serverJs: strin
     cfg.mcpServers[serverId] = {
       command: nodeBin,
       args: [serverJs],
-      env: { CONSTELLATION_SERVER_ID: serverId },
+      env: { CONSTELLATION_SERVER_ID: serverId, ...extraEnv },
       disabled: false,
       autoApprove: ["ping", "echo"],
     };

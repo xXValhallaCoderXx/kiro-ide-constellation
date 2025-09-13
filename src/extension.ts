@@ -4,6 +4,7 @@ import { upsertUserMcpConfig, maybeWriteWorkspaceConfig, selfTest } from "./serv
 import { isNodeVersionSupported } from "./services/node-version.service.js";
 import { SidePanelViewProvider } from "./side-panel-view-provider.js";
 import { runScan } from "./services/dependency-cruiser.service.js";
+import { startHttpBridge } from "./services/http-bridge.service.js";
 
 let graphPanel: vscode.WebviewPanel | undefined;
 
@@ -30,15 +31,19 @@ export async function activate(context: vscode.ExtensionContext) {
         // Path to compiled MCP server file
         const serverJs = vscode.Uri.joinPath(context.extensionUri, "out", "mcp.server.js").fsPath;
 
+        // Start local HTTP bridge for webview commands
+        const { port: bridgePort, token: bridgeToken } = await startHttpBridge(context);
+
         // Server ID (namespacing)
         const serverId = getEffectiveServerId();
 
         // Write/merge Kiro MCP user config
         const nodeBin = resolveNodeBin();
-        const userCfgPath = await upsertUserMcpConfig(nodeBin, serverJs, serverId);
+        const extraEnv = { CONSTELLATION_BRIDGE_PORT: String(bridgePort), CONSTELLATION_BRIDGE_TOKEN: bridgeToken };
+        const userCfgPath = await upsertUserMcpConfig(nodeBin, serverJs, serverId, extraEnv);
 
         // Optionally write workspace config
-        await maybeWriteWorkspaceConfig(nodeBin, serverJs, serverId);
+        await maybeWriteWorkspaceConfig(nodeBin, serverJs, serverId, extraEnv);
 
         // Self-test: can we boot the server quickly?
         const okTest = await selfTest(nodeBin, serverJs);

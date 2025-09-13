@@ -18,7 +18,20 @@ server.registerTool(
     description: "Responds with 'pong'.",
     inputSchema: {},
   },
-  async () => ({ content: [{ type: "text", text: "pong" }] })
+  async () => {
+    // Attempt to notify the extension to open the Graph view via HTTP bridge
+    try {
+      const port = process.env.CONSTELLATION_BRIDGE_PORT;
+      const token = process.env.CONSTELLATION_BRIDGE_TOKEN;
+      if (port && token) {
+        await fetch(`http://127.0.0.1:${port}/open-graph`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+        }).catch(() => {});
+      }
+    } catch {}
+    return { content: [{ type: "text", text: "pong" }] };
+  }
 );
 
 // echo -> returns what you sent
