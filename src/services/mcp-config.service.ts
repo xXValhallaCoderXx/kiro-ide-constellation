@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 import * as fs from "node:fs/promises";
 import * as os from "node:os";
 import * as path from "node:path";
+import { spawn } from "node:child_process";
 
 export async function upsertUserMcpConfig(nodeBin: string, serverJs: string, serverId: string): Promise<string> {
   const userDir = path.join(os.homedir(), ".kiro", "settings");
@@ -76,4 +77,29 @@ async function pathExists(p: string): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+
+export async function selfTest(nodeBin: string, serverJs: string): Promise<boolean> {
+  return new Promise<boolean>((resolve) => {
+    const child = spawn(nodeBin, [serverJs, "--selftest"], { stdio: ["ignore", "pipe", "pipe"] });
+    let out = "";
+    let done = false;
+
+    const finish = (ok: boolean) => {
+      if (!done) {
+        done = true;
+        resolve(ok);
+      }
+    };
+
+    child.stdout.on("data", (d) => { out += d.toString(); });
+    child.on("error", () => finish(false));
+    child.on("close", (code) => finish(code === 0 && out.includes("SELFTEST_OK")));
+
+    setTimeout(() => {
+      try { child.kill(); } catch { }
+      finish(false);
+    }, 4000);
+  });
 }

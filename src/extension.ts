@@ -1,7 +1,6 @@
 import * as vscode from "vscode";
 import { getEffectiveServerId, resolveNodeBin } from "./services/extension-config.service.js";
-import { upsertUserMcpConfig, maybeWriteWorkspaceConfig } from "./services/mcp-config.service.js";
-import { selfTest } from "./services/self-test.service.js";
+import { upsertUserMcpConfig, maybeWriteWorkspaceConfig, selfTest } from "./services/mcp-config.service.js";
 import { isNodeVersionSupported } from "./services/node-version.service.js";
 
 export async function activate(context: vscode.ExtensionContext) {
