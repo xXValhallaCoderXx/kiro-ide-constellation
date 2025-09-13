@@ -29,6 +29,8 @@ kiro-constellation/
 │  ├─ extension.ts                # activation, MCP config upsert, self-test, toasts, commands, registers webview provider
 │  ├─ side-panel-view-provider.ts # WebviewViewProvider for the Activity Bar side panel
 │  └─ mcp.server.ts               # minimal MCP server (stdio) with ping/echo + --selftest
+├─ src/services/
+│  └─ dependency-cruiser.service.ts # runScan() integrates dependency-cruiser (background scan)
 ├─ webview-ui/                    # UI source (Preact + Vite)
 │  ├─ index.html
 │  ├─ vite.config.ts              # outputs to ../out/ui
@@ -48,6 +50,13 @@ Side panel UI
 - The extension contributes a Constellation icon to the Activity Bar which opens a side panel.
 - The side panel is a webview backed by a Preact app (bundled via Vite) that renders into #root.
 - The UI assets are built into out/ui and loaded via webview.asWebviewUri.
+
+Dependency scan (background)
+- On activation the extension runs a background dependency scan of the first workspace folder using dependency-cruiser.
+- It auto-detects a dependency-cruiser config if present (.dependency-cruiser.{js,cjs,mjs} or dependency-cruiser.config.{js,cjs}); otherwise it runs with --no-config.
+- It also auto-detects tsconfig.json and passes it as --ts-config when present.
+- Output is written to ./.constellation/data/codebase-dependencies.json.
+- You can re-run the scan any time via the command palette: "Constellation: Scan Dependencies".
 
 What the extension writes
 - User-level MCP config: ~/.kiro/settings/mcp.json

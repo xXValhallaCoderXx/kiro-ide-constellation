@@ -9,7 +9,8 @@ On activation the extension:
 1. Verifies Node.js 18+.
 2. Upserts ~/.kiro/settings/mcp.json with an entry named `constellation-mcp` (or a namespaced dev ID).
 3. Smoke-tests the server (fast `--selftest`).
-4. Shows a toast with quick actions to reload or open the MCP config.
+4. Runs a background dependency scan with dependency-cruiser and writes results to ./.constellation/data/codebase-dependencies.json.
+5. Shows a toast with quick actions to reload or open the MCP config.
 
 Quick start (with side panel UI)
 
@@ -24,6 +25,7 @@ Verify in Kiro and open the side panel
 - Try: `#[constellation-mcp] ping` → pong
 - Try: `#[constellation-mcp] echo Hello` → Hello
 - Click the Constellation icon in the Activity Bar to open the side panel (webview). It should display "Hello world".
+- Dependency scan output: ./.constellation/data/codebase-dependencies.json (re-run via "Constellation: Scan Dependencies").
 
 Docs
 - docs/README.md — overview and layout (including UI layer)

@@ -33,6 +33,14 @@ Server changes
 Config changes
 - For Node path / workspace write setting changes, reload the window so Kiro re-reads configs.
 
+Dependency scan (dev notes)
+- The scan runs in the background on activation and does not block the UI.
+- By default it excludes: node_modules|dist|out|build|coverage|.git|.vscode|.constellation
+- If a dependency-cruiser config exists in the workspace root it will be used (via --config). Otherwise we pass --no-config.
+- If tsconfig.json exists in the workspace root it will be passed as --ts-config <abs path>.
+- Output path: ./.constellation/data/codebase-dependencies.json
+- You can re-run the scan via command palette: "Constellation: Scan Dependencies".
+
 Debug profiles
 - Run Extension (Dev MCP)
   - Starts the combined watch tasks and sets CONSTELLATION_SERVER_ID=constellation-mcp-dev so user config writes to the dev namespace.

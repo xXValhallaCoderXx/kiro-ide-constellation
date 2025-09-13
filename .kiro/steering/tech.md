@@ -8,6 +8,7 @@
 - **Zod**: Schema validation and type safety
 - **Preact**: Lightweight React alternative for webview UI
 - **Vite**: Fast build tool for webview bundling
+- **dependency-cruiser**: Codebase dependency analysis and visualization
 
 ## Build System
 - **TypeScript Compiler**: Direct `tsc` compilation for extension code
@@ -48,6 +49,14 @@ npm run clean:mcp    # Clean user MCP config
 npm run clean:mcp:ws # Clean workspace MCP config
 ```
 
+### Analysis & Scanning
+- **Dependency Scanning**: Automatic background scan on activation
+  - Auto-detects dependency-cruiser config files (`.dependency-cruiser.{js,cjs,mjs}`)
+  - Auto-detects and uses `tsconfig.json` when present
+  - Excludes: `node_modules|dist|out|build|coverage|.git|.vscode|.constellation`
+  - Output: `./.constellation/data/codebase-dependencies.json`
+  - Manual trigger: Command palette → "Constellation: Scan Dependencies"
+
 ### Development Workflow
 - **F5 Launch**: Extension Development Host with dual watch tasks
   - TypeScript watch (`tsc -watch`)
@@ -64,6 +73,8 @@ npm run clean:mcp:ws # Clean workspace MCP config
 - **MCP Configuration**: Automatic Kiro config file management
   - User-level: `~/.kiro/settings/mcp.json`
   - Workspace-level: `./.kiro/settings/mcp.json`
+- **Output Files**: Generated analysis data
+  - Dependency scan results: `./.constellation/data/codebase-dependencies.json`
 
 ## Code Style & Standards
 - **Strict TypeScript**: Full type checking with ES2022 target
@@ -80,6 +91,7 @@ npm run clean:mcp:ws # Clean workspace MCP config
 - `@modelcontextprotocol/sdk`: ^1.18.0 (MCP server implementation)
 - `zod`: ^3.23.8 (Schema validation)
 - `preact`: ^10.24.3 (UI framework)
+- `dependency-cruiser`: ^16.8.0 (Codebase dependency analysis)
 
 ### Development Dependencies
 - `typescript`: ^5.9.2 (Language and compiler)

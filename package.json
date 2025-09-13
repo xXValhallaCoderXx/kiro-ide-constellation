@@ -30,7 +30,8 @@
     },
     "commands": [
       { "command": "constellation.selfTest", "title": "Constellation: Self-test MCP server" },
-      { "command": "constellation.openUserMcpConfig", "title": "Constellation: Open user MCP config" }
+      { "command": "constellation.openUserMcpConfig", "title": "Constellation: Open user MCP config" },
+      { "command": "constellation.scanDependencies", "title": "Constellation: Scan Dependencies" }
     ],
     "configuration": {
       "title": "Constellation",
@@ -70,6 +71,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.18.0",
+    "dependency-cruiser": "^17.0.1",
     "zod": "^3.23.8"
   },
   "devDependencies": {

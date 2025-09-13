@@ -36,6 +36,7 @@
   - `extension-config.service.ts`: VS Code settings management
   - `mcp-config.service.ts`: Kiro MCP configuration handling
   - `node-version.service.ts`: Node.js version validation
+  - `dependency-cruiser.service.ts`: Background dependency scanning integration
 - **`shared/constants.ts`**: Shared constants and configuration
 - **`test/`**: VS Code test framework integration
 
@@ -51,7 +52,7 @@
 
 ## Key Configuration Files
 - **`package.json`**: Extension manifest with VS Code contributions
-  - Commands: self-test, open MCP config
+  - Commands: self-test, open MCP config, scan dependencies
   - Views: Activity bar container and side panel
   - Settings: Node path, workspace config, server ID
 - **`tsconfig.json`**: TypeScript compilation (ES2022, NodeNext modules)
@@ -73,10 +74,14 @@
   - `main.js`: Bundled Preact application
   - `style.css`: Compiled styles
 
+## Data Output Structure (`.constellation/`)
+- **`data/codebase-dependencies.json`**: Dependency-cruiser scan results
+
 ## Architecture Patterns
 - **Separation of Concerns**: Extension, MCP server, and UI as distinct layers
 - **Service Layer**: Abstracted configuration and system services
 - **Configuration Management**: User vs workspace MCP config handling
+- **Background Processing**: Non-blocking dependency scanning on activation
 - **Error Handling**: Graceful fallbacks with user notifications
 - **Environment Awareness**: Dev/prod server ID namespacing
 - **Self-Validation**: Built-in server health checks
