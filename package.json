@@ -1,6 +1,7 @@
 {
   "name": "kiro-constellation",
   "displayName": "Kiro Constellation",
+  "publisher": "xXValhallaCoderXx",
   "description": "Bare-bones Kiro MCP server (ping/echo) + setup helper.",
   "version": "0.0.1",
   "type": "module",
