@@ -5,7 +5,7 @@
       "name": "Run Extension (Dev MCP)",
       "type": "extensionHost",
       "request": "launch",
-      "preLaunchTask": "watch:dev",
+      "preLaunchTask": "watch:dev+ui",
       "env": {
         "CONSTELLATION_SERVER_ID": "constellation-mcp-dev"
       },
@@ -20,7 +20,7 @@
       "name": "Run Extension",
       "type": "extensionHost",
       "request": "launch",
-      "preLaunchTask": "watch",
+      "preLaunchTask": "watch+ui",
       "args": [
         "--extensionDevelopmentPath=${workspaceFolder}"
       ],

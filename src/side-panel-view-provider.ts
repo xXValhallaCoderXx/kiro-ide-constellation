@@ -10,16 +10,16 @@ export class SidePanelViewProvider implements vscode.WebviewViewProvider {
     webview.options = {
       enableScripts: true,
       localResourceRoots: [
-        vscode.Uri.joinPath(this.extensionUri, "media"),
-        vscode.Uri.joinPath(this.extensionUri, "media", "ui"),
+        vscode.Uri.joinPath(this.extensionUri, "out"),
+        vscode.Uri.joinPath(this.extensionUri, "out", "ui"),
       ],
     };
 
     const scriptUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this.extensionUri, "media", "ui", "main.js")
+      vscode.Uri.joinPath(this.extensionUri, "out", "ui", "main.js")
     );
     const styleUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this.extensionUri, "media", "ui", "style.css")
+      vscode.Uri.joinPath(this.extensionUri, "out", "ui", "style.css")
     );
 
     const nonce = getNonce();

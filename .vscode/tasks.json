@@ -14,6 +14,39 @@
 			"label": "watch",
 			"isBackground": true,
 			"problemMatcher": "$tsc-watch"
+		},
+		{
+			"type": "npm",
+			"script": "dev:ui",
+			"label": "dev:ui",
+			"isBackground": true,
+			"problemMatcher": {
+				"owner": "vite",
+				"fileLocation": ["relative", "${workspaceFolder}"],
+				"pattern": {
+					"regexp": "^(?:\\x1b\\[[0-9;]*m)?(.+?):(\\d+):(\\d+):\\s+(error|warning):\\s+(.*)$",
+					"file": 1,
+					"line": 2,
+					"column": 3,
+					"severity": 4,
+					"message": 5
+				},
+				"background": {
+					"activeOnStart": true,
+					"beginsPattern": "^.*(building for production|watching for file changes).*$",
+					"endsPattern": "^.*built in \\d+ms.*$"
+				}
+			}
+		},
+		{
+			"label": "watch:dev+ui",
+			"dependsOn": ["watch:dev", "dev:ui"],
+			"dependsOrder": "parallel"
+		},
+		{
+			"label": "watch+ui",
+			"dependsOn": ["watch", "dev:ui"],
+			"dependsOrder": "parallel"
 		}
 	]
 }

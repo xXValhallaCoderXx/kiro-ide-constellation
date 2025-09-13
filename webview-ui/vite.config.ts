@@ -7,7 +7,7 @@ export default defineConfig({
   plugins: [preact()],
   root: '.',
   build: {
-    outDir: resolve(__dirname, '../media/ui'),
+    outDir: resolve(__dirname, '../out/ui'),
     emptyOutDir: true,
     sourcemap: false,
     rollupOptions: {
