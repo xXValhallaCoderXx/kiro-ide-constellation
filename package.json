@@ -1,0 +1,58 @@
+{
+  "name": "kiro-constellation",
+  "displayName": "Kiro Constellation",
+  "description": "Bare-bones Kiro MCP server (ping/echo) + setup helper.",
+  "version": "0.0.1",
+  "type": "module",
+  "engines": { "vscode": "^1.85.0" },
+  "categories": ["Other"],
+  "activationEvents": ["onStartupFinished"],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      { "command": "constellation.selfTest", "title": "Constellation: Self-test MCP server" },
+      { "command": "constellation.openUserMcpConfig", "title": "Constellation: Open user MCP config" }
+    ],
+    "configuration": {
+      "title": "Constellation",
+      "properties": {
+        "constellation.nodePath": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Optional absolute path to the Node.js binary. Leave blank to use `node` from PATH."
+        },
+        "constellation.writeWorkspaceMcpConfig": {
+          "type": "boolean",
+          "default": false,
+          "description": "Also write ./.kiro/settings/mcp.json if the folder exists."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "build": "npm run compile",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src",
+    "test": "vscode-test",
+    "package": "vsce package"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.18.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.85.0",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^20.11.0",
+    "@typescript-eslint/eslint-plugin": "^8.42.0",
+    "@typescript-eslint/parser": "^8.42.0",
+    "eslint": "^9.34.0",
+    "typescript": "^5.9.2",
+    "@vscode/test-cli": "^0.0.11",
+    "@vscode/test-electron": "^2.5.2",
+    "vsce": "^2.15.0"
+  }
+}
