@@ -5,6 +5,12 @@ No tools appear in the MCP panel or side panel is blank
 - Open ~/.kiro/settings/mcp.json and confirm the constellation-mcp entry exists with the correct absolute path.
 - For the side panel, ensure out/ui/main.js and out/ui/style.css exist (run `npm run build:ui`). Reload the window.
 
+Dependency scan issues
+- Check the debug console for "Dependency scan stderr:" output for precise error messages.
+- If your project does not have a dependency-cruiser config, the extension runs with --no-config by default. If you prefer a custom setup, add one (e.g., `.dependency-cruiser.cjs`).
+- Ensure tsconfig.json is valid if present; the extension passes it to the CLI.
+- Very large repos might hit the scan timeout (60s). Re-run on a narrower subfolder or adjust excludes.
+
 Self-test fails or setup toast shows an error
 - Ensure Node 18+ is installed. The extension will refuse to proceed if Node is older.
 - If node isn’t on PATH, set Constellation: Node Path to an absolute Node binary path.

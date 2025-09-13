@@ -28,6 +28,9 @@ Workspace config (optional)
 - Enable the setting Constellation: Write Workspace MCP Config (constellation.writeWorkspaceMcpConfig).
 - Ensure a ./.kiro folder exists in the workspace. If present, the extension will write ./.kiro/settings/mcp.json as well.
 
+Output files
+- Dependency scan: ./.constellation/data/codebase-dependencies.json (workspace relative)
+
 Extension settings
 - constellation.nodePath (string)
   - Optional absolute path to the Node.js binary. Leave blank to use node from PATH.

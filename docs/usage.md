@@ -26,9 +26,15 @@ npm run build
 - Click the Constellation icon in the Activity Bar to open the webview side panel.
 - It should display "Hello world" via the Preact app.
 
+6) Dependency scan results
+- On activation a background scan runs (non-blocking). Results are written to:
+  - ./.constellation/data/codebase-dependencies.json
+- To re-run manually: open the command palette and run "Constellation: Scan Dependencies".
+
 Helpful commands
 - Constellation: Self-test — Spawns the MCP server with --selftest and reports OK/FAILED.
 - Constellation: Open user MCP config — Opens ~/.kiro/settings/mcp.json in the editor.
+- Constellation: Scan Dependencies — Re-run dependency-cruiser on the workspace and overwrite the output file.
 
 Where the config is
 - User-level: ~/.kiro/settings/mcp.json (always updated by the extension)
