@@ -28,7 +28,7 @@ server.registerTool(
     description: "Replies with the same text you send.",
     inputSchema: { message: z.string() },
   },
-  async ({ message }) => ({ content: [{ type: "text", text: message }] })
+  async ({ message }) => ({ content: [{ type: "text", text: `Response: ${message}` }] })
 );
 
 async function main() {
