@@ -9,6 +9,7 @@
 - **Preact**: Lightweight React alternative for webview UI
 - **Vite**: Fast build tool for webview bundling
 - **dependency-cruiser**: Codebase dependency analysis and visualization
+- **Cytoscape.js**: Interactive graph visualization library for dependency graphs
 
 ## Build System
 - **TypeScript Compiler**: Direct `tsc` compilation for extension code
@@ -56,6 +57,15 @@ npm run clean:mcp:ws # Clean workspace MCP config
   - Excludes: `node_modules|dist|out|build|coverage|.git|.vscode|.constellation`
   - Output: `./.constellation/data/codebase-dependencies.json`
   - Manual trigger: Command palette → "Constellation: Scan Dependencies"
+  - **Timeout**: 30 seconds with progress reporting
+  - **Performance**: Optimized for large codebases with smart file size detection
+
+### Graph Visualization
+- **Interactive Graphs**: Cytoscape.js-powered dependency visualization
+- **Performance Optimizations**: Adaptive layouts and rendering for large graphs (500+ nodes)
+- **User Interactions**: Click to select, double-click to open files
+- **Real-time Updates**: Live progress indicators during scanning and rendering
+- **Error Handling**: Graceful fallbacks with user-friendly error messages
 
 ### Development Workflow
 - **F5 Launch**: Extension Development Host with dual watch tasks
@@ -92,6 +102,7 @@ npm run clean:mcp:ws # Clean workspace MCP config
 - `zod`: ^3.23.8 (Schema validation)
 - `preact`: ^10.24.3 (UI framework)
 - `dependency-cruiser`: ^16.8.0 (Codebase dependency analysis)
+- `cytoscape`: ^3.30.4 (Interactive graph visualization)
 
 ### Development Dependencies
 - `typescript`: ^5.9.2 (Language and compiler)

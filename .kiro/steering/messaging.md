@@ -18,12 +18,13 @@ Kiro Constellation implements a multi-layer messaging system that enables commun
 - `open-graph-view`: Opens/reveals the Graph visualization tab
 - `ping`: Simple connectivity test
 
-#### Planned Message Types (Graph Integration)
+#### Graph Integration Message Types (Implemented)
 - `graph/load`: Request dependency graph data
 - `graph/data`: Response with graph nodes/edges/metadata
 - `graph/open-file`: Open specific file in editor from graph node
 - `graph/scan`: Trigger dependency rescan
 - `graph/error`: Error response for graph operations
+- `graph/status`: Progress updates during scanning and processing
 
 ### 2. MCP Server → Extension (HTTP Bridge)
 - **Protocol**: HTTP REST API over loopback (127.0.0.1)
@@ -95,6 +96,13 @@ await fetch(`http://127.0.0.1:${port}/open-graph`, {
 - **Extensibility**: Easy to add new message types and endpoints
 - **Debugging**: Centralized message handling for easier troubleshooting
 
+## Graph Visualization Integration
+- **Data Service**: `src/services/graph-data.service.ts` handles dependency data transformation
+- **UI Component**: `webview-ui/src/views/GraphView.tsx` renders interactive Cytoscape graphs
+- **Performance Handling**: Automatic optimizations for large graphs (500+ nodes)
+- **Error Resilience**: Comprehensive error handling with user-friendly messages
+- **Progress Feedback**: Real-time status updates during scanning and rendering
+
 ## Related Files
 - **Documentation**: `docs/events.md` (detailed message specifications)
 - **UI messaging**: `webview-ui/src/services/messenger.ts`
@@ -102,3 +110,5 @@ await fetch(`http://127.0.0.1:${port}/open-graph`, {
 - **HTTP bridge**: `src/services/http-bridge.service.ts`
 - **MCP integration**: `src/mcp.server.ts`
 - **Webview providers**: `src/side-panel-view-provider.ts`
+- **Graph data**: `src/services/graph-data.service.ts`
+- **Graph UI**: `webview-ui/src/views/GraphView.tsx`

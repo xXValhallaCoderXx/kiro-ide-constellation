@@ -6,8 +6,9 @@ Kiro Constellation includes built-in dependency-cruiser integration that automat
 ## Automatic Scanning
 - **Trigger**: Runs automatically on extension activation (background, non-blocking)
 - **Target**: First workspace folder
-- **Timeout**: 60 seconds maximum
+- **Timeout**: 30 seconds maximum (optimized for performance)
 - **Output**: `./.constellation/data/codebase-dependencies.json`
+- **Progress Reporting**: Real-time status updates with countdown timer
 
 ## Configuration Detection
 The scanner intelligently detects and uses existing project configurations:
@@ -50,11 +51,18 @@ Results are written as JSON to `./.constellation/data/codebase-dependencies.json
 - Orphaned modules identification
 - Dependency metrics and statistics
 
+## Performance Optimizations
+- **Large File Detection**: Automatically detects files >5MB and provides appropriate warnings
+- **Progress Indicators**: Real-time scanning progress with remaining time countdown
+- **Timeout Handling**: 30-second timeout with graceful error handling and retry suggestions
+- **Memory Management**: Efficient processing of large dependency graphs
+
 ## Troubleshooting
-- **Large repos**: May hit 60s timeout - consider narrower subfolder or custom excludes
+- **Large repos**: May hit 30s timeout - consider narrower subfolder or custom excludes
 - **Config errors**: Check debug console for "Dependency scan stderr:" messages
 - **Missing results**: Ensure workspace has analyzable code files
 - **Permission issues**: Verify write access to `./.constellation/data/` directory
+- **No workspace**: Clear error messaging when no workspace folder is open
 
 ## Integration Points
 - **Service**: `src/services/dependency-cruiser.service.ts`
