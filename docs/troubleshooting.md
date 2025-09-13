@@ -11,6 +11,14 @@ Dependency scan issues
 - Ensure tsconfig.json is valid if present; the extension passes it to the CLI.
 - Very large repos might hit the scan timeout (60s). Re-run on a narrower subfolder or adjust excludes.
 
+Graph tab doesn’t open on ping
+- Ensure the bridge env exists in ~/.kiro/settings/mcp.json under your server:
+  - CONSTELLATION_BRIDGE_PORT, CONSTELLATION_BRIDGE_TOKEN
+- The bridge listens on 127.0.0.1 only; this should work in local/WSL environments. If you’re in a remote with port sandboxing, open the Graph manually via the command.
+- Test manually:
+  - curl -s -X POST -H "Authorization: Bearer <TOKEN>" http://127.0.0.1:<PORT>/open-graph -o /dev/null -w "%{http_code}\n"  # expect 204
+- If the HTTP call fails, the ping tool still returns pong; check the Extension Host debug console for bridge logs/errors.
+
 Self-test fails or setup toast shows an error
 - Ensure Node 18+ is installed. The extension will refuse to proceed if Node is older.
 - If node isn’t on PATH, set Constellation: Node Path to an absolute Node binary path.

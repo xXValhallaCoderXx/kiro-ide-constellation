@@ -41,6 +41,27 @@ Dependency scan (dev notes)
 - Output path: ./.constellation/data/codebase-dependencies.json
 - You can re-run the scan via command palette: "Constellation: Scan Dependencies".
 
+Event architecture (details)
+- Webview UI messaging
+  - Webview posts messages via messenger.post(type, payload) (webview-ui/src/services/messenger.ts).
+  - Providers/Graph panels listen to webview.onDidReceiveMessage and route into src/services/messenger.service.ts.
+  - Current inbound messages: 'open-graph-view'. Planned graph messages: 'graph/load', 'graph/open-file', 'graph/scan'.
+- HTTP bridge for MCP → extension
+  - startHttpBridge in src/services/http-bridge.service.ts creates a small HTTP server (listen(0), loopback only) and a random token.
+  - Env injected into MCP config: CONSTELLATION_BRIDGE_PORT, CONSTELLATION_BRIDGE_TOKEN.
+  - MCP (Node 18+) uses global fetch to POST http://127.0.0.1:<port>/open-graph with Authorization: Bearer <token>.
+  - The handler validates token and runs the command to open/reveal the singleton Graph tab.
+- Graph tab singleton
+  - The command keeps a module-level WebviewPanel reference; further opens call reveal instead of creating duplicates.
+
+Manual bridge testing
+```bash
+# View env in ~/.kiro/settings/mcp.json (values are dynamic per run)
+# Test the bridge manually (replace <PORT> and <TOKEN>)
+curl -s -X POST -H "Authorization: Bearer <TOKEN>" http://127.0.0.1:<PORT>/open-graph -o /dev/null -w "%{http_code}\n"
+# Expected: 204
+```
+
 Debug profiles
 - Run Extension (Dev MCP)
   - Starts the combined watch tasks and sets CONSTELLATION_SERVER_ID=constellation-mcp-dev so user config writes to the dev namespace.

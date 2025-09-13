@@ -58,6 +58,18 @@ Dependency scan (background)
 - Output is written to ./.constellation/data/codebase-dependencies.json.
 - You can re-run the scan any time via the command palette: "Constellation: Scan Dependencies".
 
+Event architecture (overview)
+- Webview ↔ Extension (UI messaging)
+  - Webview UI posts messages via window.postMessage (wrapped by webview-ui/src/services/messenger.ts).
+  - Providers and WebviewPanels receive messages and route them through src/services/messenger.service.ts.
+  - Example: Side panel “Open Graph View” sends { type: 'open-graph-view' } → extension runs the command to open the Graph tab.
+- MCP → Extension (HTTP bridge)
+  - The extension starts a loopback HTTP server on 127.0.0.1 (src/services/http-bridge.service.ts) and publishes two env vars in the MCP config: CONSTELLATION_BRIDGE_PORT and CONSTELLATION_BRIDGE_TOKEN.
+  - The MCP server (src/mcp.server.ts) sends POST /open-graph with Authorization: Bearer <token> on ping completion, which opens/reveals the Graph tab.
+- Graph tab
+  - Opened as a singleton WebviewPanel by the "Constellation: Open Graph View" command.
+  - Future graph data messages will use the same webview messaging channel.
+
 What the extension writes
 - User-level MCP config: ~/.kiro/settings/mcp.json
   - The entry is keyed constellation-mcp and runs the compiled server via Node.

@@ -31,6 +31,27 @@ Workspace config (optional)
 Output files
 - Dependency scan: ./.constellation/data/codebase-dependencies.json (workspace relative)
 
+Bridge environment (in MCP config)
+- The extension injects these env vars into your MCP server entry to enable UI actions from tools:
+  - CONSTELLATION_BRIDGE_PORT: loopback port of the local HTTP bridge
+  - CONSTELLATION_BRIDGE_TOKEN: bearer token used to authenticate calls
+- Example (snippet inside mcp.json):
+```json
+{
+  "mcpServers": {
+    "constellation-mcp": {
+      "command": "node",
+      "args": ["/abs/path/to/out/mcp.server.js"],
+      "env": {
+        "CONSTELLATION_SERVER_ID": "constellation-mcp",
+        "CONSTELLATION_BRIDGE_PORT": "54023",
+        "CONSTELLATION_BRIDGE_TOKEN": "<random>"
+      }
+    }
+  }
+}
+```
+
 Extension settings
 - constellation.nodePath (string)
   - Optional absolute path to the Node.js binary. Leave blank to use node from PATH.

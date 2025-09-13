@@ -31,6 +31,11 @@ npm run build
   - ./.constellation/data/codebase-dependencies.json
 - To re-run manually: open the command palette and run "Constellation: Scan Dependencies".
 
+7) Open the Graph tab
+- From the side panel, click "Open Graph View".
+- Or run the command "Constellation: Open Graph View".
+- When you call the MCP tool #[constellation-mcp] ping, the Graph tab will also auto-open via the local HTTP bridge.
+
 Helpful commands
 - Constellation: Self-test — Spawns the MCP server with --selftest and reports OK/FAILED.
 - Constellation: Open user MCP config — Opens ~/.kiro/settings/mcp.json in the editor.
