@@ -1,69 +1,49 @@
-# Technology Stack (Monorepo)
+# Technology Stack
 
-## Core
-- VS Code API: ^1.100.3
-- TypeScript: ^5.9.2
-- Preact (webviews): ^10.27.1
-- Vite (webviews): ^7.1.4 with @preact/preset-vite and manifest
-- esbuild (MCP bundling): ^0.23.0
-- Turborepo: ^2.5.6 (task orchestration)
-- pnpm: workspace manager (pnpm-workspace.yaml)
+## Core Technologies
+- **TypeScript**: Primary language (ES2022 target, NodeNext modules)
+- **Node.js**: Runtime (18+ required)
+- **VS Code Extension API**: Host platform integration
+- **MCP SDK**: `@modelcontextprotocol/sdk` for server implementation
+- **Zod**: Schema validation and type safety
 
-## Packages and roles
-- packages/extension: VS Code extension host code (tsc → out/)
-- packages/webview: builds to ../extension/out with Vite
-- packages/shared: shared contracts (events, commands, utils)
-- packages/mcp-server: stdio server (bundled to ../extension/out/mcp)
+## Build System
+- **TypeScript Compiler**: Direct `tsc` compilation
+- **ESLint**: Code linting with TypeScript rules
+- **VS Code Test**: Testing framework
 
-## Build and scripts
-Root package.json scripts:
+## Common Commands
+
+### Development
 ```bash
-pnpm build              # turbo run build across packages
-pnpm dev                # turbo run dev --parallel
-pnpm typecheck          # turbo run typecheck
-pnpm lint               # turbo run lint
-pnpm test               # turbo run test
-pnpm watch              # pnpm -r run watch (all packages)
-pnpm package            # build & vsce package (extension vsix)
-```
-MCP utilities:
-```bash
-pnpm bundle:mcp         # node esbuild.mcp.config.js
-pnpm watch:mcp          # node esbuild.mcp.config.js --watch
+npm install          # Install dependencies
+npm run build        # Compile TypeScript
+npm run watch        # Watch mode compilation
+npm run watch:dev    # Watch with dev server ID
 ```
 
-## Build architecture
-- Webviews (Vite):
-  - Inputs configured for `src/main-sidebar.tsx` and `src/main-dashboard.tsx`
-  - Output to `packages/extension/out` with manifest
-- Extension (tsc):
-  - Compiles to `packages/extension/out`
-- MCP server (esbuild at repo root):
-  - Bundles `packages/mcp-server/src/server.ts` → `packages/extension/out/mcp/mcpStdioServer.cjs`
+### Testing & Quality
+```bash
+npm run lint         # Run ESLint
+npm run test         # Run VS Code tests
+npm run pretest      # Compile + lint before testing
+```
 
-## Configuration
-- tsconfig.base.json: ES2022, common options, composite = true
-- packages/*/tsconfig.json: per-package configs
-- packages/webview/vite.config.ts: manifest + preact preset + output path
-- .vscode/launch.json and tasks.json: Run Extension and build tasks
+### Extension Management
+```bash
+npm run package      # Create .vsix package
+npm run clean:mcp    # Clean user MCP config
+npm run clean:mcp:ws # Clean workspace MCP config
+```
 
-## Runtime and discovery
-- MCP provider (packages/extension/src/mcp/mcp.provider.ts):
-  - Registers provider via vscode.lm when available
-  - Fallback writes `.kiro/settings/mcp.json` in workspace
-  - Resolves Node path via env + heuristics; resolves server script from bundled out/mcp
-- HTTP bridge (packages/extension/src/services/http-bridge.service.ts):
-  - POST /events with { type, payload? } to inject events into the extension bus
-  - Defaults to 127.0.0.1:39237; safe error handling and limits
+### Development Workflow
+- Use F5 in VS Code to launch extension host
+- Choose "Run Extension (Dev MCP)" for namespaced development
+- Server auto-registers with `constellation-mcp` or `constellation-mcp-dev` ID
 
-## Dependency analysis (POC)
-- Command: `kiro.deps.scan`
-- Service: `packages/extension/src/services/dependency-cruiser.service.ts`
-- Behavior: runs dependency-cruiser via npx with sane defaults, timeout, cancellation
-- Output: `.constellation/data/dependency-analysis.json` within the analyzed folder
-
-## Troubleshooting quick refs
-- MCP bundle missing → run `pnpm bundle:mcp` or `pnpm build`
-- Web assets missing → run `pnpm -r run dev` (webview builds into extension/out), reload window
-- Bridge port busy → set KIRO_MCP_BRIDGE_PORT to a free port and reload
-- Node path issues for MCP → set KIRO_MCP_NODE
+## Code Style
+- Strict TypeScript configuration
+- ESLint with naming conventions (camelCase/PascalCase imports)
+- Semicolons required
+- Curly braces enforced
+- Strict equality (`===`) preferred

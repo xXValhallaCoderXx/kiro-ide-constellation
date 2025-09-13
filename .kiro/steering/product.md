@@ -1,35 +1,21 @@
 # Product Overview
 
-Kiro IDE Constellation is a VS Code extension packaged within a pnpm/Turbo monorepo. It provides a custom Activity Bar container with sidebar and dashboard webviews, an MCP stdio integration, a typed message bus, and utility commands for developer workflows.
+Kiro Constellation is a VS Code extension that provides a bare-bones MCP (Model Context Protocol) server for Kiro AI assistant integration. 
+
+## Core Purpose
+- Demonstrates MCP server implementation with basic ping/echo tools
+- Auto-configures Kiro's MCP settings for seamless integration
+- Serves as a template/starting point for custom MCP server development
 
 ## Key Features
-- Activity Bar integration: "Kiro Constellation" container with branded icon
-- Sidebar webview: persistent, message-bus connected
-- Dashboard webview: opens via command, synchronized via sticky events
-- MCP integration: stdio server bundled and registered via VS Code language model APIs (with fallback discovery)
-- Message bus: typed contracts shared across extension and webviews
-- HTTP bridge: allows external processes (e.g., MCP tools) to trigger extension/UI behavior
-- Dependency analysis (POC): command to analyze workspace dependencies and write JSON to `.constellation/data`
+- Automatic MCP server registration in Kiro configuration
+- Node.js 18+ compatibility checking
+- Self-testing capabilities for server validation
+- Support for both user-level and workspace-level MCP configurations
+- Development/production server ID namespacing
 
-## Target Use Cases
-- AI-assisted development with MCP
-- Custom dashboards and tooling via a lightweight Preact web UI
-- Coordinated workflows between extension, webviews, and external processes
-
-## Monorepo Packages
-- packages/extension: extension host (tsc → out)
-- packages/webview: web UI (Vite → ../extension/out)
-- packages/shared: shared contracts
-- packages/mcp-server: stdio server (esbuild → ../extension/out/mcp)
-
-## Extension Metadata
-- Name: kiro-ide-constellation
-- Version: 0.0.5
-- Publisher: xXValhallaCoderXx
-- Activation: onStartupFinished, onCommand handlers, and view activations
-
-## Commands
-- `kiro-ide-constellation.openDashboard`: Open the dashboard
-- `kiro.deps.scan`: Run dependency analysis (POC) and write `.constellation/data/dependency-analysis.json` in the analyzed folder
-
-The extension is a foundation for MCP-based AI tooling and UI experiences in VS Code, emphasizing strict typing, clean separation of concerns, and robust fallbacks for varied environments.
+## Target Users
+Developers who want to:
+- Learn MCP server development
+- Create custom tools for Kiro AI assistant
+- Extend Kiro's capabilities with local services

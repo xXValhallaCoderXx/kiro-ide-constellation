@@ -1,44 +1,67 @@
 {
-  "name": "kiro-ide-constellation-workspace",
-  "private": true,
-  "version": "0.0.5",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/xXValhallaCoderXx/kiro-ide-constellation"
+  "name": "kiro-constellation",
+  "displayName": "Kiro Constellation",
+  "publisher": "xXValhallaCoderXx",
+  "description": "Bare-bones Kiro MCP server (ping/echo) + setup helper.",
+  "version": "0.0.1",
+  "type": "module",
+  "engines": { "vscode": "^1.85.0" },
+  "categories": ["Other"],
+  "activationEvents": ["onStartupFinished"],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      { "command": "constellation.selfTest", "title": "Constellation: Self-test MCP server" },
+      { "command": "constellation.openUserMcpConfig", "title": "Constellation: Open user MCP config" }
+    ],
+    "configuration": {
+      "title": "Constellation",
+      "properties": {
+        "constellation.nodePath": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Optional absolute path to the Node.js binary. Leave blank to use `node` from PATH."
+        },
+        "constellation.writeWorkspaceMcpConfig": {
+          "type": "boolean",
+          "default": false,
+          "description": "Also write ./.kiro/settings/mcp.json if the folder exists."
+        },
+        "constellation.serverId": {
+          "type": "string",
+          "default": "constellation-mcp",
+          "markdownDescription": "MCP server ID used as the key in Kiro's mcp.json. Change to namespace dev vs prod (e.g. `constellation-mcp-dev`)."
+        }
+      }
+    }
   },
   "scripts": {
-    "build": "turbo run build",
-    "dev": "turbo run dev --parallel",
-    "typecheck": "turbo run typecheck",
-    "lint": "turbo run lint",
-    "test": "turbo run test",
-    "watch": "pnpm -r run watch",
-    "package": "pnpm --filter kiro-ide-constellation run package:root",
-    "bundle:mcp": "node esbuild.mcp.config.js",
-    "watch:mcp": "node esbuild.mcp.config.js --watch",
-    "analyze:mcp": "esbuild packages/mcp-server/src/server.ts --bundle --platform=node --format=cjs --target=node18 --metafile=mcp-meta.json --outfile=packages/extension/out/mcp/mcpStdioServer.cjs && esbuild-visualizer --metadata ./mcp-meta.json --open",
-    "analyze": "bash scripts/analyze-bundles.sh",
-    "clean": "rimraf packages/**/out && rimraf node_modules"
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "build": "npm run compile",
+    "watch": "tsc -watch -p ./",
+    "watch:dev": "CONSTELLATION_SERVER_ID=constellation-mcp-dev tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src",
+    "test": "vscode-test",
+    "package": "vsce package",
+    "clean:mcp": "node ./scripts/mcp-clean.mjs",
+    "clean:mcp:ws": "node ./scripts/mcp-clean.mjs --workspace"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.18.0",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
-    "@preact/preset-vite": "^2.10.2",
+    "@types/vscode": "^1.85.0",
     "@types/mocha": "^10.0.10",
-    "@types/node": "20.x",
-    "@types/vscode": "^1.100.3",
-    "@typescript-eslint/eslint-plugin": "^8.31.1",
-    "@typescript-eslint/parser": "^8.31.1",
+    "@types/node": "^20.11.0",
+    "@typescript-eslint/eslint-plugin": "^8.42.0",
+    "@typescript-eslint/parser": "^8.42.0",
+    "eslint": "^9.34.0",
+    "typescript": "^5.9.2",
     "@vscode/test-cli": "^0.0.11",
     "@vscode/test-electron": "^2.5.2",
-    "@vscode/vsce": "^3.2.1",
-    "esbuild": "^0.23.0",
-    "esbuild-visualizer": "^0.6.0",
-    "eslint": "^9.25.1",
-    "preact": "^10.27.1",
-    "rimraf": "^6.0.1",
-    "rollup-plugin-visualizer": "^5.12.0",
-    "turbo": "^2.5.6",
-    "typescript": "^5.9.2",
-    "vite": "^7.1.4"
-  },
-  "packageManager": "pnpm@8.0.0"
+    "vsce": "^2.15.0"
+  }
 }

@@ -2,7 +2,6 @@
 .vscode-test/**
 src/**
 .gitignore
-node_modules/**
 .yarnrc
 vsc-extension-quickstart.md
 **/tsconfig.json
@@ -10,4 +9,3 @@ vsc-extension-quickstart.md
 **/*.map
 **/*.ts
 **/.vscode-test.*
-docs/**

@@ -1,24 +1,2 @@
-# Ignore build metadata and cache (added by Agent Mode)
-
-# TypeScript incremental build info
-*.tsbuildinfo
-**/*.tsbuildinfo
-
-# Turborepo cache & logs
-.turbo/
-**/.turbo/
-**/turbo-build.log
-
-# Visualizer reports
-**/bundle-stats.html
-
 node_modules/
 out/
-*.vsix
-.vscode-test/
-.github
-.kiro/settings/mcp.json
-.turbo/**
-.turbo-build.log
-
-.constellation
