@@ -26,10 +26,28 @@ kiro-constellation/
 ├─ package.json
 ├─ tsconfig.json
 ├─ src/
-│  ├─ extension.ts          # activation, MCP config upsert, self-test, toasts, commands
-│  └─ mcpServer.ts          # minimal MCP server (stdio) with ping/echo + --selftest
-└─ out/                     # compiled JS (tsc)
+│  ├─ extension.ts                # activation, MCP config upsert, self-test, toasts, commands, registers webview provider
+│  ├─ side-panel-view-provider.ts # WebviewViewProvider for the Activity Bar side panel
+│  └─ mcp.server.ts               # minimal MCP server (stdio) with ping/echo + --selftest
+├─ webview-ui/                    # UI source (Preact + Vite)
+│  ├─ index.html
+│  ├─ vite.config.ts              # outputs to ../out/ui
+│  ├─ tsconfig.json
+│  └─ src/
+│     ├─ components/
+│     │  ├─ App.tsx
+│     │  ├─ GraphDashboard.tsx
+│     │  └─ Button.tsx
+│     └─ styles/global.css
+└─ out/
+   ├─ extension.js, mcp.server.js # compiled by tsc
+   └─ ui/                         # built webview assets (main.js, style.css)
 ```
+
+Side panel UI
+- The extension contributes a Constellation icon to the Activity Bar which opens a side panel.
+- The side panel is a webview backed by a Preact app (bundled via Vite) that renders into #root.
+- The UI assets are built into out/ui and loaded via webview.asWebviewUri.
 
 What the extension writes
 - User-level MCP config: ~/.kiro/settings/mcp.json

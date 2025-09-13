@@ -4,44 +4,52 @@ Requirements
 - Node.js 18+ (required by the MCP TypeScript SDK)
 - ESM configuration: package.json has "type": "module" and tsconfig uses NodeNext.
 
-Edit–build loop
-- Keep a background compile running:
+UI layer
+- Preact app bundled with Vite lives in webview-ui/.
+- Output goes to out/ui (main.js, style.css). The webview provider loads from there.
+- Components use PascalCase .tsx files (e.g., App.tsx, GraphDashboard.tsx, Button.tsx). Non-components use kebab-case .ts.
 
+Edit–build loop
+- F5 (Run Extension or Run Extension (Dev MCP)) starts two background tasks:
+  - TypeScript watch (tsc -w)
+  - UI watch (vite build --watch)
+- When UI code changes, the Vite watcher rebuilds out/ui; reload the window to pick up the new assets.
+
+Manual commands
 ```bash
-npm run watch
+# TypeScript compile once
+npm run compile
+
+# Build webview UI once
+npm run build:ui
+
+# Watch both (ts + UI) outside of F5
+npm run watch & npm run dev:ui
 ```
 
-- For MCP server code changes (src/mcpServer.ts):
-  - After the file recompiles to out/mcpServer.js, use the MCP panel to restart constellation-mcp.
-  - No window reload needed for code-only changes.
+Server changes
+- For changes in src/mcp.server.ts, rebuild (tsc should handle) and restart constellation-mcp from the MCP panel. No full window reload needed.
 
-- For config-related changes (e.g., Node path setting, enabling workspace writes):
-  - Reload the window so Kiro re-reads MCP configs.
+Config changes
+- For Node path / workspace write setting changes, reload the window so Kiro re-reads configs.
 
 Debug profiles
 - Run Extension (Dev MCP)
-  - Uses a background watch task that sets CONSTELLATION_SERVER_ID=constellation-mcp-dev and launches the Extension Development Host with the same env var. The extension will write to the dev namespace in ~/.kiro/settings/mcp.json.
+  - Starts the combined watch tasks and sets CONSTELLATION_SERVER_ID=constellation-mcp-dev so user config writes to the dev namespace.
 - Run Extension
-  - Uses the default namespace from settings (constellation.serverId), no env override.
+  - Uses the default namespace from settings (constellation.serverId).
 
 Useful commands (palette)
-- Constellation: Self-test — Boots the server with --selftest and reports OK/FAILED.
-- Constellation: Open user MCP config — Opens ~/.kiro/settings/mcp.json.
-
-Testing locally
-- Extension Development Host (F5) is the recommended way to iterate.
-- The extension writes user-level config by default, which applies to all workspaces.
-- If you need isolation, enable the workspace write setting and create a ./.kiro folder in your test workspace.
+- Constellation: Self-test — Boot the server with --selftest and report OK/FAILED.
+- Constellation: Open user MCP config — Open ~/.kiro/settings/mcp.json.
 
 Packaging
-
 ```bash
 npm run package
 ```
-
-This produces a .vsix that you can install. Remember: the MCP config stores absolute paths to out/mcpServer.js — if the install location differs or you move folders, reactivate the extension to upsert the path.
+Produces a .vsix you can install. MCP config stores absolute paths to out/mcp.server.js; if the install location changes, reactivate the extension to upsert the path.
 
 Gotchas
 - Using __dirname in ESM: prefer fileURLToPath(import.meta.url) + dirname().
-- Tests are excluded from the TS build (tsconfig exclude: src/test/**) to avoid pulling test runner types.
+- Tests are excluded from the TS build (tsconfig exclude: src/test/**).
 
