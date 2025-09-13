@@ -15,12 +15,14 @@ Kiro Constellation is a VS Code extension that provides a bare-bones MCP (Model 
 - **Dual Configuration**: User-level and workspace-level MCP config support
 - **Development Workflow**: Dev/prod server ID namespacing for isolation
 - **Webview Side Panel**: Modern Preact UI with Vite build system
-- **Extension Commands**: Self-test and config management commands
+- **Dependency Analysis**: Background dependency-cruiser integration for codebase scanning
+- **Extension Commands**: Self-test, config management, and dependency scanning commands
 
 ## Architecture Components
 - **VS Code Extension**: Main extension host integration (`src/extension.ts`)
 - **MCP Server**: Standalone server with ping/echo tools (`src/mcp.server.ts`)
 - **Webview UI**: Preact-based side panel with dashboard components
+- **Dependency Scanner**: Background dependency-cruiser integration service
 - **Build System**: TypeScript + Vite for extension and UI compilation
 - **Configuration**: Automatic Kiro MCP config management
 
@@ -30,4 +32,5 @@ Developers who want to:
 - Create custom tools for Kiro AI assistant
 - Build VS Code extensions with webview UIs
 - Understand Kiro integration workflows
+- Analyze codebase dependencies and structure
 - Extend Kiro's capabilities with local services
