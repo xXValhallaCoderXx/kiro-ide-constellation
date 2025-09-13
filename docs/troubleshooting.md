@@ -1,8 +1,9 @@
 # Troubleshooting
 
-No tools appear in the MCP panel
+No tools appear in the MCP panel or side panel is blank
 - Did you reload the window after activation? Kiro re-reads MCP config on startup.
 - Open ~/.kiro/settings/mcp.json and confirm the constellation-mcp entry exists with the correct absolute path.
+- For the side panel, ensure out/ui/main.js and out/ui/style.css exist (run `npm run build:ui`). Reload the window.
 
 Self-test fails or setup toast shows an error
 - Ensure Node 18+ is installed. The extension will refuse to proceed if Node is older.

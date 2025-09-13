@@ -2,14 +2,32 @@
   "name": "kiro-constellation",
   "displayName": "Kiro Constellation",
   "publisher": "xXValhallaCoderXx",
-  "description": "Bare-bones Kiro MCP server (ping/echo) + setup helper.",
+  "description": "Bare-bones Kiro MCP server (ping/echo) + setup helper, with a side panel UI.",
   "version": "0.0.1",
   "type": "module",
   "engines": { "vscode": "^1.85.0" },
   "categories": ["Other"],
-  "activationEvents": ["onStartupFinished"],
+  "activationEvents": ["onStartupFinished", "onView:constellation.sidePanel"],
   "main": "./out/extension.js",
   "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "constellation",
+          "title": "Constellation",
+          "icon": "media/kiro.png"
+        }
+      ]
+    },
+    "views": {
+      "constellation": [
+        {
+          "id": "constellation.sidePanel",
+          "name": "Constellation",
+          "type": "webview"
+        }
+      ]
+    },
     "commands": [
       { "command": "constellation.selfTest", "title": "Constellation: Self-test MCP server" },
       { "command": "constellation.openUserMcpConfig", "title": "Constellation: Open user MCP config" }
@@ -36,9 +54,11 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
+    "vscode:prepublish": "npm run build:ui && npm run compile",
     "compile": "tsc -p ./",
-    "build": "npm run compile",
+    "build": "npm run build:ui && npm run compile",
+    "build:ui": "vite build --config webview-ui/vite.config.ts",
+    "dev:ui": "vite build --watch --config webview-ui/vite.config.ts",
     "watch": "tsc -watch -p ./",
     "watch:dev": "CONSTELLATION_SERVER_ID=constellation-mcp-dev tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
@@ -62,6 +82,9 @@
     "typescript": "^5.9.2",
     "@vscode/test-cli": "^0.0.11",
     "@vscode/test-electron": "^2.5.2",
-    "vsce": "^2.15.0"
+    "vsce": "^2.15.0",
+    "vite": "^5.4.8",
+    "@preact/preset-vite": "^2.9.1",
+    "preact": "^10.24.3"
   }
 }

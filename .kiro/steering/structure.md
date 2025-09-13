@@ -3,9 +3,17 @@
 ## Root Directory
 ```
 ├── src/                    # TypeScript source code
+│   ├── services/           # Service layer abstractions
+│   ├── shared/             # Shared constants and utilities
+│   └── test/               # VS Code test framework tests
+├── webview-ui/             # Preact-based webview UI
+│   ├── src/components/     # React/Preact components
+│   └── src/styles/         # CSS styling
 ├── out/                    # Compiled JavaScript output
-├── docs/                   # Documentation files
-├── scripts/                # Utility scripts
+│   └── ui/                 # Built webview assets (main.js, style.css)
+├── docs/                   # Comprehensive documentation
+├── scripts/                # Utility scripts (MCP cleanup)
+├── media/                  # Extension icons and assets
 ├── .kiro/                  # Kiro configuration and steering
 ├── .vscode/                # VS Code workspace settings
 └── node_modules/           # Dependencies
@@ -15,36 +23,69 @@
 - **`extension.ts`**: Main VS Code extension entry point
   - Extension activation/deactivation
   - MCP configuration management
-  - Command registration
+  - Command registration and webview provider
   - Node.js version validation
-- **`mcpServer.ts`**: Standalone MCP server implementation
+- **`mcp.server.ts`**: Standalone MCP server implementation
   - Tool registration (ping, echo)
   - MCP SDK integration
-  - Self-test functionality
-- **`test/`**: Test files using VS Code test framework
+  - Self-test functionality with `--selftest` flag
+- **`side-panel-view-provider.ts`**: Webview panel management
+  - Preact UI integration
+  - Message passing between extension and webview
+- **`services/`**: Service layer abstractions
+  - `extension-config.service.ts`: VS Code settings management
+  - `mcp-config.service.ts`: Kiro MCP configuration handling
+  - `node-version.service.ts`: Node.js version validation
+- **`shared/constants.ts`**: Shared constants and configuration
+- **`test/`**: VS Code test framework integration
 
-## Key Files
-- **`package.json`**: Extension manifest, dependencies, VS Code contribution points
-- **`tsconfig.json`**: TypeScript compilation settings (ES2022, NodeNext)
+## Webview UI Structure (`webview-ui/`)
+- **`src/components/`**: Preact components (PascalCase .tsx files)
+  - `App.tsx`: Main application component
+  - `GraphDashboard.tsx`: Dashboard visualization component
+  - `Button.tsx`: Reusable button component
+- **`src/main.tsx`**: Preact application entry point
+- **`src/styles/global.css`**: Global styling
+- **`vite.config.ts`**: Vite build configuration for webview
+- **`tsconfig.json`**: TypeScript config for webview components
+
+## Key Configuration Files
+- **`package.json`**: Extension manifest with VS Code contributions
+  - Commands: self-test, open MCP config
+  - Views: Activity bar container and side panel
+  - Settings: Node path, workspace config, server ID
+- **`tsconfig.json`**: TypeScript compilation (ES2022, NodeNext modules)
 - **`eslint.config.mjs`**: Code style and linting rules
 - **`.vscodeignore`**: Files excluded from extension package
+- **`.vscode-test.mjs`**: VS Code test runner configuration
 
 ## Documentation Structure (`docs/`)
-- `README.md`: Project overview
-- `usage.md`: Build/run/verify instructions
-- `configuration.md`: MCP config details
-- `development.md`: Development workflow
-- `troubleshooting.md`: Common issues
+- `README.md`: Project overview and quick start
+- `usage.md`: Build/run/verify instructions with webview setup
+- `configuration.md`: MCP config details and JSON examples
+- `development.md`: Development workflow with UI build process
+- `troubleshooting.md`: Common issues and solutions
+
+## Build Output Structure (`out/`)
+- **`extension.js`**: Compiled main extension
+- **`mcp.server.js`**: Compiled standalone MCP server
+- **`ui/`**: Built webview assets
+  - `main.js`: Bundled Preact application
+  - `style.css`: Compiled styles
 
 ## Architecture Patterns
-- **Separation of Concerns**: Extension logic separate from MCP server
+- **Separation of Concerns**: Extension, MCP server, and UI as distinct layers
+- **Service Layer**: Abstracted configuration and system services
 - **Configuration Management**: User vs workspace MCP config handling
 - **Error Handling**: Graceful fallbacks with user notifications
 - **Environment Awareness**: Dev/prod server ID namespacing
 - **Self-Validation**: Built-in server health checks
+- **Modern UI**: Preact + Vite for fast webview development
 
 ## File Naming Conventions
-- TypeScript files: camelCase (e.g., `mcpServer.ts`)
+- TypeScript files: camelCase (e.g., `mcp.server.ts`)
+- React/Preact components: PascalCase (e.g., `App.tsx`, `GraphDashboard.tsx`)
 - Config files: kebab-case (e.g., `eslint.config.mjs`)
 - Documentation: kebab-case (e.g., `troubleshooting.md`)
 - Scripts: kebab-case (e.g., `mcp-clean.mjs`)
+- Services: kebab-case with suffix (e.g., `mcp-config.service.ts`)
