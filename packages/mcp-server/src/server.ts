@@ -35,7 +35,7 @@ mcp.registerTool(
         },
       }, (res) => {
         // Consume response
-        res.on('data', () => {});
+        res.on('data', () => { });
         res.on('end', () => resolve());
       });
       req.on('error', reject);
@@ -58,6 +58,75 @@ mcp.registerTool(
     return {
       content: [
         { type: 'text', text: posted ? 'pong (dashboard opening)' : 'pong (bridge unavailable)' },
+      ],
+    };
+  }
+);
+
+// Register constellation analysis tool
+mcp.registerTool(
+  'constellation_analysis',
+  {
+    title: 'Constellation Analysis',
+    description: 'Analyzes files or paths in the workspace. Requires an "input" parameter (string) containing the file path or content to analyze.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        input: {
+          type: 'string',
+          description: 'The file path or content to analyze'
+        }
+      },
+      required: ['input']
+    },
+  },
+  async (request: any) => {
+    const safe = (v: unknown) => {
+      try { return JSON.stringify(v); } catch { return '[unserializable]'; }
+    };
+
+    // Log everything we receive to understand the structure
+    console.error('[constellation_analysis] Full request:', safe(request));
+    console.error('[constellation_analysis] request keys:', Object.keys(request || {}));
+    
+    // The MCP SDK passes tool arguments directly as the first parameter
+    // It's NOT wrapped in any envelope - the parameter IS the arguments object
+    const args = request || {};
+    
+    // Accept several shapes: direct string, { input }, or { userInput }
+    let input: string | undefined;
+    if (typeof args === 'string') {
+      input = args;
+    } else if (args && typeof args === 'object') {
+      // Try common parameter names
+      if (typeof args.input === 'string') {
+        input = args.input;
+      } else if (typeof args.userInput === 'string') {
+        input = args.userInput;  
+      } else if (typeof args.path === 'string') {
+        input = args.path;
+      } else if (typeof args.file === 'string') {
+        input = args.file;
+      } else if (typeof args.content === 'string') {
+        input = args.content;
+      } else if (typeof args.query === 'string') {
+        input = args.query;
+      } else if (typeof args.text === 'string') {
+        input = args.text;
+      }
+    }
+
+    if (!input || input.trim() === '') {
+      return {
+        content: [
+          { type: 'text', text: `Error: Input parameter is required. Received args: ${safe(args)}` },
+        ],
+      };
+    }
+
+    return {
+      content: [
+        { type: 'text', text: `Analysis input received: ${input}` },
       ],
     };
   }
