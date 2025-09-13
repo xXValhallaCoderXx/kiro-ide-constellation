@@ -56,46 +56,46 @@
     - Add command contribution to `package.json` for VS Code command palette access
     - _Requirements: 5.1, 5.2, 5.3_
 
-- [ ] 4. Create comprehensive unit tests for the service
-  - [ ] 4.1 Test workspace detection and validation logic
+- [ ] 4. Create comprehensive unit tests for the service - **SKIPPED**
+  - [ ] 4.1 Test workspace detection and validation logic - **SKIPPED**
     - Mock `vscode.workspace.workspaceFolders` for various scenarios (no workspace, single workspace, multiple workspaces)
     - Test TypeScript config detection with and without `tsconfig.json`
     - Verify no-op behavior when no workspace is available
     - _Requirements: 1.2, 1.3, 2.2_
 
-  - [ ] 4.2 Test CLI argument construction and path resolution
+  - [ ] 4.2 Test CLI argument construction and path resolution - **SKIPPED**
     - Test CLI path resolution using mock extension context
     - Verify argument array construction with and without TypeScript config
     - Test exclusion pattern formatting and workspace root handling
     - _Requirements: 2.1, 2.2_
 
-  - [ ] 4.3 Test process management and timeout behavior
+  - [ ] 4.3 Test process management and timeout behavior - **SKIPPED**
     - Mock child process spawning and test timeout scenarios
     - Verify graceful process termination on timeout
     - Test stdout data collection and buffering
     - _Requirements: 2.3, 4.3_
 
-  - [ ] 4.4 Test output processing and error handling
+  - [ ] 4.4 Test output processing and error handling - **SKIPPED**
     - Test JSON parsing with valid and invalid dependency-cruiser output
     - Verify envelope structure creation with proper metadata
     - Test file system operations and directory creation
     - Test comprehensive error scenarios (CLI not found, process failures, file I/O errors)
     - _Requirements: 3.1, 3.2, 3.3, 4.1, 4.2, 4.4_
 
-- [ ] 5. Integration testing and validation
-  - [ ] 5.1 Test extension activation with dependency scanning
+- [ ] 5. Integration testing and validation - **SKIPPED**
+  - [ ] 5.1 Test extension activation with dependency scanning - **SKIPPED**
     - Create test workspace with TypeScript files and dependencies
     - Verify extension activates without blocking and scan runs in background
     - Confirm output file is created with expected structure and content
     - _Requirements: 1.1, 1.4, 3.1, 3.2, 3.3_
 
-  - [ ] 5.2 Test manual command execution
+  - [ ] 5.2 Test manual command execution - **SKIPPED**
     - Verify command appears in VS Code command palette
     - Test manual scan execution and file overwriting behavior
     - Confirm error handling works the same as automatic scans
     - _Requirements: 5.1, 5.2, 5.3_
 
-  - [ ] 5.3 Validate cross-platform compatibility and performance
+  - [ ] 5.3 Validate cross-platform compatibility and performance - **SKIPPED**
     - Test on different operating systems (Windows, macOS, Linux)
     - Verify timeout behavior with large repositories
     - Confirm non-blocking behavior doesn't impact extension responsiveness
