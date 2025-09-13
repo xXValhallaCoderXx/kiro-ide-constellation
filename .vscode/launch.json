@@ -15,7 +15,7 @@
 			"outFiles": [
 				"${workspaceFolder}/packages/extension/out/**/*.js"
 			],
-			"preLaunchTask": "build-all"
+			"preLaunchTask": "build-and-watch"
 		}
 	]
 }
