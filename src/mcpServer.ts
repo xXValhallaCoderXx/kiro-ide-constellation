@@ -2,7 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 
-const SERVER_ID = "constellation-mcp";
+const SERVER_ID = process.env.CONSTELLATION_SERVER_ID ?? "constellation-mcp";
 
 const server = new McpServer({
   name: SERVER_ID,

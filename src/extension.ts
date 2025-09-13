@@ -4,8 +4,6 @@ import * as path from "node:path";
 import * as os from "node:os";
 import { spawn } from "node:child_process";
 
-const SERVER_ID = "constellation-mcp";
-
 export async function activate(context: vscode.ExtensionContext) {
   try {
     // Node 18+ requirement
@@ -19,12 +17,16 @@ export async function activate(context: vscode.ExtensionContext) {
 
     const serverJs = vscode.Uri.joinPath(context.extensionUri, "out", "mcpServer.js").fsPath;
 
+    // Server ID (namespacing)
+    const envServerId = (process.env.CONSTELLATION_SERVER_ID || "").trim();
+    const serverId = envServerId || vscode.workspace.getConfiguration("constellation").get<string>("serverId", "constellation-mcp");
+
     // Write/merge Kiro MCP user config
     const nodeBin = resolveNodeBin();
-    const userCfgPath = await upsertUserMcpConfig(nodeBin, serverJs);
+    const userCfgPath = await upsertUserMcpConfig(nodeBin, serverJs, serverId);
 
     // Optionally write workspace config
-    await maybeWriteWorkspaceConfig(nodeBin, serverJs);
+    await maybeWriteWorkspaceConfig(nodeBin, serverJs, serverId);
 
     // Self-test: can we boot the server quickly?
     const ok = await selfTest(nodeBin, serverJs);
@@ -71,7 +73,7 @@ function resolveNodeBin(): string {
   return cfgPath.trim() || "node";
 }
 
-async function upsertUserMcpConfig(nodeBin: string, serverJs: string): Promise<string> {
+async function upsertUserMcpConfig(nodeBin: string, serverJs: string, serverId: string): Promise<string> {
   const userDir = path.join(os.homedir(), ".kiro", "settings");
   const userCfgPath = path.join(userDir, "mcp.json");
   await fs.mkdir(userDir, { recursive: true });
@@ -85,10 +87,10 @@ async function upsertUserMcpConfig(nodeBin: string, serverJs: string): Promise<s
     cfg = { mcpServers: {} };
   }
 
-  cfg.mcpServers[SERVER_ID] = {
+  cfg.mcpServers[serverId] = {
     command: nodeBin,
     args: [serverJs],
-    env: {},
+    env: { CONSTELLATION_SERVER_ID: serverId },
     disabled: false,
     autoApprove: ["ping", "echo"],
   };
@@ -97,7 +99,7 @@ async function upsertUserMcpConfig(nodeBin: string, serverJs: string): Promise<s
   return userCfgPath;
 }
 
-async function maybeWriteWorkspaceConfig(nodeBin: string, serverJs: string): Promise<void> {
+async function maybeWriteWorkspaceConfig(nodeBin: string, serverJs: string, serverId: string): Promise<void> {
   const writeWorkspace = vscode.workspace
     .getConfiguration("constellation")
     .get<boolean>("writeWorkspaceMcpConfig", false);
@@ -123,10 +125,10 @@ async function maybeWriteWorkspaceConfig(nodeBin: string, serverJs: string): Pro
       cfg = { mcpServers: {} };
     }
 
-    cfg.mcpServers[SERVER_ID] = {
+    cfg.mcpServers[serverId] = {
       command: nodeBin,
       args: [serverJs],
-      env: {},
+      env: { CONSTELLATION_SERVER_ID: serverId },
       disabled: false,
       autoApprove: ["ping", "echo"],
     };

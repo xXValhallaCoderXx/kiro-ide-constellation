@@ -1,21 +1,32 @@
-// A launch configuration that compiles the extension and then opens it inside a new window
-// Use IntelliSense to learn about possible attributes.
-// Hover to view descriptions of existing attributes.
-// For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
 {
-	"version": "0.2.0",
-	"configurations": [
-		{
-			"name": "Run Extension",
-			"type": "extensionHost",
-			"request": "launch",
-			"args": [
-				"--extensionDevelopmentPath=${workspaceFolder}"
-			],
-			"outFiles": [
-				"${workspaceFolder}/out/**/*.js"
-			],
-			"preLaunchTask": "${defaultBuildTask}"
-		}
-	]
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run Extension (Dev MCP)",
+      "type": "extensionHost",
+      "request": "launch",
+      "preLaunchTask": "watch:dev",
+      "env": {
+        "CONSTELLATION_SERVER_ID": "constellation-mcp-dev"
+      },
+      "args": [
+        "--extensionDevelopmentPath=${workspaceFolder}"
+      ],
+      "outFiles": [
+        "${workspaceFolder}/out/**/*.js"
+      ]
+    },
+    {
+      "name": "Run Extension",
+      "type": "extensionHost",
+      "request": "launch",
+      "preLaunchTask": "watch",
+      "args": [
+        "--extensionDevelopmentPath=${workspaceFolder}"
+      ],
+      "outFiles": [
+        "${workspaceFolder}/out/**/*.js"
+      ]
+    }
+  ]
 }

@@ -25,6 +25,11 @@
           "type": "boolean",
           "default": false,
           "description": "Also write ./.kiro/settings/mcp.json if the folder exists."
+        },
+        "constellation.serverId": {
+          "type": "string",
+          "default": "constellation-mcp",
+          "markdownDescription": "MCP server ID used as the key in Kiro's mcp.json. Change to namespace dev vs prod (e.g. `constellation-mcp-dev`)."
         }
       }
     }
@@ -34,10 +39,13 @@
     "compile": "tsc -p ./",
     "build": "npm run compile",
     "watch": "tsc -watch -p ./",
+    "watch:dev": "CONSTELLATION_SERVER_ID=constellation-mcp-dev tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src",
     "test": "vscode-test",
-    "package": "vsce package"
+    "package": "vsce package",
+    "clean:mcp": "node ./scripts/mcp-clean.mjs",
+    "clean:mcp:ws": "node ./scripts/mcp-clean.mjs --workspace"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.18.0",

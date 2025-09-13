@@ -18,6 +18,12 @@ npm run watch
 - For config-related changes (e.g., Node path setting, enabling workspace writes):
   - Reload the window so Kiro re-reads MCP configs.
 
+Debug profiles
+- Run Extension (Dev MCP)
+  - Uses a background watch task that sets CONSTELLATION_SERVER_ID=constellation-mcp-dev and launches the Extension Development Host with the same env var. The extension will write to the dev namespace in ~/.kiro/settings/mcp.json.
+- Run Extension
+  - Uses the default namespace from settings (constellation.serverId), no env override.
+
 Useful commands (palette)
 - Constellation: Self-test — Boots the server with --selftest and reports OK/FAILED.
 - Constellation: Open user MCP config — Opens ~/.kiro/settings/mcp.json.
