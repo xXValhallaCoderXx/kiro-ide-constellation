@@ -86,5 +86,6 @@ Read next
 - docs/usage.md — build, run, verify
 - docs/configuration.md — user/workspace config details and JSON examples
 - docs/development.md — recommended dev loop, when to reload/restart
+- docs/events.md — end-to-end messaging and bridge overview
 - docs/troubleshooting.md — common problems and quick fixes
 

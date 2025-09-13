@@ -11,7 +11,7 @@ let graphPanel: vscode.WebviewPanel | undefined;
 export async function activate(context: vscode.ExtensionContext) {
   try {
     // Register side panel webview provider (visible when user clicks the Activity Bar icon)
-    const provider = new SidePanelViewProvider(context.extensionUri);
+    const provider = new SidePanelViewProvider(context.extensionUri, context);
     context.subscriptions.push(
       vscode.window.registerWebviewViewProvider(SidePanelViewProvider.viewType, provider)
     );
@@ -113,9 +113,39 @@ export async function activate(context: vscode.ExtensionContext) {
                 ],
               }
             );
+            
+            // Set up message handling for graph panel
+            const messageDisposable = graphPanel.webview.onDidReceiveMessage((msg) => {
+              import('./services/messenger.service.js').then(({ handleWebviewMessage }) =>
+                handleWebviewMessage(msg, {
+                  revealGraphView: () => void vscode.commands.executeCommand('constellation.openGraphView'),
+                  log: (s) => console.log(s),
+                  postMessage: (message) => graphPanel?.webview.postMessage(message),
+                  extensionContext: context,
+                  openFile: async (path: string) => {
+                    try {
+                      const doc = await vscode.workspace.openTextDocument(vscode.Uri.file(path));
+                      await vscode.window.showTextDocument(doc);
+                    } catch (error) {
+                      console.error('Failed to open file:', path, error);
+                    }
+                  },
+                  triggerScan: async () => {
+                    const { runScan } = await import('./services/dependency-cruiser.service.js');
+                    await runScan(context);
+                  }
+                })
+              ).catch(() => {/* ignore */})
+            });
+            
             const { renderHtml } = await import('./services/webview.service.js');
             graphPanel.webview.html = renderHtml(graphPanel.webview, context.extensionUri, 'graph', 'Constellation Graph');
-            graphPanel.onDidDispose(() => { graphPanel = undefined; });
+            
+            // Ensure proper cleanup of message handlers on panel disposal
+            graphPanel.onDidDispose(() => { 
+              messageDisposable.dispose();
+              graphPanel = undefined; 
+            });
           })
         );
       } catch (err: any) {

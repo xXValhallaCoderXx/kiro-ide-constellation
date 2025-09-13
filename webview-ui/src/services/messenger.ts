@@ -1,9 +1,23 @@
 // Simple message bus for the webview UI
 // Centralized here so views/components can communicate and post to extension
 
+// Graph-specific message types for webview -> extension
+type GraphMessage = 
+  | { type: 'graph/load' }
+  | { type: 'graph/open-file'; path: string }
+  | { type: 'graph/scan' }
+
+// Graph-specific message types for extension -> webview
+type GraphResponseMessage =
+  | { type: 'graph/data'; payload: any } // GraphData type from extension
+  | { type: 'graph/error'; message: string }
+  | { type: 'graph/status'; message: string }
+
 type Message =
   | { type: 'open-graph-view' }
   | { type: 'ping' }
+  | GraphMessage
+  | GraphResponseMessage
 
 function getApi() {
   return typeof acquireVsCodeApi === 'function' ? acquireVsCodeApi() : undefined

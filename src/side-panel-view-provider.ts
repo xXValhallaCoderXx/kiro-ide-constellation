@@ -4,7 +4,17 @@ import { renderHtml } from "./services/webview.service.js";
 export class SidePanelViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = "constellation.sidePanel";
 
-  constructor(private readonly extensionUri: vscode.Uri) {}
+  constructor(
+    private readonly extensionUri: vscode.Uri,
+    private readonly extensionContext?: vscode.ExtensionContext
+  ) {}
+
+  private getExtensionContext(): vscode.ExtensionContext {
+    if (!this.extensionContext) {
+      throw new Error('Extension context not available');
+    }
+    return this.extensionContext;
+  }
 
   resolveWebviewView(webviewView: vscode.WebviewView): void | Thenable<void> {
     const { webview } = webviewView;
@@ -15,6 +25,20 @@ export class SidePanelViewProvider implements vscode.WebviewViewProvider {
         handleWebviewMessage(msg, {
           revealGraphView: () => void vscode.commands.executeCommand('constellation.openGraphView'),
           log: (s) => console.log(s),
+          postMessage: (message) => webview.postMessage(message),
+          extensionContext: this.getExtensionContext(),
+          openFile: async (path: string) => {
+            try {
+              const doc = await vscode.workspace.openTextDocument(vscode.Uri.file(path));
+              await vscode.window.showTextDocument(doc);
+            } catch (error) {
+              console.error('Failed to open file:', path, error);
+            }
+          },
+          triggerScan: async () => {
+            const { runScan } = await import('./services/dependency-cruiser.service.js');
+            await runScan(this.getExtensionContext());
+          }
         })
       ).catch(() => {/* ignore */})
     });
