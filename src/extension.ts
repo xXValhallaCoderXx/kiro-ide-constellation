@@ -3,6 +3,7 @@ import { getEffectiveServerId, resolveNodeBin } from "./services/extension-confi
 import { upsertUserMcpConfig, maybeWriteWorkspaceConfig, selfTest } from "./services/mcp-config.service.js";
 import { isNodeVersionSupported } from "./services/node-version.service.js";
 import { SidePanelViewProvider } from "./side-panel-view-provider.js";
+import { runScan } from "./services/dependency-cruiser.service.js";
 
 export async function activate(context: vscode.ExtensionContext) {
   try {
@@ -59,6 +60,14 @@ export async function activate(context: vscode.ExtensionContext) {
           }
         });
 
+        // Run dependency scan in background (non-blocking)
+        try {
+          void runScan(context);
+        } catch (err: any) {
+          // Log error but don't disrupt extension functionality
+          console.error('Dependency scan failed during activation:', err?.message ?? String(err));
+        }
+
         // Commands
         context.subscriptions.push(
           vscode.commands.registerCommand("constellation.selfTest", async () => {
@@ -68,6 +77,15 @@ export async function activate(context: vscode.ExtensionContext) {
           vscode.commands.registerCommand("constellation.openUserMcpConfig", async () => {
             const doc = await vscode.workspace.openTextDocument(vscode.Uri.file(userCfgPath));
             void vscode.window.showTextDocument(doc);
+          }),
+          vscode.commands.registerCommand("constellation.scanDependencies", async () => {
+            try {
+              await runScan(context);
+              void vscode.window.showInformationMessage("Dependency scan completed successfully");
+            } catch (err: any) {
+              console.error('Manual dependency scan failed:', err?.message ?? String(err));
+              void vscode.window.showErrorMessage(`Dependency scan failed: ${err?.message ?? String(err)}`);
+            }
           })
         );
       } catch (err: any) {
