@@ -4,7 +4,8 @@ import { upsertUserMcpConfig, maybeWriteWorkspaceConfig, selfTest } from "./serv
 import { isNodeVersionSupported } from "./services/node-version.service.js";
 import { SidePanelViewProvider } from "./side-panel-view-provider.js";
 import { runScan } from "./services/dependency-cruiser.service.js";
-import * as path from "node:path";
+
+let graphPanel: vscode.WebviewPanel | undefined;
 
 export async function activate(context: vscode.ExtensionContext) {
   try {
@@ -89,21 +90,27 @@ export async function activate(context: vscode.ExtensionContext) {
             }
           }),
           vscode.commands.registerCommand("constellation.openGraphView", async () => {
-            const panel = vscode.window.createWebviewPanel(
-              'constellation.graph',
+            // Singleton: if already open, just reveal
+            if (graphPanel) {
+              graphPanel.reveal(vscode.ViewColumn.Active, true);
+              return;
+            }
+            graphPanel = vscode.window.createWebviewPanel(
+              'constellation.graphPanel',
               'Constellation Graph',
               vscode.ViewColumn.Active,
               {
                 enableScripts: true,
+                retainContextWhenHidden: true,
                 localResourceRoots: [
                   vscode.Uri.joinPath(context.extensionUri, 'out'),
                   vscode.Uri.joinPath(context.extensionUri, 'out', 'ui'),
                 ],
               }
             );
-
-            const { renderHtml } = await import('./services/webview.service.js')
-            panel.webview.html = renderHtml(panel.webview, context.extensionUri, 'graph', 'Constellation Graph')
+            const { renderHtml } = await import('./services/webview.service.js');
+            graphPanel.webview.html = renderHtml(graphPanel.webview, context.extensionUri, 'graph', 'Constellation Graph');
+            graphPanel.onDidDispose(() => { graphPanel = undefined; });
           })
         );
       } catch (err: any) {

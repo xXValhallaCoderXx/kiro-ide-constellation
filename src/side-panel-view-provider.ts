@@ -9,11 +9,14 @@ export class SidePanelViewProvider implements vscode.WebviewViewProvider {
   resolveWebviewView(webviewView: vscode.WebviewView): void | Thenable<void> {
     const { webview } = webviewView;
 
-    // Handle messages from the webview (e.g., open Graph View)
+    // Handle messages via centralized messenger
     webview.onDidReceiveMessage((msg) => {
-      if (msg?.type === 'open-graph-view') {
-        void vscode.commands.executeCommand('constellation.openGraphView');
-      }
+      import('./services/messenger.service.js').then(({ handleWebviewMessage }) =>
+        handleWebviewMessage(msg, {
+          revealGraphView: () => void vscode.commands.executeCommand('constellation.openGraphView'),
+          log: (s) => console.log(s),
+        })
+      ).catch(() => {/* ignore */})
     });
     webview.options = {
       enableScripts: true,
