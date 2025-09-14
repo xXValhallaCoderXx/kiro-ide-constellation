@@ -5,3 +5,4 @@ out/
 *.vsix
 .vscode-test/
 docs/_reports/
+.kiro/steering/_reports/
