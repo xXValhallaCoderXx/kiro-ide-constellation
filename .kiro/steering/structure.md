@@ -26,7 +26,7 @@
   - Command registration and webview provider
   - Node.js version validation
 - **`mcp.server.ts`**: Standalone MCP server implementation
-  - Tool registration (ping, constellation_impactAnalysis)
+  - Tool registration (ping, constellation_impactAnalysis, constellation_onboarding.plan, constellation_onboarding.commitPlan, constellation_onboarding.nextStep, constellation_onboarding.finalize)
   - MCP SDK integration
   - HTTP bridge communication for UI integration
   - Self-test functionality with `--selftest` flag
@@ -43,6 +43,8 @@
   - `graph-data.service.ts`: Dependency data transformation and loading
   - `messenger.service.ts`: Centralized webview message handling
   - `workspace.service.ts`: Workspace validation and utilities
+  - `onboarding-mode.service.ts`: Persona switching and steering document backup/restore management
+  - `onboarding-walkthrough.service.ts`: Walkthrough plan execution and step progression with file highlighting
 - **`shared/constants.ts`**: Shared constants and configuration
 - **`test/`**: VS Code test framework integration
 
@@ -53,6 +55,8 @@
   - `GraphCanvas.tsx`: Cytoscape.js graph rendering component
   - `GraphToolbar.tsx`: Graph interaction controls
   - `Button.tsx`: Reusable button component
+  - `OnboardingModeToggle.tsx`: Mode switching UI with confirmation dialogs and backup/restore messaging
+  - `OnboardingStatus.tsx`: Walkthrough progress display with step tracking and completion notifications
 - **`src/views/`**: Page-level view components
   - `SidePanelView.tsx`: Main side panel interface
 - **`src/services/`**: UI service layer
@@ -72,7 +76,7 @@
   - Commands: open MCP config, scan dependencies, open graph view
   - Views: Activity bar container and side panel
   - Settings: Node path, workspace config, server ID
-  - MCP Tools: ping, constellation_impactAnalysis
+  - MCP Tools: ping, constellation_impactAnalysis, constellation_onboarding.plan, constellation_onboarding.commitPlan, constellation_onboarding.nextStep, constellation_onboarding.finalize
 - **`tsconfig.json`**: TypeScript compilation (ES2022, NodeNext modules)
 - **`eslint.config.mjs`**: Code style and linting rules
 - **`.vscodeignore`**: Files excluded from extension package
@@ -94,6 +98,11 @@
 
 ## Data Output Structure (`.constellation/`)
 - **`data/codebase-dependencies.json`**: Dependency-cruiser scan results
+- **`onboarding/`**: Walkthrough plan storage and execution data
+  - `plan-YYYY-MM-DDTHH-mm-ss.json`: Timestamped onboarding plan files with step definitions
+- **`steering/backup/`**: Persona switching backup storage
+  - `YYYY-MM-DDTHH-mm-ss/`: Timestamped backup directories containing steering document snapshots
+  - `.backup-metadata.json`: Backup metadata with file counts and timestamps
 
 ## Architecture Patterns
 - **Separation of Concerns**: Extension, MCP server, and UI as distinct layers
@@ -104,6 +113,13 @@
 - **Environment Awareness**: Dev/prod server ID namespacing
 - **Self-Validation**: Built-in server health checks
 - **Modern UI**: Preact + Vite for fast webview development
+- **Persona Management**: Embedded onboarding template with backup/restore lifecycle
+  - Onboarding persona template embedded in `onboarding-mode.service.ts` for bundle shipping
+  - Written to `.kiro/steering/onboarding-guide.md` during mode switching
+  - Original steering documents backed up to `.constellation/steering/backup/` with timestamps
+  - Automatic restoration and cleanup when switching back to Default mode
+
+For comprehensive onboarding system architecture and workflows, see [onboarding.md](onboarding.md).
 
 ## File Naming Conventions
 - TypeScript files: camelCase (e.g., `mcp.server.ts`)
