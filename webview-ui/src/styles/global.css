@@ -299,6 +299,29 @@ body {
   position: relative;
 }
 
+/* Focus Mode helpers */
+.cy-hidden { display: none; }
+.cy-focus-root { outline: 3px solid var(--kiro-accent); outline-offset: 2px; }
+.cy-focus-child { outline: 2px solid var(--vscode-charts-orange, #FF8C00); outline-offset: 1px; }
+
+/* Breadcrumbs */
+.focus-crumbs {
+  position: absolute;
+  top: 8px;
+  left: 12px;
+  display: flex;
+  align-items: center;
+  gap: var(--kiro-space-2);
+  z-index: 100;
+}
+.focus-crumbs-nav { display: inline-flex; align-items: center; gap: 6px; }
+.focus-crumb-item { display: inline-flex; align-items: center; gap: 6px; }
+.focus-crumb { background: var(--kiro-surface-1); color: var(--kiro-text); border: 1px solid var(--kiro-border); border-radius: 12px; padding: 2px 8px; font-size: 11px; cursor: pointer; }
+.focus-crumb:hover { background: var(--vscode-button-secondaryHoverBackground, var(--vscode-button-hoverBackground)); }
+.focus-crumb-text { white-space: nowrap; max-width: 200px; overflow: hidden; text-overflow: ellipsis; }
+.focus-crumb-sep { color: var(--kiro-text-muted); font-size: 11px; }
+.focus-reset { padding: 4px 8px; font-size: 11px; }
+
 /* Impact banner */
 .banner-impact {
   display: flex;
@@ -879,3 +902,250 @@ body {
     min-width: 80px;
   }
 }
+
+/* Focus Mode Breadcrumb Styles */
+.focus-crumbs {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--kiro-space-3);
+  padding: var(--kiro-space-2) var(--kiro-space-3);
+  background: var(--kiro-surface-1);
+  border-bottom: 1px solid var(--kiro-border);
+  min-height: 40px;
+}
+
+.focus-crumbs-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--kiro-space-1);
+  flex: 1;
+  overflow: hidden;
+}
+
+.focus-crumb-item {
+  display: flex;
+  align-items: center;
+  gap: var(--kiro-space-1);
+}
+
+.focus-crumb {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  font-size: 12px;
+  background: transparent;
+  color: var(--kiro-text);
+  border: 1px solid var(--kiro-border);
+  border-radius: var(--kiro-radius-1);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  max-width: 200px;
+  overflow: hidden;
+}
+
+.focus-crumb:hover {
+  background: var(--vscode-button-hoverBackground);
+  color: var(--vscode-button-foreground);
+}
+
+.focus-crumb:focus {
+  outline: 2px solid var(--vscode-focusBorder);
+  outline-offset: 2px;
+}
+
+.focus-crumb-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+  width: 100%;
+}
+
+.focus-crumb-sep {
+  color: var(--kiro-text-muted);
+  font-size: 10px;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.focus-reset {
+  flex-shrink: 0;
+  font-size: 12px;
+}
+
+/* Responsive design for focus breadcrumbs */
+@media (max-width: 768px) {
+  .focus-crumbs {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--kiro-space-2);
+    padding: var(--kiro-space-2);
+  }
+  
+  .focus-crumbs-nav {
+    justify-content: flex-start;
+    overflow-x: auto;
+    padding-bottom: 2px;
+  }
+  
+  .focus-crumb {
+    max-width: 150px;
+    flex-shrink: 0;
+  }
+  
+  .focus-reset {
+    align-self: flex-end;
+  }
+}
+
+@media (max-width: 480px) {
+  .focus-crumb {
+    max-width: 120px;
+  }
+}
+
+/* Focus Mode Cytoscape Classes */
+.cy-hidden {
+  display: none !important;
+}
+
+.cy-dimmed {
+  opacity: 0.2 !important;
+  pointer-events: none !important;
+}
+
+/* Focus Mode Error Handling Styles */
+.focus-error-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--kiro-space-2);
+  padding: var(--kiro-space-2) var(--kiro-space-3);
+  background: var(--vscode-inputValidation-errorBackground);
+  border: 1px solid var(--vscode-inputValidation-errorBorder);
+  border-left: 4px solid var(--vscode-errorForeground);
+  color: var(--vscode-inputValidation-errorForeground, var(--vscode-errorForeground));
+  font-size: 12px;
+}
+
+.focus-error-icon {
+  color: var(--vscode-errorForeground);
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+.focus-error-message {
+  flex: 1;
+  line-height: 1.4;
+}
+
+.focus-error-dismiss {
+  padding: 0 4px;
+  font-size: 16px;
+  line-height: 1;
+  background: transparent;
+  border: none;
+  color: var(--vscode-errorForeground);
+  cursor: pointer;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.focus-error-dismiss:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.focus-error-dismiss:focus {
+  outline: 2px solid var(--vscode-focusBorder);
+  outline-offset: 2px;
+}
+
+/* Empty Children State Styles */
+.focus-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--kiro-space-2);
+  padding: var(--kiro-space-6) var(--kiro-space-3);
+  background: var(--kiro-surface-1);
+  border: 1px solid var(--kiro-border);
+  border-radius: var(--kiro-radius-2);
+  margin: var(--kiro-space-3);
+  text-align: center;
+}
+
+.focus-empty-icon {
+  font-size: 24px;
+  opacity: 0.6;
+}
+
+.focus-empty-message {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--kiro-text);
+}
+
+.focus-empty-hint {
+  font-size: 12px;
+  color: var(--kiro-text-muted);
+  line-height: 1.4;
+}
+
+/* Fan-out Information Styles */
+.focus-fanout-info {
+  display: flex;
+  align-items: center;
+  gap: var(--kiro-space-2);
+  padding: var(--kiro-space-2) var(--kiro-space-3);
+  background: var(--vscode-inputValidation-warningBackground, color-mix(in srgb, var(--kiro-warning) 15%, transparent));
+  border: 1px solid var(--vscode-inputValidation-warningBorder, var(--kiro-warning));
+  border-left: 4px solid var(--kiro-warning);
+  color: var(--vscode-inputValidation-warningForeground, var(--kiro-text));
+  font-size: 12px;
+}
+
+.focus-fanout-icon {
+  color: var(--kiro-warning);
+  flex-shrink: 0;
+}
+
+.focus-fanout-message {
+  flex: 1;
+  line-height: 1.4;
+}
+
+.focus-fanout-badge {
+  padding: 2px 6px;
+  background: var(--kiro-warning);
+  color: var(--kiro-accent-contrast);
+  border-radius: var(--kiro-radius-pill);
+  font-size: 11px;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+/* Responsive design for focus mode error states */
+@media (max-width: 768px) {
+  .focus-error-banner,
+  .focus-fanout-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--kiro-space-1);
+  }
+  
+  .focus-error-dismiss {
+    align-self: flex-end;
+  }
+  
+  .focus-fanout-badge {
+    align-self: flex-start;
+  }
+  
+  .focus-empty-state {
+    margin: var(--kiro-space-2);
+    padding: var(--kiro-space-4) var(--kiro-space-2);
+  }
+}
+
+/* Note: Focus mode root and child node emphasis styles are implemented 
+   in graph-styles.service.ts as part of the Cytoscape stylesheet */
