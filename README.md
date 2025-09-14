@@ -1,9 +1,9 @@
 # Kiro Constellation
 
-A bare-bones Kiro/VS Code extension that installs a tiny local MCP (Model Context Protocol) server and auto-registers it in Kiro. It includes two tools and a side panel UI (Preact webview):
+A bare-bones Kiro/VS Code extension that installs a tiny local MCP (Model Context Protocol) server and auto-registers it in Kiro. It includes tools and a side panel UI (Preact webview):
 
 - ping → responds with "pong"
-- echo → responds with the same text you send
+- constellation_impactAnalysis → analyzes the dependency impact of changing a source file
 
 On activation the extension:
 1. Verifies Node.js 18+.
@@ -23,8 +23,8 @@ npm run build
 Verify in Kiro and open the side panel
 - Open MCP panel → `constellation-mcp` (or `constellation-mcp-dev`) should be running
 - Try: `#[constellation-mcp] ping` → pong
-- Try: `#[constellation-mcp] echo Hello` → Hello
-- Click the Constellation icon in the Activity Bar to open the side panel (webview). It should display "Hello world".
+- Optionally: call `#[constellation-mcp] constellation_impactAnalysis { "filePath": "src/index.ts" }` to visualize impact in the Graph view.
+- Click the Constellation icon in the Activity Bar to open the side panel (webview).
 - Dependency scan output: ./.constellation/data/codebase-dependencies.json (re-run via "Constellation: Scan Dependencies").
 
 Docs

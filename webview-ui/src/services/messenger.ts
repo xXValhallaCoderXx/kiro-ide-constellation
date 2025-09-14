@@ -6,12 +6,14 @@ type GraphMessage =
   | { type: 'graph/load' }
   | { type: 'graph/open-file'; path: string }
   | { type: 'graph/scan' }
+  | { type: 'graph/ready' }
 
 // Graph-specific message types for extension -> webview
 type GraphResponseMessage =
   | { type: 'graph/data'; payload: any } // GraphData type from extension
   | { type: 'graph/error'; message: string }
   | { type: 'graph/status'; message: string }
+  | { type: 'graph/impact'; payload: { sourceFile: string; affectedFiles: string[] } }
 
 type Message =
   | { type: 'open-graph-view' }

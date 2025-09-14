@@ -69,8 +69,10 @@ Debug profiles
   - Uses the default namespace from settings (constellation.serverId).
 
 Useful commands (palette)
-- Constellation: Self-test — Boot the server with --selftest and report OK/FAILED.
 - Constellation: Open user MCP config — Open ~/.kiro/settings/mcp.json.
+
+Internal self-test
+- On activation the extension performs a quick internal self-test to verify the MCP server boots. This is not exposed as a command palette action.
 
 Packaging
 ```bash

@@ -6,7 +6,8 @@ import { SidePanelViewProvider } from "./side-panel-view-provider.js";
 import { runScan } from "./services/dependency-cruiser.service.js";
 import { startHttpBridge } from "./services/http-bridge.service.js";
 
-let graphPanel: vscode.WebviewPanel | undefined;
+// Graph panel provider singleton instance (lazily imported)
+let graphProvider: any | null = null;
 
 export async function activate(context: vscode.ExtensionContext) {
   try {
@@ -77,10 +78,6 @@ export async function activate(context: vscode.ExtensionContext) {
 
         // Commands
         context.subscriptions.push(
-          vscode.commands.registerCommand("constellation.selfTest", async () => {
-            const ok2 = await selfTest(nodeBin, serverJs);
-            void vscode.window.showInformationMessage(`Self-test: ${ok2 ? "OK" : "FAILED"}`);
-          }),
           vscode.commands.registerCommand("constellation.openUserMcpConfig", async () => {
             const doc = await vscode.workspace.openTextDocument(vscode.Uri.file(userCfgPath));
             void vscode.window.showTextDocument(doc);
@@ -95,57 +92,14 @@ export async function activate(context: vscode.ExtensionContext) {
             }
           }),
           vscode.commands.registerCommand("constellation.openGraphView", async () => {
-            // Singleton: if already open, just reveal
-            if (graphPanel) {
-              graphPanel.reveal(vscode.ViewColumn.Active, true);
-              return;
-            }
-            graphPanel = vscode.window.createWebviewPanel(
-              'constellation.graphPanel',
-              'Constellation Graph',
-              vscode.ViewColumn.Active,
-              {
-                enableScripts: true,
-                retainContextWhenHidden: true,
-                localResourceRoots: [
-                  vscode.Uri.joinPath(context.extensionUri, 'out'),
-                  vscode.Uri.joinPath(context.extensionUri, 'out', 'ui'),
-                ],
-              }
-            );
-            
-            // Set up message handling for graph panel
-            const messageDisposable = graphPanel.webview.onDidReceiveMessage((msg) => {
-              import('./services/messenger.service.js').then(({ handleWebviewMessage }) =>
-                handleWebviewMessage(msg, {
-                  revealGraphView: () => void vscode.commands.executeCommand('constellation.openGraphView'),
-                  log: (s) => console.log(s),
-                  postMessage: (message) => graphPanel?.webview.postMessage(message),
-                  extensionContext: context,
-                  openFile: async (path: string) => {
-                    try {
-                      const doc = await vscode.workspace.openTextDocument(vscode.Uri.file(path));
-                      await vscode.window.showTextDocument(doc);
-                    } catch (error) {
-                      console.error('Failed to open file:', path, error);
-                    }
-                  },
-                  triggerScan: async () => {
-                    const { runScan } = await import('./services/dependency-cruiser.service.js');
-                    await runScan(context);
-                  }
-                })
-              ).catch(() => {/* ignore */})
-            });
-            
-            const { renderHtml } = await import('./services/webview.service.js');
-            graphPanel.webview.html = renderHtml(graphPanel.webview, context.extensionUri, 'graph', 'Constellation Graph');
-            
-            // Ensure proper cleanup of message handlers on panel disposal
-            graphPanel.onDidDispose(() => { 
-              messageDisposable.dispose();
-              graphPanel = undefined; 
-            });
+            const { GraphPanelProvider } = await import('./providers/graph-panel-provider.js');
+            if (!graphProvider) graphProvider = new GraphPanelProvider(context);
+            await graphProvider.ensureOpen();
+          }),
+          vscode.commands.registerCommand("constellation.showImpact", async (payload: { sourceFile: string; affectedFiles: string[] }) => {
+            const { GraphPanelProvider } = await import('./providers/graph-panel-provider.js');
+            if (!graphProvider) graphProvider = new GraphPanelProvider(context);
+            await graphProvider.postImpact(payload);
           })
         );
       } catch (err: any) {

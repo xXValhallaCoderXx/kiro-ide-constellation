@@ -12,6 +12,7 @@ export type GraphOutboundMessage =
   | { type: 'graph/data'; payload: import('./graph-data.service.js').GraphData }
   | { type: 'graph/error'; message: string }
   | { type: 'graph/status'; message: string }
+  | { type: 'graph/impact'; payload: { sourceFile: string; affectedFiles: string[] } }
 
 export type InboundMessage =
   | { type: 'open-graph-view' }

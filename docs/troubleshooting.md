@@ -24,11 +24,11 @@ Self-test fails or setup toast shows an error
 - If node isn’t on PATH, set Constellation: Node Path to an absolute Node binary path.
 
 Server starts but fails at runtime
-- Open the MCP server logs (if available) or run the self-test command.
+- Open the MCP server logs (if available).
 - Restart constellation-mcp from the MCP panel after building (npm run watch is handy).
 
 I moved or renamed the repository, and now it can’t start
-- The MCP config stores an absolute path to out/mcpServer.js. Re-run the extension (or run the self-test) to upsert the path.
+- The MCP config stores an absolute path to out/mcpServer.js. Re-run the extension to upsert the path.
 
 I want to disable or remove the server
 - Remove the constellation-mcp block from ~/.kiro/settings/mcp.json (and from ./.kiro/settings/mcp.json if you created one).

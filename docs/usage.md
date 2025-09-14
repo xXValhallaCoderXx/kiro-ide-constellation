@@ -20,7 +20,7 @@ npm run build
 - Open Kiro’s MCP panel and confirm constellation-mcp is running.
 - Try the tools:
   - #[constellation-mcp] ping → pong
-  - #[constellation-mcp] echo Hello → Hello
+  - #[constellation-mcp] constellation_impactAnalysis { "filePath": "src/index.ts" }
 
 5) Open the side panel UI
 - Click the Constellation icon in the Activity Bar to open the webview side panel.
@@ -37,7 +37,6 @@ npm run build
 - When you call the MCP tool #[constellation-mcp] ping, the Graph tab will also auto-open via the local HTTP bridge.
 
 Helpful commands
-- Constellation: Self-test — Spawns the MCP server with --selftest and reports OK/FAILED.
 - Constellation: Open user MCP config — Opens ~/.kiro/settings/mcp.json in the editor.
 - Constellation: Scan Dependencies — Re-run dependency-cruiser on the workspace and overwrite the output file.
 

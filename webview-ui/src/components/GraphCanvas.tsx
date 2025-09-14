@@ -37,9 +37,10 @@ interface GraphCanvasProps {
   data: GraphData
   isRendering: boolean
   onRenderingChange: (rendering: boolean) => void
+  impactSourceId?: string
 }
 
-export function GraphCanvas({ data, isRendering, onRenderingChange }: GraphCanvasProps) {
+export function GraphCanvas({ data, isRendering, onRenderingChange, impactSourceId }: GraphCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const cyRef = useRef<Core | null>(null)
   // Keep a stable reference to the callback so the effect below doesn't re-run
@@ -66,17 +67,34 @@ export function GraphCanvas({ data, isRendering, onRenderingChange }: GraphCanva
         }
       }
 
+      // Compute direct children for role styling
+      const directChildren = new Set<string>()
+      if (impactSourceId) {
+        for (const e of data.edges) {
+          if (e.source === impactSourceId) {
+            directChildren.add(e.target)
+          }
+        }
+      }
+
       // Transform data for Cytoscape with file type detection
       const elements = [
         ...data.nodes.map(node => {
           const ext = getFileExt(node.path)
+          const role = impactSourceId
+            ? (node.id === impactSourceId
+                ? 'source'
+                : (directChildren.has(node.id) ? 'direct-child' : 'indirect-child'))
+            : 'normal'
           return {
             data: {
               id: node.id,
               label: node.label,
               path: node.path,
               language: node.language,
-              ext: ext // Add file extension for styling
+              ext: ext, // Add file extension for styling
+              isSource: impactSourceId === node.id, // Mark epicenter node for highlighting
+              role
             }
           }
         }),
@@ -85,7 +103,8 @@ export function GraphCanvas({ data, isRendering, onRenderingChange }: GraphCanva
             id: edge.id,
             source: edge.source,
             target: edge.target,
-            kind: edge.kind
+            kind: edge.kind,
+            fromSource: impactSourceId ? edge.source === impactSourceId : false
           }
         }))
       ]
@@ -156,7 +175,7 @@ export function GraphCanvas({ data, isRendering, onRenderingChange }: GraphCanva
         }
       }, renderDelay)
     }
-  }, [data])
+  }, [data, impactSourceId])
 
   // Enhanced cleanup on unmount
   useEffect(() => {

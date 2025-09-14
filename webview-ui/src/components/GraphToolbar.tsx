@@ -2,14 +2,24 @@ import { Button } from './Button'
 import { getPlaceholderAttributes, isToolbarFeatureEnabled } from '../services/extension-config.service'
 import { getSupportedFileTypes, getFileTypeLabel } from '../services/graph-styles.service'
 
+interface ImpactState {
+  isActive: boolean
+  data?: {
+    sourceFile: string
+    affectedFiles: string[]
+  }
+}
+
 interface GraphToolbarProps {
   onRescan: () => void
   nodeCount?: number
   edgeCount?: number
   isOptimized?: boolean
+  impactState?: ImpactState
+  onResetImpactView?: () => void
 }
 
-export function GraphToolbar({ onRescan, nodeCount, edgeCount, isOptimized }: GraphToolbarProps) {
+export function GraphToolbar({ onRescan, nodeCount, edgeCount, isOptimized, impactState, onResetImpactView }: GraphToolbarProps) {
   const fileTypes = getSupportedFileTypes()
 
   return (
@@ -38,15 +48,15 @@ export function GraphToolbar({ onRescan, nodeCount, edgeCount, isOptimized }: Gr
             Fit
           </button>
           
-          <button
-            className="toolbar-button"
-            title="Reset graph layout (coming soon)"
-            aria-label="Reset graph layout"
-            {...getPlaceholderAttributes(isToolbarFeatureEnabled('resetEnabled'))}
-            data-testid="graph-reset-button"
-          >
-            Reset
-          </button>
+          {/* Reset View Button - Only show when impact filter is active */}
+          {impactState?.isActive && onResetImpactView && (
+            <Button 
+              onClick={onResetImpactView}
+              data-testid="graph-reset-view-button"
+            >
+              Reset View
+            </Button>
+          )}
           
           <div className="toolbar-dropdown">
             <button
