@@ -648,6 +648,41 @@ export function GraphDashboard() {
             crumbs={focusState.crumbs}
             onJump={handleBreadcrumbJump}
             onReset={handleReset}
+            currentDepth={focusState.depth === Number.MAX_SAFE_INTEGER ? 0 : focusState.depth}
+            onDepthChange={(delta) => {
+              // Implement true +/- depth control with clamping
+              const last = focusState.crumbs[focusState.crumbs.length - 1]
+              if (!last) return
+
+              const prevDepth = focusState.depth === Number.MAX_SAFE_INTEGER ? 3 : focusState.depth // treat 'All' as 3 for stepping
+              let nextDepth = prevDepth + delta
+              if (nextDepth < 1) nextDepth = 1
+              if (nextDepth > 10) nextDepth = 10 // sanity cap; adjust later
+
+              // Determine active graph
+              const activeGraph = impactState.isActive && impactState.filteredGraph 
+                ? impactState.filteredGraph 
+                : fullGraphData
+              if (!activeGraph) return
+
+              const visibility = computeVisible({
+                forwardAdj: forwardAdjRef.current,
+                reverseAdj: reverseAdjRef.current,
+                root: last.root,
+                depth: nextDepth,
+                lens: last.lens,
+                maxChildren: 100
+              })
+              setFocusState(prev => ({
+                ...prev,
+                depth: nextDepth,
+                visibleNodes: visibility.visibleNodes,
+                visibleEdges: visibility.visibleEdges,
+                crumbs: prev.crumbs.map((c, i) => i === prev.crumbs.length - 1 ? { ...c, depth: nextDepth } : c)
+              }))
+              graphCanvasRef.current?.applyFocusView({ visibleNodes: visibility.visibleNodes, visibleEdges: visibility.visibleEdges, rootId: last.root })
+              graphCanvasRef.current?.centerOn(last.root, { animate: true })
+            }}
           />
         )}
 

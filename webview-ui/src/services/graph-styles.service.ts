@@ -90,6 +90,13 @@ export function generateGraphStylesheet(nodeCount: number = 0) {
         'background-color': colors.other // Default fallback
       }
     },
+    // Hidden elements for focus mode
+    {
+      selector: '.cy-hidden',
+      style: {
+        'display': 'none'
+      }
+    },
     // Edge styles
     {
       selector: 'edge',
@@ -124,6 +131,27 @@ export function generateGraphStylesheet(nodeCount: number = 0) {
         'shadow-opacity': 0.5,
         'shadow-offset-x': 0,
         'shadow-offset-y': 0
+      }
+    },
+    // Focus root emphasis
+    {
+      selector: 'node.cy-focus-root',
+      style: {
+        'border-width': 3,
+        'border-color': '#007FD4',
+        'shadow-blur': 18,
+        'shadow-color': '#007FD4',
+        'shadow-opacity': 0.6,
+        'shadow-offset-x': 0,
+        'shadow-offset-y': 0
+      }
+    },
+    // Focus direct child emphasis
+    {
+      selector: 'node.cy-focus-child',
+      style: {
+        'border-width': 2,
+        'border-color': '#FFD700'
       }
     },
     // Epicenter node style (impact source)
