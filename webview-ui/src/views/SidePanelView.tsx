@@ -2,6 +2,12 @@ import { useState, useEffect } from 'preact/hooks'
 import { Button } from '../components/Button'
 import { OnboardingModeToggle } from '../components/OnboardingModeToggle'
 import { OnboardingStatus } from '../components/OnboardingStatus'
+import { SidebarShell } from '../components/SidebarShell'
+import { ConstellationHeader } from '../components/ConstellationHeader'
+import { SectionHeader } from '../components/SectionHeader'
+import { ModeSelector } from '../components/ModeSelector'
+import { ActionCard } from '../components/ActionCard'
+import { DataStatusCard } from '../components/DataStatusCard'
 import { messenger } from '../services/messenger'
 
 interface OnboardingStatusState {
@@ -76,6 +82,11 @@ export function SidePanelView() {
     setCurrentMode(mode)
   }
 
+  const handleReindex = () => {
+    // TODO: Implement re-index functionality
+    console.log('Re-index requested')
+  }
+
   return (
     <div>
       <OnboardingModeToggle 
@@ -90,11 +101,52 @@ export function SidePanelView() {
         currentFile={onboardingStatus.currentFile}
         explanation={onboardingStatus.explanation}
       />
-      <div style={{ padding: '12px' }}>
-        <h1>Constellation</h1>
-        <p>Side Panel</p>
-        <Button onClick={openGraph}>Open Graph View</Button>
-      </div>
+      
+      <SidebarShell>
+        <ConstellationHeader />
+        
+        <div>
+          <SectionHeader label="MODE">
+            <span class="constellation-help-icon" title="Switch between development and onboarding modes">❓</span>
+          </SectionHeader>
+          <ModeSelector 
+            currentMode={currentMode}
+            onModeChange={handleModeChange}
+            disabled={isLoading}
+          />
+        </div>
+        
+        <div>
+          <SectionHeader label="ACTIONS" />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <ActionCard
+              icon="🌐"
+              title="Project Graph"
+              subtitle="Visualize project structure"
+              accent="brand"
+              onClick={openGraph}
+            />
+            <ActionCard
+              icon="📊"
+              title="Health Dashboard"
+              subtitle="Monitor code quality metrics"
+              accent="success"
+              disabled={true}
+            />
+          </div>
+        </div>
+        
+        <div>
+          <SectionHeader label="DATA" />
+          <DataStatusCard
+            title="Codebase Index Status"
+            subline="Last indexed 2 minutes ago"
+            filesCount={42}
+            depsCount={18}
+            onReindex={handleReindex}
+          />
+        </div>
+      </SidebarShell>
     </div>
   )
 }
