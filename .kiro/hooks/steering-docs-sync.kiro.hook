@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "name": "Steering Documents Sync",
+  "description": "Monitors changes to steering documents in the .kiro/steering directory and ensures the kiro steering agent has the latest versions for accurate guidance and assistance",
+  "version": "1",
+  "when": {
+    "type": "userTriggered",
+    "patterns": [
+      ".kiro/steering/*.md"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "The steering documents in .kiro/steering/ have been updated. Please review the changes and update your understanding of the project's architecture, technology stack, messaging patterns, and development guidelines. Pay special attention to any new rules, patterns, or constraints that may affect how you provide assistance with this codebase."
+  }
+}

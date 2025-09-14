@@ -1,0 +1,21 @@
+{
+  "enabled": true,
+  "name": "Documentation Sync Checker",
+  "description": "This hook analyzes the current /docs directory documentation and compares it against the latest code changes and codebase to ensure that documentation remains up to date with the actual implementation",
+  "version": "1",
+  "when": {
+    "type": "userTriggered",
+    "patterns": [
+      "docs/*",
+      "src/**/*",
+      "webview-ui/**/*",
+      "package.json",
+      "README.md",
+      "*.md"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Analyze the current documentation in the /docs directory and compare it against the latest code changes in the codebase. Check for:\n\n1. **Documentation Coverage**: Ensure all major features, services, and components are documented\n2. **Accuracy**: Verify that documented APIs, configurations, and workflows match the actual implementation\n3. **Completeness**: Identify missing documentation for new features or significant changes\n4. **Consistency**: Check that documentation follows the established patterns and structure\n5. **Examples**: Ensure code examples and usage patterns are current and functional\n\nFocus on:\n- API changes in services and components\n- New features or tools that need documentation\n- Configuration changes that affect user setup\n- Workflow changes that impact usage instructions\n- Deprecated features that should be removed from docs\n\nProvide specific recommendations for documentation updates, including which files need changes and what content should be added, modified, or removed."
+  }
+}
