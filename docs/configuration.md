@@ -15,10 +15,10 @@ Example ~/.kiro/settings/mcp.json after activation:
   "mcpServers": {
     "constellation-mcp": {
       "command": "node",
-      "args": ["/absolute/path/to/kiro-ide-constellation/out/mcpServer.js"],
+    "args": ["/absolute/path/to/kiro-ide-constellation/out/mcp.server.js"],
       "env": {},
       "disabled": false,
-      "autoApprove": ["ping", "constellation_impactAnalysis", "constellation_onboarding.finalize"]
+      "autoApprove": ["ping", "constellation_impactAnalysis", "constellation_onboarding.finalize", "constellation_onboarding.plan", "constellation_onboarding.commitPlan", "constellation_onboarding.nextStep"]
     }
   }
 }
@@ -69,28 +69,30 @@ The extension includes an onboarding mode that provides guided walkthroughs of y
 
 ### Onboarding Configuration Paths
 - **Persona file (when enabled)**: `./.kiro/steering/onboarding-guide.md`
-- **Backup location**: `./.constellation/steering/.backups/<timestamp>/`
+- **Backup location**: `./.constellation/steering/backup/<timestamp>/`
 - **Plan storage**: `./.constellation/onboarding/plan-<yyyyMMdd-HHmmss>.json`
 
 ### Mode Switching Lifecycle
 - **Enable flow**: 
-  1. Backup existing `./.kiro/steering/` directory to `./.constellation/steering/.backups/<timestamp>/`
+  1. Backup existing `./.kiro/steering/` directory to `./.constellation/steering/backup/<timestamp>/`
   2. Write onboarding persona file to `./.kiro/steering/onboarding-guide.md`
 - **Disable flow**: 
-  1. Restore most recent backup from `./.constellation/steering/.backups/` to `./.kiro/steering/`
-  2. Clean up backup directory
+  1. Restore most recent backup from `./.constellation/steering/backup/` to `./.kiro/steering/`.
+  2. If no backup exists or restore fails, create an empty `./.kiro/steering/` and proceed with a warning.
+  3. On successful restore, backups are cleaned up; otherwise they are left in place.
 
 ### MCP Tools Integration
 The onboarding feature adds three new MCP tools:
-- `constellation_onboardingplan`: Generate structured walkthrough plans
-- `constellation_onboardingcommitPlan`: Commit and execute walkthrough plans
-- `constellation_onboardingnextStep`: Advance to the next step in active walkthroughs
+- `constellation_onboarding.plan`: Generate structured walkthrough plans
+- `constellation_onboarding.commitPlan`: Commit and execute walkthrough plans
+- `constellation_onboarding.nextStep`: Advance to the next step in active walkthroughs
 
 ### HTTP Bridge Endpoints
-Additional endpoints for onboarding functionality:
+Additional endpoints for onboarding and graph functionality:
 - `POST /persona`: Switch between Default and Onboarding modes
 - `POST /onboarding/commitPlan`: Commit walkthrough plans and execute first step
 - `POST /onboarding/nextStep`: Progress to next step in active walkthrough
+- `POST /scan`: Trigger a dependency graph scan; used by MCP to populate `.constellation/data/codebase-dependencies.json` when missing
 
 All endpoints require bearer token authentication via `CONSTELLATION_BRIDGE_TOKEN`.
 

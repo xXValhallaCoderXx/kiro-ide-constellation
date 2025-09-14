@@ -8,9 +8,9 @@ A Kiro/VS Code extension that provides a comprehensive MCP (Model Context Protoc
 - `constellation_onboarding.finalize` → finalizes onboarding walkthrough with cleanup
 
 **Onboarding Tools:**
-- `constellation_onboardingplan` → generates structured walkthrough plans
-- `constellation_onboardingcommitPlan` → commits and executes walkthrough plans  
-- `constellation_onboardingnextStep` → advances to next step in active walkthroughs
+- `constellation_onboarding.plan` → generates structured walkthrough plans
+- `constellation_onboarding.commitPlan` → commits and executes walkthrough plans  
+- `constellation_onboarding.nextStep` → advances to next step in active walkthroughs
 
 On activation the extension:
 1) Ensures Node.js 18+ is available.
@@ -67,6 +67,13 @@ Dependency scan (background)
 - Output is written to ./.constellation/data/codebase-dependencies.json.
 - You can re-run the scan any time via the command palette: "Constellation: Scan Dependencies".
 
+Graph-context onboarding plans
+- The plan generator uses the dependency graph written to ./.constellation/data/codebase-dependencies.json.
+- If the graph file is missing, the MCP server triggers POST /scan via the local HTTP bridge, then retries loading the graph.
+- Seed resolution: exact/case-insensitive path matching, TS/JS extension swaps, basename scoring, and topic matching.
+- Traversal: breadth-first over the union of import and reverse edges (depth=1, limit≈30), ranked by distance then node degree.
+- Output: plan steps include the seed (if resolved) and up to 5 related files for quick onboarding context.
+
 Event architecture (overview)
 - Webview ↔ Extension (UI messaging)
   - Webview UI posts messages via window.postMessage (wrapped by webview-ui/src/services/messenger.ts).
@@ -107,12 +114,12 @@ Onboarding mode (new)
   - The Side Panel shows “Onboarding Mode”.
 - Disable (Onboarding → Default):
   - Confirms with a dialog.
-  - Restores the most recent backup back to ./.kiro/steering.
-  - Cleans up all backups by removing ./.constellation/steering/backup.
+  - Attempts to restore the most recent backup back to ./.kiro/steering. If no backup exists or restore fails, it creates an empty ./.kiro/steering as a safe fallback and proceeds, showing a warning.
+  - Cleans up backups on successful restore; otherwise leaves ./.constellation/steering/backup intact for manual review.
 
 Implementation notes
 - Embedded persona template lives in code and is written to ./.kiro/steering/onboarding-guide.md on enable.
-- Backup/restore is implemented in src/services/onboarding-mode.service.ts
+- Backup/restore is implemented in src/services/onboarding-mode.service.ts and stores backups under ./.constellation/steering/backup to avoid recursion and path growth.
 - UI components: webview-ui/src/components/OnboardingModeToggle.tsx and OnboardingStatus.tsx
 - Status and errors are sent via onboarding/* webview messages (see docs/events.md)
 

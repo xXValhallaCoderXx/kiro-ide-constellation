@@ -32,6 +32,11 @@ MCP → Ext (HTTP bridge)
   - Auth: Authorization: Bearer <CONSTELLATION_BRIDGE_TOKEN>
   - Env: CONSTELLATION_BRIDGE_PORT, CONSTELLATION_BRIDGE_TOKEN (in mcp.json)
   - Action: opens/reveals the singleton Graph tab (command: constellation.openGraphView)
+- POST /scan
+  - Sender: MCP server when graph file is missing — src/mcp.server.ts (loadGraphWithScanFallback)
+  - Receiver: Ext HTTP handler — src/services/http-bridge.service.ts
+  - Auth: Authorization: Bearer <CONSTELLATION_BRIDGE_TOKEN>
+  - Action: triggers dependency scan and writes ./.constellation/data/codebase-dependencies.json; MCP retries loading graph afterwards
 
 Files and responsibilities
 - UI
@@ -63,6 +68,7 @@ Security
 Future
 - Add graph/load/data/open-file/scan as per cytoscape-graph-initial-prd.md.
 - Optional: add more endpoints to the HTTP bridge if tools need to drive UI (e.g., focus node, load subset).
+- Expand MCP graph-context responses to include traversal stats and seed resolution diagnostics.
 
 Onboarding UI messages (current)
 

@@ -39,7 +39,7 @@ Dependency scan (dev notes)
 - If a dependency-cruiser config exists in the workspace root it will be used (via --config). Otherwise we pass --no-config.
 - If tsconfig.json exists in the workspace root it will be passed as --ts-config <abs path>.
 - Output path: ./.constellation/data/codebase-dependencies.json
-- You can re-run the scan via command palette: "Constellation: Scan Dependencies".
+- You can re-run the scan via command palette: "Constellation: Scan Dependencies" or via the MCP-triggered `/scan` bridge endpoint when the graph is missing.
 
 Event architecture (details)
 - Webview UI messaging
@@ -89,7 +89,9 @@ Onboarding mode (implementation map)
   - Embedded template string (ONBOARDING_PERSONA_TEMPLATE)
   - Move ./.kiro/steering → ./.constellation/steering/backup/<timestamp> on enable
   - Write ./.kiro/steering/onboarding-guide.md
-  - Restore from backup on disable and cleanup backups
+  - Restore from backup on disable with fallback to creating an empty ./.kiro/steering when no backup exists
+  - Cleanup: remove backups on successful restore; otherwise leave ./.constellation/steering/backup present for manual review
+  - Important: backups are stored outside ./.kiro/steering to avoid recursive nesting and ENAMETOOLONG
 - Service: src/services/onboarding-walkthrough.service.ts
   - Plan commit and step execution helpers (open + highlight)
 - UI: webview-ui/src/components/OnboardingModeToggle.tsx

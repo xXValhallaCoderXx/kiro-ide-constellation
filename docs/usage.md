@@ -23,9 +23,9 @@ npm run build
   - `#[constellation-mcp] constellation_impactAnalysis { "filePath": "src/index.ts" }`
   - `#[constellation-mcp] constellation_onboarding.finalize { "chosenAction": "document" }`
 - Try the onboarding tools (when in Onboarding mode):
-  - `#[constellation-mcp] constellation_onboardingplan { "request": "Show me how authentication works" }`
-  - `#[constellation-mcp] constellation_onboardingcommitPlan { "plan": {...} }`
-  - `#[constellation-mcp] constellation_onboardingnextStep`
+  - `#[constellation-mcp] constellation_onboarding.plan { "request": "Show me how authentication works" }`
+  - `#[constellation-mcp] constellation_onboarding.commitPlan { "plan": {...} }`
+  - `#[constellation-mcp] constellation_onboarding.nextStep`
 
 5) Open the side panel UI
 - Click the Constellation icon in the Activity Bar to open the webview side panel.
@@ -58,14 +58,14 @@ Notes
 Onboarding Mode
 1) Open the Constellation side panel and use the Mode dropdown to switch from Default → Onboarding.
 2) Confirm the dialog. The extension will:
-   - Move ./.kiro/steering → ./.constellation/steering/backup/<timestamp>
+|   - Move ./.kiro/steering → ./.constellation/steering/backup/<timestamp>
    - Create ./.kiro/steering/onboarding-guide.md from an embedded template
    - Show “Onboarding Mode” in the panel
 3) To return to Default:
-   - Switch Mode to Default and confirm. The extension restores from the most recent backup and removes ./.constellation/steering/backup entirely.
+   - Switch Mode to Default and confirm. The extension attempts to restore from the most recent backup; if none exists, it creates an empty ./.kiro/steering and proceeds with a warning. On successful restore backups are removed; otherwise they are left intact for manual review.
 
 Where files go (Onboarding)
 - Persona file: ./.kiro/steering/onboarding-guide.md
 - Backups (during Onboarding): ./.constellation/steering/backup/<timestamp>
-- After returning to Default: backups are cleaned up automatically.
+- After returning to Default: backups are cleaned up automatically if restore succeeded.
 
