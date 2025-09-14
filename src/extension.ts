@@ -46,7 +46,17 @@ export async function activate(context: vscode.ExtensionContext) {
 
         // Write/merge Kiro MCP user config
         const nodeBin = resolveNodeBin();
-        const extraEnv = { CONSTELLATION_BRIDGE_PORT: String(bridgePort), CONSTELLATION_BRIDGE_TOKEN: bridgeToken };
+        const extraEnv: Record<string, string> = { 
+          CONSTELLATION_BRIDGE_PORT: String(bridgePort), 
+          CONSTELLATION_BRIDGE_TOKEN: bridgeToken 
+        };
+        
+        // Add workspace root to environment if available
+        const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+        if (workspaceRoot) {
+          extraEnv.CONSTELLATION_WORKSPACE_ROOT = workspaceRoot;
+        }
+        
         const userCfgPath = await upsertUserMcpConfig(nodeBin, serverJs, serverId, extraEnv);
 
         // Optionally write workspace config
