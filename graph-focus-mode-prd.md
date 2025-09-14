@@ -132,11 +132,23 @@ Changes
   - .cy-hidden { display: none }
   - Root/children emphasis classes (reuse halo from isSource with neutral color)
 
-10) Message contracts
+10) Impact Analysis interop (existing 'graph/impact')
+- Current behavior:
+  - Extension computes affectedFiles via BFS and posts { type: 'graph/impact', payload: { sourceFile, affectedFiles } }.
+  - Webview (GraphDashboard.tsx) stores fullGraphData and also builds a filtered subgraph (only affected files), then sets state to that filtered subgraph. GraphCanvas receives impactSourceId to style source, direct children, and edges from source.
+- Focus Mode integration plan:
+  - Activation: When 'graph/impact' is processed and GraphData is present, enter Focus Mode automatically with root = sourceFile and lens='children'. Seed breadcrumbs with one crumb for the source file. Keep the existing Impact banner.
+  - Active graph: Define activeGraph = impactState.filteredGraph ?? fullGraphData. Build adjacency maps for whichever is active. Focus computations (computeVisible/applyView) operate on the activeGraph to avoid re-creating Cytoscape.
+  - Visible set: For P0, apply depth=1 (root + direct children). Non-visible nodes/edges use display:none (default). Impact-specific styles (isSource, fromSource, direct/indirect child) remain when impact is active.
+  - Drill & back: Users can double-click within the impact subgraph to drill deeper; breadcrumbs grow accordingly. Esc/back only when breadcrumbs exist. Reset View (existing) clears impact state and focus crumbs and restores the full graph.
+  - Performance: Respect the fan-out cap (100 children) when computing visible sets. If the impact subgraph is large, the default depth=1 maintains clarity and performance.
+  - Optional label: Breadcrumb bar may display a small “Impact” badge when impactState.isActive, but functionality is identical to regular Focus Mode.
+
+11) Message contracts
 - P0 is fully client‑side once 'graph/data' is loaded. No new extension messages required.
 - Deferred (not in P0/P1): command to open graph already focused on a specific file.
 
-11) UX flows (P0)
+12) UX flows (P0)
 A) Drill once
 - User double‑clicks node X
 - View sets root = X, depth = 1, lens = children
@@ -152,42 +164,42 @@ C) Back / Reset
 - Esc pops to previous crumb (Y → X)
 - Reset clears crumbs and shows full graph
 
-12) Acceptance criteria (P0)
+13) Acceptance criteria (P0)
 - Double‑click focuses on node and shows only its outgoing neighborhood at depth 1
 - Breadcrumb renders correctly, supports jump and reset
-- Esc pops one level back when there is a previous crumb
+- Esc pops one level back when breadcrumbs exist
 - Layout remains stable; only the view filters change; the root is centered
 - Performance: compute+apply under 100ms for 1k‑node graph (typical case far less)
-- No extension changes required; impact view continues to work unchanged
+- Impact interop: When an impact payload arrives, seed breadcrumbs with the source file as the first crumb; Reset View exits both impact and focus states and restores the full graph.
 
-13) Rollout plan
+14) Rollout plan
 - F0: Scaffolding (service + adjacency + minimal applyView that dims non‑visible; no breadcrumbs yet)
-- F1: Breadcrumbs + Esc + Reset + displayNone strategy
+- F1: Breadcrumbs + Esc + Reset + displayNone strategy; Impact interop: seed crumb when impact arrives
 - F2: Position cache + center animation + small counts chip
 - F3 (P1): depth controls via +/- buttons (1–3), parents lens toggle, cap “+N more” with show‑all
 - F4 (deferred): open‑focused via command/message (skipped per decision)
 
-14) Decisions (based on your feedback)
+15) Decisions (based on your feedback)
 - Visibility strategy: display:none by default (dim mode remains available behind a flag).
 - Depth controls (P1): use small +/- buttons near breadcrumbs (range 1–3, default 1).
 - Fan‑out threshold: cap at 100 children; show “+N more”.
 - Esc behavior: only triggers Back when breadcrumbs exist.
 - Open‑focused command: skip for now (deferred beyond P1).
 
-15) Implementation checklist (file-oriented)
+16) Implementation checklist (file-oriented)
 - webview-ui/src/services/focus-mode.service.ts (new): adjacency + BFS + helpers
 - webview-ui/src/components/focus-breadcrumb.tsx (new): crumbs UI
 - webview-ui/src/components/GraphCanvas.tsx: imperative API + double‑click handler + visibility classes
 - webview-ui/src/components/GraphDashboard.tsx: focus state, handlers, Esc, render breadcrumb, Reset Focus integration
-- webview-ui/src/styles/global.css: focus classes & breadcrumb styles
-- Tests (optional now): unit for computeVisible and crumbs ops
+- Impact interop: ensure adjacency is built for activeGraph (filteredGraph when impact is active); seed crumb from sourceFile on 'graph/impact'; reuse existing Impact banner and Reset
 
-16) Risks & mitigations
+17) Risks & mitigations
 - Large graphs: ensure we do not recreate Cytoscape for focus changes; use cy.batch and style updates only
 - Interaction clash: existing double‑click opens files today — keep double‑click in GraphCanvas for focus; move file open to modifier (e.g., Alt+double‑click) or switch: single‑click select, Enter to open (we can confirm preference)
+- Impact vs Focus semantics: current impact path swaps the dataset to a filtered subgraph. The focus implementation must operate on the active dataset (full or filtered) and keep breadcrumb state in sync with impact activation/reset.
 - Visual churn: prefer center/animate with short duration; avoid full layout reflows
 
-17) Appendix: pseudo‑APIs
+18) Appendix: pseudo‑APIs
 
 Focus compute
 ```ts

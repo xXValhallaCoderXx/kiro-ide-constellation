@@ -156,6 +156,44 @@ export function generateGraphStylesheet(nodeCount: number = 0) {
       style: {
         'opacity': isLargeGraph ? 0.9 : 1
       }
+    },
+    // Focus mode root node emphasis - halo ring + thicker border
+    {
+      selector: 'node.cy-focus-root',
+      style: {
+        'border-width': '4px',
+        'border-color': '#007FD4',
+        'shadow-blur': 25,
+        'shadow-color': '#007FD4',
+        'shadow-opacity': 0.7,
+        'shadow-offset-x': 0,
+        'shadow-offset-y': 0,
+        'z-index': 10
+      }
+    },
+    // Focus mode direct children emphasis - thicker border
+    {
+      selector: 'node.cy-focus-child',
+      style: {
+        'border-width': '3px',
+        'border-color': '#4FC1FF',
+        'z-index': 5
+      }
+    },
+    // Hidden elements for focus mode
+    {
+      selector: '.cy-hidden',
+      style: {
+        'display': 'none'
+      }
+    },
+    // Dimmed elements for focus mode (alternative visibility strategy)
+    {
+      selector: '.cy-dimmed',
+      style: {
+        'opacity': 0.2,
+        'events': 'no'
+      }
     }
   ];
 

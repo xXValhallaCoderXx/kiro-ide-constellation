@@ -1,4 +1,5 @@
-import { useEffect, useRef } from 'preact/hooks'
+import { useEffect, useRef, useImperativeHandle } from 'preact/hooks'
+import { forwardRef } from 'preact/compat'
 import cytoscape, { Core } from 'cytoscape'
 import { messenger } from '../services/messenger'
 import { getFileExt } from '../services/file-type.service'
@@ -33,19 +34,140 @@ interface GraphData {
   meta: Meta
 }
 
+export interface GraphCanvasRef {
+  applyFocusView: (params: {
+    visibleNodes?: Set<string>;
+    visibleEdges?: Set<string>;
+    rootId?: string | null;
+  }) => void;
+  clearFocusView: () => void;
+  centerOn: (rootId: string, options?: { animate?: boolean }) => void;
+  getPositions: () => Record<string, { x: number; y: number }>;
+  setPositions: (positions: Record<string, { x: number; y: number }>) => void;
+}
+
 interface GraphCanvasProps {
   data: GraphData
   isRendering: boolean
   onRenderingChange: (rendering: boolean) => void
   impactSourceId?: string
+  onNodeDrill?: (nodeId: string) => void
 }
 
-export function GraphCanvas({ data, isRendering, onRenderingChange, impactSourceId }: GraphCanvasProps) {
-  const containerRef = useRef<HTMLDivElement>(null)
-  const cyRef = useRef<Core | null>(null)
-  // Keep a stable reference to the callback so the effect below doesn't re-run
-  const onRenderingChangeRef = useRef(onRenderingChange)
-  useEffect(() => { onRenderingChangeRef.current = onRenderingChange }, [onRenderingChange])
+export const GraphCanvas = forwardRef<GraphCanvasRef, GraphCanvasProps>(
+  ({ data, isRendering, onRenderingChange, impactSourceId, onNodeDrill }, ref) => {
+    const containerRef = useRef<HTMLDivElement>(null)
+    const cyRef = useRef<Core | null>(null)
+    // Keep a stable reference to the callback so the effect below doesn't re-run
+    const onRenderingChangeRef = useRef(onRenderingChange)
+    useEffect(() => { onRenderingChangeRef.current = onRenderingChange }, [onRenderingChange])
+
+    // Expose imperative API through ref
+    useImperativeHandle(ref, () => ({
+      applyFocusView: ({ visibleNodes, visibleEdges, rootId }) => {
+        if (!cyRef.current) return
+
+        const startTime = performance.now()
+
+        cyRef.current.batch(() => {
+          // Default behavior: show everything, then optionally hide the non-visible set
+          cyRef.current!.elements().removeClass('cy-hidden cy-dimmed cy-focus-root cy-focus-child')
+
+          if (visibleNodes && visibleEdges) {
+            // Hide nodes not in the visible set
+            cyRef.current!.nodes().forEach(n => {
+              if (!visibleNodes.has(n.id())) n.addClass('cy-hidden')
+            })
+            // Hide edges not in the visible set
+            cyRef.current!.edges().forEach(e => {
+              if (!visibleEdges.has(e.id())) e.addClass('cy-hidden')
+            })
+
+            // Emphasis
+            if (rootId) {
+              cyRef.current!.nodes().forEach(n => {
+                if (n.id() === rootId) {
+                  n.addClass('cy-focus-root')
+                } else {
+                  const isDirectChild = cyRef.current!.edges(`[source="${rootId}"][target="${n.id()}"]`).length > 0
+                  if (isDirectChild) n.addClass('cy-focus-child')
+                }
+              })
+            }
+          }
+        })
+
+        // Keep dragging enabled on the visible set
+        try {
+          cyRef.current.autoungrabify(false)
+          cyRef.current.nodes().grabify()
+        } catch {/* ignore */}
+
+        // Performance monitoring - log when operations exceed 50ms threshold
+        const duration = performance.now() - startTime
+        if (duration > 50) {
+          console.warn(`Focus mode applyFocusView took ${duration.toFixed(2)}ms (threshold: 50ms)`) 
+        }
+
+        // Center if root provided
+        if (rootId) {
+          const node = cyRef.current.getElementById(rootId)
+          if (node.length > 0) cyRef.current.center(node)
+        }
+      },
+
+      clearFocusView: () => {
+        if (!cyRef.current) return
+        cyRef.current.batch(() => {
+          cyRef.current!.elements().removeClass('cy-hidden cy-dimmed cy-focus-root cy-focus-child')
+        })
+        try {
+          cyRef.current.autoungrabify(false)
+          cyRef.current.nodes().grabify()
+        } catch {/* ignore */}
+      },
+
+      centerOn: (rootId, options = { animate: true }) => {
+        if (!cyRef.current) return
+
+        const node = cyRef.current.getElementById(rootId)
+        if (node.length > 0) {
+          const animationDuration = options.animate ? 175 : 0
+          cyRef.current.center(node)
+          if (options.animate) {
+            cyRef.current.animate({
+              center: { eles: node },
+              duration: animationDuration,
+              easing: 'ease-out'
+            })
+          }
+        }
+      },
+
+      getPositions: () => {
+        if (!cyRef.current) return {}
+
+        const positions: Record<string, { x: number; y: number }> = {}
+        cyRef.current.nodes().forEach(node => {
+          const pos = node.position()
+          positions[node.id()] = { x: pos.x, y: pos.y }
+        })
+        return positions
+      },
+
+      setPositions: (positions) => {
+        if (!cyRef.current) return
+
+        cyRef.current.batch(() => {
+          Object.entries(positions).forEach(([nodeId, pos]) => {
+            const node = cyRef.current!.getElementById(nodeId)
+            if (node.length > 0) {
+              node.position(pos)
+            }
+          })
+        })
+      }
+    }), [])
 
   // Create/update Cytoscape instance only when data changes
   useEffect(() => {
@@ -162,10 +284,18 @@ export function GraphCanvas({ data, isRendering, onRenderingChange, impactSource
           })
 
           cyRef.current.on('dbltap', 'node', (evt) => {
-            // Double-click to open file
             const node = evt.target
+            const nodeId = node.id()
             const path = node.data('path')
-            if (path) {
+            const alt = (evt.originalEvent as any)?.altKey
+
+            if (alt && path) {
+              messenger.post('graph/open-file', { path })
+              return
+            }
+            if (onNodeDrill) {
+              onNodeDrill(nodeId)
+            } else if (path) {
               messenger.post('graph/open-file', { path })
             }
           })
@@ -182,7 +312,7 @@ export function GraphCanvas({ data, isRendering, onRenderingChange, impactSource
         }
       }, renderDelay)
     }
-  }, [data, impactSourceId])
+  }, [data, impactSourceId, onNodeDrill])
 
   // Enhanced cleanup on unmount
   useEffect(() => {
@@ -201,23 +331,24 @@ export function GraphCanvas({ data, isRendering, onRenderingChange, impactSource
     }
   }, [])
 
-  return (
-    <div className="graph-canvas">
-      {/* Rendering indicator */}
-      {isRendering && (
-        <div className="graph-canvas-overlay">
-          <div className="graph-canvas-indicator">
-            Rendering...
+    return (
+      <div className="graph-canvas">
+        {/* Rendering indicator */}
+        {isRendering && (
+          <div className="graph-canvas-overlay">
+            <div className="graph-canvas-indicator">
+              Rendering...
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Cytoscape container */}
-      <div
-        ref={containerRef}
-        className="graph-canvas-container"
-        data-testid="graph-canvas"
-      />
-    </div>
-  )
-}
+        {/* Cytoscape container */}
+        <div
+          ref={containerRef}
+          className="graph-canvas-container"
+          data-testid="graph-canvas"
+        />
+      </div>
+    )
+  }
+)

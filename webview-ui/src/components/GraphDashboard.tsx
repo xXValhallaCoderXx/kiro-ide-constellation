@@ -1,8 +1,22 @@
 import { useCallback, useEffect, useState, useRef } from 'preact/hooks'
 import { messenger } from '../services/messenger'
 import { GraphToolbar } from './GraphToolbar'
-import { GraphCanvas } from './GraphCanvas'
+import { GraphCanvas, GraphCanvasRef } from './GraphCanvas'
 import { Button } from './Button'
+import { FocusBreadcrumb } from './FocusBreadcrumb'
+import { 
+  buildAdjacency, 
+  computeVisible, 
+  formatCrumb,
+  validateRootNode,
+  countChildren,
+  validateGraphData,
+  cleanupPositionCache,
+  type FocusLens, 
+  type Crumb,
+  type FocusError,
+  type ChildrenInfo
+} from '../services/focus-mode.service'
 
 interface Node {
   id: string
@@ -44,6 +58,19 @@ interface ImpactState {
   filteredGraph?: GraphData
 }
 
+interface FocusState {
+  isActive: boolean
+  root: string | null
+  depth: number
+  lens: FocusLens
+  visibleNodes: Set<string>
+  visibleEdges: Set<string>
+  crumbs: Crumb[]
+  positionCache: Record<string, { x: number; y: number }>
+  error: FocusError | null
+  childrenInfo: ChildrenInfo | null
+}
+
 type ComponentState = 
   | { type: 'loading' }
   | { type: 'error'; message: string }
@@ -56,9 +83,39 @@ export function GraphDashboard() {
   const [isRendering, setIsRendering] = useState(false)
   const [fullGraphData, setFullGraphData] = useState<GraphData | null>(null)
   const [impactState, setImpactState] = useState<ImpactState>({ isActive: false })
+  const [focusState, setFocusState] = useState<FocusState>({
+    isActive: false,
+    root: null,
+    depth: 1,
+    lens: 'children',
+    visibleNodes: new Set(),
+    visibleEdges: new Set(),
+    crumbs: [],
+    positionCache: {},
+    error: null,
+    childrenInfo: null
+  })
+  
   // Keep latest impact state in a ref to avoid stale closure inside message handler
   const impactRef = useRef<ImpactState>({ isActive: false })
   useEffect(() => { impactRef.current = impactState }, [impactState])
+  
+  // Refs for adjacency maps and GraphCanvas
+  const forwardAdjRef = useRef<Map<string, string[]>>(new Map())
+  const reverseAdjRef = useRef<Map<string, string[]>>(new Map())
+  const graphCanvasRef = useRef<GraphCanvasRef>(null)
+
+  // Helper function to rebuild adjacency maps for the active graph
+  const rebuildAdjacencyMaps = useCallback((activeGraph: GraphData) => {
+    try {
+      const { forwardAdj, reverseAdj } = buildAdjacency(activeGraph)
+      forwardAdjRef.current = forwardAdj
+      reverseAdjRef.current = reverseAdj
+    } catch (error) {
+      console.error('Failed to rebuild adjacency maps:', error)
+      throw error
+    }
+  }, [])
 
   // Function to compute filtered graph from affected files list
   const computeFilteredGraph = useCallback((graphData: GraphData, affectedFiles: string[]): GraphData => {
@@ -96,6 +153,283 @@ export function GraphDashboard() {
     }
   }, [fullGraphData])
 
+  // Toast notification function for error messages
+  const showToast = useCallback((message: string, type: 'error' | 'warning' | 'info' = 'error') => {
+    // Simple console-based toast for now - could be enhanced with a proper toast system
+    console.warn(`Focus Mode ${type.toUpperCase()}: ${message}`)
+    
+    // Update focus state with error
+    setFocusState(prev => ({
+      ...prev,
+      error: {
+        type: type === 'error' ? 'unknown' : 'performance',
+        message
+      }
+    }))
+    
+    // Clear error after 5 seconds
+    setTimeout(() => {
+      setFocusState(prev => ({ ...prev, error: null }))
+    }, 5000)
+  }, [])
+
+  // Reset function - defined first to avoid hoisting issues
+  const handleReset = useCallback(() => {
+    // Clear focus state including error and children info
+    setFocusState({
+      isActive: false,
+      root: null,
+      depth: 1,
+      lens: 'children',
+      visibleNodes: new Set(),
+      visibleEdges: new Set(),
+      crumbs: [],
+      positionCache: {},
+      error: null,
+      childrenInfo: null
+    })
+
+    // Clear focus view on canvas so all nodes/edges are visible again
+    if (graphCanvasRef.current) {
+      graphCanvasRef.current.clearFocusView()
+    }
+
+    // Clear impact state and return to full graph
+    if (impactState.isActive) {
+      setImpactState({ isActive: false })
+    }
+
+    // Return to full graph view and rebuild adjacency maps for full graph
+    if (fullGraphData) {
+      try {
+        rebuildAdjacencyMaps(fullGraphData)
+        setState({ type: 'data', data: fullGraphData })
+      } catch (error) {
+        console.error('Failed to rebuild adjacency maps during reset:', error)
+        setState({ type: 'error', message: 'Failed to reset to full graph view' })
+      }
+    }
+  }, [impactState.isActive, fullGraphData, rebuildAdjacencyMaps])
+
+  // Focus mode methods
+  const handleNodeDrill = useCallback((nodeId: string) => {
+    if (!fullGraphData) return
+
+    // Determine active graph (impact subgraph or full graph)
+    const activeGraph = impactState.isActive && impactState.filteredGraph 
+      ? impactState.filteredGraph 
+      : fullGraphData
+
+    // Validate graph data structure
+    const graphValidation = validateGraphData(activeGraph)
+    if (!graphValidation.isValid) {
+      showToast(`Malformed graph data: ${graphValidation.error}. Falling back to full graph view.`, 'error')
+      // Fallback to full graph view
+      if (fullGraphData) {
+        setState({ type: 'data', data: fullGraphData })
+        setImpactState({ isActive: false })
+      }
+      return
+    }
+
+    // Root node validation - check if node exists in current graph
+    if (!validateRootNode(activeGraph, nodeId)) {
+      showToast(`Node "${nodeId}" not found in current graph. This may be due to stale breadcrumbs.`, 'error')
+      // Reset to full graph view
+      handleReset()
+      return
+    }
+
+    // Count children to check for empty state and extreme fan-out
+    const childrenCount = countChildren(forwardAdjRef.current, reverseAdjRef.current, nodeId, 'children')
+    const maxChildren = 100
+    const hasMore = childrenCount > maxChildren
+    const displayCount = Math.min(childrenCount, maxChildren)
+
+    // Handle empty children state
+    if (childrenCount === 0) {
+      setFocusState(prev => ({
+        ...prev,
+        isActive: true,
+        root: nodeId,
+        depth: 1,
+        lens: 'children',
+        visibleNodes: new Set([nodeId]),
+        visibleEdges: new Set(),
+        crumbs: [...prev.crumbs, formatCrumb(activeGraph, nodeId, 1, 'children')],
+        error: null,
+        childrenInfo: {
+          count: 0,
+          hasMore: false,
+          displayCount: 0
+        }
+      }))
+
+      // Apply focus view showing only the root node
+      if (graphCanvasRef.current) {
+        graphCanvasRef.current.applyFocusView({
+          visibleNodes: new Set([nodeId]),
+          visibleEdges: new Set(),
+          rootId: nodeId
+        })
+        graphCanvasRef.current.centerOn(nodeId, { animate: true })
+      }
+      return
+    }
+
+    // Cache current positions before applying focus
+    if (graphCanvasRef.current) {
+      const positions = graphCanvasRef.current.getPositions()
+      setFocusState(prev => ({ 
+        ...prev, 
+        positionCache: cleanupPositionCache(positions, new Set(activeGraph.nodes.map(n => n.id)))
+      }))
+    }
+
+    try {
+      // Compute visibility using BFS with performance monitoring
+      const visibilityResult = computeVisible({
+        forwardAdj: forwardAdjRef.current,
+        reverseAdj: reverseAdjRef.current,
+        root: nodeId,
+        depth: 1,
+        lens: 'children',
+        maxChildren
+      })
+
+      // Create new breadcrumb
+      const newCrumb = formatCrumb(activeGraph, nodeId, 1, 'children')
+
+      // Update focus state
+      setFocusState(prev => ({
+        ...prev,
+        isActive: true,
+        root: nodeId,
+        depth: 1,
+        lens: 'children',
+        visibleNodes: visibilityResult.visibleNodes,
+        visibleEdges: visibilityResult.visibleEdges,
+        crumbs: [...prev.crumbs, newCrumb],
+        error: null,
+        childrenInfo: {
+          count: childrenCount,
+          hasMore,
+          displayCount
+        }
+      }))
+
+      // Apply focus view to canvas
+      if (graphCanvasRef.current) {
+        graphCanvasRef.current.applyFocusView({
+          visibleNodes: visibilityResult.visibleNodes,
+          visibleEdges: visibilityResult.visibleEdges,
+          rootId: nodeId
+        })
+        graphCanvasRef.current.centerOn(nodeId, { animate: true })
+      }
+
+      // Log extreme fan-out warning
+      if (hasMore) {
+        console.warn(`Focus mode: Node "${nodeId}" has ${childrenCount} children, showing only ${displayCount} (capped at ${maxChildren})`)
+      }
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error during focus computation'
+      showToast(`Failed to compute focus view: ${errorMessage}`, 'error')
+      
+      // Fallback to full graph view
+      handleReset()
+    }
+  }, [fullGraphData, impactState, showToast, handleReset])
+
+  const handleBreadcrumbJump = useCallback((index: number) => {
+    if (!fullGraphData || index >= focusState.crumbs.length) return
+
+    const targetCrumb = focusState.crumbs[index]
+    
+    // Determine active graph
+    const activeGraph = impactState.isActive && impactState.filteredGraph 
+      ? impactState.filteredGraph 
+      : fullGraphData
+
+    // Validate graph data structure
+    const graphValidation = validateGraphData(activeGraph)
+    if (!graphValidation.isValid) {
+      showToast(`Malformed graph data: ${graphValidation.error}. Falling back to full graph view.`, 'error')
+      handleReset()
+      return
+    }
+
+    // Root node validation for stale breadcrumbs
+    if (!validateRootNode(activeGraph, targetCrumb.root)) {
+      showToast(`Breadcrumb target "${targetCrumb.root}" not found in current graph. Resetting to full view.`, 'error')
+      handleReset()
+      return
+    }
+
+    try {
+      // Count children for the target crumb
+      const childrenCount = countChildren(forwardAdjRef.current, reverseAdjRef.current, targetCrumb.root, targetCrumb.lens)
+      const maxChildren = 100
+      const hasMore = childrenCount > maxChildren
+      const displayCount = Math.min(childrenCount, maxChildren)
+
+      // Recompute visibility for the target crumb
+      const visibilityResult = computeVisible({
+        forwardAdj: forwardAdjRef.current,
+        reverseAdj: reverseAdjRef.current,
+        root: targetCrumb.root,
+        depth: targetCrumb.depth,
+        lens: targetCrumb.lens,
+        maxChildren
+      })
+
+      // Update focus state and truncate later crumbs
+      setFocusState(prev => ({
+        ...prev,
+        root: targetCrumb.root,
+        depth: targetCrumb.depth,
+        lens: targetCrumb.lens,
+        visibleNodes: visibilityResult.visibleNodes,
+        visibleEdges: visibilityResult.visibleEdges,
+        crumbs: prev.crumbs.slice(0, index + 1),
+        error: null,
+        childrenInfo: {
+          count: childrenCount,
+          hasMore,
+          displayCount
+        }
+      }))
+
+      // Apply focus view to canvas
+      if (graphCanvasRef.current) {
+        graphCanvasRef.current.applyFocusView({
+          visibleNodes: visibilityResult.visibleNodes,
+          visibleEdges: visibilityResult.visibleEdges,
+          rootId: targetCrumb.root
+        })
+        graphCanvasRef.current.centerOn(targetCrumb.root, { animate: true })
+      }
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error during breadcrumb jump'
+      showToast(`Failed to jump to breadcrumb: ${errorMessage}`, 'error')
+      handleReset()
+    }
+  }, [fullGraphData, focusState.crumbs, impactState, showToast, handleReset])
+
+  const handleEscapeKey = useCallback(() => {
+    if (focusState.crumbs.length > 0) {
+      if (focusState.crumbs.length === 1) {
+        // If only one crumb, reset completely
+        handleReset()
+      } else {
+        // Navigate back to previous breadcrumb level
+        handleBreadcrumbJump(focusState.crumbs.length - 2)
+      }
+    }
+  }, [focusState.crumbs, handleReset, handleBreadcrumbJump])
+
   // Initialize component and request graph data
   useEffect(() => {
     // Signal readiness so the extension can safely send impact payloads
@@ -109,14 +443,45 @@ export function GraphDashboard() {
       switch (msg.type) {
         case 'graph/data': {
           const graphPayload = msg.payload as GraphData
+          
+          // Validate graph data structure before processing
+          const graphValidation = validateGraphData(graphPayload)
+          if (!graphValidation.isValid) {
+            setState({ type: 'error', message: `Invalid graph data: ${graphValidation.error}` })
+            break
+          }
+
           // Store full graph data for reset functionality
           setFullGraphData(graphPayload)
 
           // If an impact arrived before data, apply it now (using ref to avoid stale closure)
           if (impactRef.current.isActive && impactRef.current.data) {
-            const filteredGraph = computeFilteredGraph(graphPayload, impactRef.current.data.affectedFiles)
-            setImpactState((prev) => ({ ...prev, filteredGraph }))
-            setState({ type: 'data', data: filteredGraph })
+            try {
+              const filteredGraph = computeFilteredGraph(graphPayload, impactRef.current.data.affectedFiles)
+              
+              // Build adjacency maps for the filtered graph (active graph)
+              rebuildAdjacencyMaps(filteredGraph)
+              
+              setImpactState((prev) => ({ ...prev, filteredGraph }))
+              setState({ type: 'data', data: filteredGraph })
+            } catch (error) {
+              console.error('Failed to compute filtered graph or build adjacency maps:', error)
+              // Fallback to full graph
+              try {
+                rebuildAdjacencyMaps(graphPayload)
+                setState({ type: 'data', data: graphPayload })
+              } catch (fallbackError) {
+                setState({ type: 'error', message: 'Failed to process graph data structure' })
+              }
+            }
+            break
+          }
+
+          // Build adjacency maps for the full graph (active graph when no impact)
+          try {
+            rebuildAdjacencyMaps(graphPayload)
+          } catch (error) {
+            setState({ type: 'error', message: 'Failed to process graph data structure' })
             break
           }
 
@@ -139,12 +504,67 @@ export function GraphDashboard() {
           if (fullGraphData) {
             const filteredGraph = computeFilteredGraph(fullGraphData, impactData.affectedFiles)
             
+            // Rebuild adjacency maps for the filtered graph (active graph)
+            try {
+              rebuildAdjacencyMaps(filteredGraph)
+            } catch (error) {
+              console.error('Failed to rebuild adjacency maps for impact graph:', error)
+              setState({ type: 'error', message: 'Failed to process impact analysis data' })
+              break
+            }
+            
             // Update impact state
             setImpactState({
               isActive: true,
               data: impactData,
               filteredGraph
             })
+            
+            // Automatically activate focus mode with sourceFile as root (Requirement 5.1, 5.2)
+            if (filteredGraph.nodes.some(node => node.id === impactData.sourceFile)) {
+              // Seed breadcrumbs with sourceFile as first crumb (Requirement 5.2)
+              const sourceCrumb = formatCrumb(filteredGraph, impactData.sourceFile, 1, 'children')
+              
+              // Compute visibility for the source file
+              try {
+                const visibilityResult = computeVisible({
+                  forwardAdj: forwardAdjRef.current,
+                  reverseAdj: reverseAdjRef.current,
+                  root: impactData.sourceFile,
+                  depth: 1,
+                  lens: 'children',
+                  maxChildren: 100
+                })
+
+                // Count children for display info
+                const childrenCount = countChildren(forwardAdjRef.current, reverseAdjRef.current, impactData.sourceFile, 'children')
+                const maxChildren = 100
+                const hasMore = childrenCount > maxChildren
+                const displayCount = Math.min(childrenCount, maxChildren)
+
+                // Activate focus mode with source file as root
+                setFocusState({
+                  isActive: true,
+                  root: impactData.sourceFile,
+                  depth: 1,
+                  lens: 'children',
+                  visibleNodes: visibilityResult.visibleNodes,
+                  visibleEdges: visibilityResult.visibleEdges,
+                  crumbs: [sourceCrumb],
+                  positionCache: {},
+                  error: null,
+                  childrenInfo: {
+                    count: childrenCount,
+                    hasMore,
+                    displayCount
+                  }
+                })
+              } catch (error) {
+                console.error('Failed to compute focus view for impact source:', error)
+                // Fall back to showing the filtered graph without focus
+                setFocusState(prev => ({ ...prev, isActive: false, crumbs: [] }))
+              }
+            }
             
             // Update display to show filtered graph
             setState({ type: 'data', data: filteredGraph })
@@ -165,6 +585,38 @@ export function GraphDashboard() {
 
     messenger.on(handleMessage)
   }, [])
+
+  // Keyboard event listener for Escape key
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && focusState.crumbs.length > 0) {
+        event.preventDefault()
+        handleEscapeKey()
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [focusState.crumbs.length, handleEscapeKey])
+
+  // Position cache cleanup for long-running sessions
+  useEffect(() => {
+    const cleanupInterval = setInterval(() => {
+      if (fullGraphData && Object.keys(focusState.positionCache).length > 0) {
+        const validNodeIds = new Set(fullGraphData.nodes.map(n => n.id))
+        const cleanedCache = cleanupPositionCache(focusState.positionCache, validNodeIds)
+        
+        // Only update if cleanup actually removed entries
+        if (Object.keys(cleanedCache).length !== Object.keys(focusState.positionCache).length) {
+          setFocusState(prev => ({ ...prev, positionCache: cleanedCache }))
+        }
+      }
+    }, 60000) // Cleanup every minute
+
+    return () => clearInterval(cleanupInterval)
+  }, [fullGraphData, focusState.positionCache])
 
   const handleRescan = useCallback(() => {
     // Reset rendering state when starting a new scan
@@ -190,6 +642,52 @@ export function GraphDashboard() {
       
       {/* Main Content Area */}
       <div className="graph-dashboard-content">
+        {/* Focus breadcrumb navigation */}
+        {focusState.crumbs.length > 0 && (
+          <FocusBreadcrumb
+            crumbs={focusState.crumbs}
+            onJump={handleBreadcrumbJump}
+            onReset={handleReset}
+          />
+        )}
+
+        {/* Focus mode error display */}
+        {focusState.error && (
+          <div className="focus-error-banner" role="alert" aria-live="polite">
+            <span className="focus-error-icon">⚠</span>
+            <span className="focus-error-message">{focusState.error.message}</span>
+            <button 
+              className="focus-error-dismiss"
+              onClick={() => setFocusState(prev => ({ ...prev, error: null }))}
+              aria-label="Dismiss error"
+            >
+              ×
+            </button>
+          </div>
+        )}
+
+        {/* Empty children state display */}
+        {focusState.isActive && focusState.childrenInfo?.count === 0 && (
+          <div className="focus-empty-state" role="status" aria-live="polite">
+            <span className="focus-empty-icon">📁</span>
+            <span className="focus-empty-message">No children at depth 1</span>
+            <span className="focus-empty-hint">This node has no dependencies to explore</span>
+          </div>
+        )}
+
+        {/* Fan-out information display */}
+        {focusState.isActive && focusState.childrenInfo && focusState.childrenInfo.hasMore && (
+          <div className="focus-fanout-info" role="status" aria-live="polite">
+            <span className="focus-fanout-icon">📊</span>
+            <span className="focus-fanout-message">
+              Showing {focusState.childrenInfo.displayCount} of {focusState.childrenInfo.count} children
+            </span>
+            <span className="focus-fanout-badge">
+              +{focusState.childrenInfo.count - focusState.childrenInfo.displayCount} more
+            </span>
+          </div>
+        )}
+
         {/* Impact banner */}
         {impactState.isActive && (
           <div className="banner-impact" role="status" aria-live="polite">
@@ -239,10 +737,12 @@ export function GraphDashboard() {
         {/* Graph Canvas */}
         {state.type === 'data' && (
           <GraphCanvas
+            ref={graphCanvasRef}
             data={state.data}
             isRendering={isRendering}
             onRenderingChange={handleRenderingChange}
             impactSourceId={impactState.isActive ? impactState.data?.sourceFile : undefined}
+            onNodeDrill={handleNodeDrill}
           />
         )}
       </div>
