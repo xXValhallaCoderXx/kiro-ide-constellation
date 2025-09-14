@@ -92,6 +92,14 @@ export async function activate(context: vscode.ExtensionContext) {
           console.error('Dependency scan failed during activation:', err?.message ?? String(err));
         }
 
+        // Also refresh 90-day Git metrics in the background (non-blocking)
+        try {
+          const { ensureGitMetrics } = await import('./services/git-metrics.service.js');
+          void ensureGitMetrics(context);
+        } catch (err: any) {
+          console.warn('Git metrics refresh failed during activation:', err?.message ?? String(err));
+        }
+
         // Commands
         context.subscriptions.push(
           vscode.commands.registerCommand("constellation.openUserMcpConfig", async () => {

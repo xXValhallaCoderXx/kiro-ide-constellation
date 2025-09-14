@@ -52,12 +52,14 @@ interface GraphCanvasProps {
   onRenderingChange: (rendering: boolean) => void
   impactSourceId?: string
   onNodeDrill?: (nodeId: string) => void
+  onNodeSelect?: (nodeId: string) => void
 }
 
 export const GraphCanvas = forwardRef<GraphCanvasRef, GraphCanvasProps>(
-  ({ data, isRendering, onRenderingChange, impactSourceId, onNodeDrill }, ref) => {
+  ({ data, isRendering, onRenderingChange, impactSourceId, onNodeDrill, onNodeSelect }, ref) => {
     const containerRef = useRef<HTMLDivElement>(null)
     const cyRef = useRef<Core | null>(null)
+    const tapTimeoutRef = useRef<number | null>(null)
     // Keep a stable reference to the callback so the effect below doesn't re-run
     const onRenderingChangeRef = useRef(onRenderingChange)
     useEffect(() => { onRenderingChangeRef.current = onRenderingChange }, [onRenderingChange])
@@ -278,12 +280,26 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, GraphCanvasProps>(
 
           // Add event handlers for interactions
           cyRef.current.on('tap', 'node', (evt) => {
-            // Single-click highlighting (node gets selected automatically by Cytoscape)
+            // Delay selection slightly to allow dbltap to cancel it
             const node = evt.target
-            console.log('Node selected:', node.data('label'))
+            const nodeId = node.id()
+            if (tapTimeoutRef.current) {
+              window.clearTimeout(tapTimeoutRef.current)
+              tapTimeoutRef.current = null
+            }
+            tapTimeoutRef.current = window.setTimeout(() => {
+              if (onNodeSelect) onNodeSelect(nodeId)
+              else console.log('Node selected:', node.data('label'))
+              tapTimeoutRef.current = null
+            }, 220)
           })
 
           cyRef.current.on('dbltap', 'node', (evt) => {
+            // Cancel pending single-selection
+            if (tapTimeoutRef.current) {
+              window.clearTimeout(tapTimeoutRef.current)
+              tapTimeoutRef.current = null
+            }
             const node = evt.target
             const nodeId = node.id()
             const path = node.data('path')
@@ -317,6 +333,10 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, GraphCanvasProps>(
   // Enhanced cleanup on unmount
   useEffect(() => {
     return () => {
+      if (tapTimeoutRef.current) {
+        window.clearTimeout(tapTimeoutRef.current)
+        tapTimeoutRef.current = null
+      }
       if (cyRef.current) {
         try {
           // Remove all event listeners before destroying

@@ -367,6 +367,94 @@ body {
   font-size: 12px;
 }
 
+/* File Info Panel */
+.file-info-panel {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2000;
+  width: 320px;
+  max-width: calc(100% - 24px);
+  background: var(--kiro-surface-1);
+  border: 1px solid var(--kiro-border);
+  border-radius: var(--kiro-radius-2);
+  box-shadow: var(--kiro-shadow-soft);
+  display: flex;
+  flex-direction: column;
+}
+
+.file-info-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--kiro-border);
+}
+
+.file-info-titles {
+  min-width: 0;
+}
+
+.file-info-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--kiro-text);
+  margin-bottom: 2px;
+}
+
+.file-info-path {
+  font-family: var(--vscode-editor-font-family, monospace);
+  font-size: 11px;
+  color: var(--kiro-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 240px;
+}
+
+.file-info-close {
+  line-height: 1;
+}
+
+.file-info-section {
+  padding: 8px 10px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 12px;
+}
+
+.file-info-section-title {
+  grid-column: 1 / -1;
+  font-size: 12px;
+  color: var(--kiro-text-muted);
+  margin-bottom: 4px;
+}
+
+.file-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 12px;
+  grid-column: 1 / -1;
+}
+
+.file-info-stat { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.file-info-stat .label { font-size: 11px; color: var(--kiro-text-muted); }
+.file-info-stat .value { font-size: 12px; color: var(--kiro-text); font-weight: 500; }
+
+.file-info-empty {
+  grid-column: 1 / -1;
+  font-size: 12px;
+  color: var(--kiro-text-muted);
+}
+
+.file-info-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 8px 10px 10px 10px;
+  border-top: 1px solid var(--kiro-border);
+}
+
 /* Focus and Keyboard Navigation */
 .toolbar-input:focus,
 .toolbar-button:focus,
