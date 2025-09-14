@@ -18,13 +18,19 @@ npm run build
 
 4) Verify the server
 - Open Kiro’s MCP panel and confirm constellation-mcp is running.
-- Try the tools:
-  - #[constellation-mcp] ping → pong
-  - #[constellation-mcp] constellation_impactAnalysis { "filePath": "src/index.ts" }
+- Try the core tools:
+  - `#[constellation-mcp] ping` → pong (also opens graph view)
+  - `#[constellation-mcp] constellation_impactAnalysis { "filePath": "src/index.ts" }`
+  - `#[constellation-mcp] constellation_onboarding.finalize { "chosenAction": "document" }`
+- Try the onboarding tools (when in Onboarding mode):
+  - `#[constellation-mcp] constellation_onboardingplan { "request": "Show me how authentication works" }`
+  - `#[constellation-mcp] constellation_onboardingcommitPlan { "plan": {...} }`
+  - `#[constellation-mcp] constellation_onboardingnextStep`
 
 5) Open the side panel UI
 - Click the Constellation icon in the Activity Bar to open the webview side panel.
-- It should display "Hello world" via the Preact app.
+- It should display the Constellation dashboard with mode toggle and walkthrough status.
+- Use the Mode dropdown to switch between Default and Onboarding modes.
 
 6) Dependency scan results
 - On activation a background scan runs (non-blocking). Results are written to:
@@ -48,4 +54,18 @@ Notes
 - The webview UI assets are built into out/ui. If the panel appears blank, run `npm run build:ui` and reload the window.
 - You do not need to delete mcp.json during development. The extension upserts the constellation-mcp entry on activation.
 - For code-only MCP server changes, you can restart just the server from the MCP panel—no full window reload needed.
+
+Onboarding Mode
+1) Open the Constellation side panel and use the Mode dropdown to switch from Default → Onboarding.
+2) Confirm the dialog. The extension will:
+   - Move ./.kiro/steering → ./.constellation/steering/backup/<timestamp>
+   - Create ./.kiro/steering/onboarding-guide.md from an embedded template
+   - Show “Onboarding Mode” in the panel
+3) To return to Default:
+   - Switch Mode to Default and confirm. The extension restores from the most recent backup and removes ./.constellation/steering/backup entirely.
+
+Where files go (Onboarding)
+- Persona file: ./.kiro/steering/onboarding-guide.md
+- Backups (during Onboarding): ./.constellation/steering/backup/<timestamp>
+- After returning to Default: backups are cleaned up automatically.
 

@@ -7,6 +7,8 @@ export type WebviewContext = {
   extensionContext: vscode.ExtensionContext;
   openFile: (path: string) => Promise<void>;
   triggerScan: () => Promise<void>;
+  onboardingModeService?: any;
+  onboardingWalkthroughService?: any;
 };
 
 export function configureGraphMessaging(webview: vscode.Webview, ctx: WebviewContext) {

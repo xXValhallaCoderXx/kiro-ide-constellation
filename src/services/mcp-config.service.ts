@@ -23,7 +23,15 @@ export async function upsertUserMcpConfig(nodeBin: string, serverJs: string, ser
     args: [serverJs],
     env: { CONSTELLATION_SERVER_ID: serverId, ...extraEnv },
     disabled: false,
-    autoApprove: ["ping", "constellation_impactAnalysis"],
+    autoApprove: [
+      "ping",
+      "constellation_impactAnalysis",
+      // Onboarding tools (auto-approve for seamless UX)
+      "constellation_onboarding.plan",
+      "constellation_onboarding.commitPlan",
+      "constellation_onboarding.nextStep",
+      "constellation_onboarding.finalize"
+    ],
   };
 
   await fs.writeFile(userCfgPath, JSON.stringify(cfg, null, 2), "utf8");
@@ -61,7 +69,15 @@ export async function maybeWriteWorkspaceConfig(nodeBin: string, serverJs: strin
       args: [serverJs],
       env: { CONSTELLATION_SERVER_ID: serverId, ...extraEnv },
       disabled: false,
-      autoApprove: ["ping", "constellation_impactAnalysis"],
+      autoApprove: [
+        "ping",
+        "constellation_impactAnalysis",
+        // Onboarding tools (auto-approve for seamless UX)
+        "constellation_onboarding.plan",
+        "constellation_onboarding.commitPlan",
+        "constellation_onboarding.nextStep",
+        "constellation_onboarding.finalize"
+      ],
     };
 
     await fs.writeFile(wsCfgPath, JSON.stringify(cfg, null, 2), "utf8");

@@ -84,3 +84,15 @@ Gotchas
 - Using __dirname in ESM: prefer fileURLToPath(import.meta.url) + dirname().
 - Tests are excluded from the TS build (tsconfig exclude: src/test/**).
 
+Onboarding mode (implementation map)
+- Service: src/services/onboarding-mode.service.ts
+  - Embedded template string (ONBOARDING_PERSONA_TEMPLATE)
+  - Move ./.kiro/steering → ./.constellation/steering/backup/<timestamp> on enable
+  - Write ./.kiro/steering/onboarding-guide.md
+  - Restore from backup on disable and cleanup backups
+- Service: src/services/onboarding-walkthrough.service.ts
+  - Plan commit and step execution helpers (open + highlight)
+- UI: webview-ui/src/components/OnboardingModeToggle.tsx
+- UI: webview-ui/src/components/OnboardingStatus.tsx
+- Messaging: onboarding/* events (docs/events.md)
+

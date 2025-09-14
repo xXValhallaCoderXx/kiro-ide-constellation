@@ -38,3 +38,13 @@ I want workspace-only configuration
 - Create a ./.kiro directory in the workspace and enable Constellation: Write Workspace MCP Config.
 - Optionally delete the user-level entry to isolate to this workspace only.
 
+Onboarding mode issues
+- Failed to switch to Onboarding mode: ENOENT
+  - The extension now embeds the persona template and creates ./.kiro/steering if missing. If you still see ENOENT, check write permissions for the workspace and ./.kiro.
+- ENAMETOOLONG or recursive backups
+  - Backups are stored outside ./.kiro/steering to avoid recursion. If you manually changed paths, ensure backups live under ./.constellation/steering/backup.
+- Restore fails (no backup found)
+  - If you deleted ./.constellation/steering/backup manually, there is nothing to restore. Recreate ./.kiro/steering or re-enable Onboarding to generate a new baseline.
+- After switching back to Default, backups still exist
+  - The extension now deletes ./.constellation/steering/backup on successful restore. If a partial restore occurred, you may need to remove it manually.
+

@@ -4,6 +4,7 @@ A bare-bones Kiro/VS Code extension that installs a tiny local MCP (Model Contex
 
 - ping → responds with "pong"
 - constellation_impactAnalysis → analyzes the dependency impact of changing a source file
+- constellation_onboarding.finalize → finalizes onboarding walkthrough with cleanup
 
 On activation the extension:
 1. Verifies Node.js 18+.
