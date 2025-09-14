@@ -3,9 +3,13 @@
 A Kiro/VS Code extension that provides a comprehensive MCP (Model Context Protocol) server with interactive dependency graph visualization, impact analysis, and guided onboarding capabilities. It ships multiple tools:
 
 **Core Tools:**
-- `ping` → responds with "pong" and opens graph view
+- `ping` → responds with "pong" and opens interactive graph view
 - `constellation_impactAnalysis` → analyzes dependency impact of file changes
 - `constellation_onboarding.finalize` → finalizes onboarding walkthrough with cleanup
+
+**Graph Visualization Tools:**
+- Graph Focus Mode → drill-down navigation with breadcrumb trails and depth controls
+- Interactive dependency visualization → click to explore, double-click to focus
 
 **Onboarding Tools:**
 - `constellation_onboarding.plan` → generates structured walkthrough plans
@@ -57,6 +61,11 @@ Side panel UI
 - The extension contributes a Constellation icon to the Activity Bar which opens a side panel.
 - The side panel is a webview backed by a Preact app (bundled via Vite) that renders into #root.
 - The UI assets are built into out/ui and loaded via webview.asWebviewUri.
+- **Graph Focus Mode**: Interactive drill-down navigation with breadcrumb trails
+  - Double-click nodes to focus on dependencies
+  - Breadcrumb navigation for exploration history
+  - Depth controls (1-3 levels) for relationship visualization
+  - Performance optimizations for large graphs (1000+ nodes)
 - **Onboarding Mode Toggle**: Switch between Default and Onboarding modes with safe persona backup/restore
 - **Walkthrough Status**: Display current step progress and walkthrough information when active
 
@@ -99,11 +108,22 @@ Core settings (extension)
   - If true and a ./.kiro folder exists, writes ./.kiro/settings/mcp.json in addition to the user config.
 
 Read next
-- docs/usage.md — build, run, verify
+- docs/usage.md — build, run, verify, and use graph focus mode
+- docs/graph-focus-mode.md — comprehensive focus mode documentation
+- docs/ui-components.md — webview UI architecture and components
 - docs/configuration.md — user/workspace config details and JSON examples
 - docs/development.md — recommended dev loop, when to reload/restart
 - docs/events.md — end-to-end messaging and bridge overview
 - docs/troubleshooting.md — common problems and quick fixes
+
+Graph Focus Mode (interactive navigation)
+- **Double-click navigation**: Click any node to focus on it and its immediate dependencies
+- **Breadcrumb trails**: Visual navigation history with clickable breadcrumbs (e.g., "UserService.ts ▶ AuthController.ts")
+- **Depth controls**: Adjust relationship depth (1-3 levels) with +/- buttons
+- **Performance optimization**: Fan-out capping (100 children max), cycle detection, position caching
+- **Integration**: Seamlessly works with impact analysis for focused exploration
+- **Reset functionality**: Return to full graph view at any time
+- **Keyboard navigation**: Esc to step back, clickable breadcrumbs for jumping
 
 Onboarding mode (new)
 - Toggle in Side Panel: A Mode dropdown lets you switch between Default and Onboarding.
