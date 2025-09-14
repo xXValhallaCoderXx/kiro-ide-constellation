@@ -8,8 +8,14 @@ interface ButtonProps extends Omit<JSX.HTMLAttributes<HTMLButtonElement>, 'type'
 }
 
 export function Button({ children, onClick, type = 'button', ...rest }: ButtonProps) {
+  // Allow callers to provide `class` (Preact) or `className` (JSX typing) variants.
+  // We merge with the base .button to preserve existing styling.
+  const cls = ((rest as any).class ?? (rest as any).className ?? '').toString().trim()
+  const merged = ['button', 'btn', cls].filter(Boolean).join(' ')
+  const props = { ...rest } as any
+  delete props.className
   return (
-    <button class="button" type={type} onClick={onClick} {...rest}>
+    <button class={merged} type={type} onClick={onClick} {...props}>
       {children}
     </button>
   )

@@ -83,6 +83,8 @@ export function generateGraphStylesheet(nodeCount: number = 0) {
         'font-size': isLargeGraph ? '10px' : '12px',
         'text-valign': 'center',
         'text-halign': 'center',
+        'text-outline-width': 1,
+        'text-outline-color': 'data(textOutlineColor)',
         'width': isLargeGraph ? '20px' : '30px',
         'height': isLargeGraph ? '20px' : '30px',
         'background-color': colors.other // Default fallback
@@ -92,12 +94,12 @@ export function generateGraphStylesheet(nodeCount: number = 0) {
     {
       selector: 'edge',
       style: {
-        'line-color': '#666666',
+        'line-color': '#777777',
         'width': isLargeGraph ? 1 : 2,
-        'opacity': isLargeGraph ? 0.4 : 0.6,
+        'opacity': isLargeGraph ? 0.35 : 0.6,
         'curve-style': 'bezier',
         'target-arrow-shape': 'triangle',
-        'target-arrow-color': '#666666',
+        'target-arrow-color': '#777777',
         'arrow-scale': 1.0
       }
     },
@@ -107,8 +109,8 @@ export function generateGraphStylesheet(nodeCount: number = 0) {
       style: {
         'line-color': '#FF8C00',
         'target-arrow-color': '#FF8C00',
-        'width': isLargeGraph ? 2 : 3,
-        'opacity': 0.9
+        'width': isLargeGraph ? 2.5 : 3.5,
+        'opacity': 0.95
       }
     },
     // Selected node style
@@ -117,7 +119,11 @@ export function generateGraphStylesheet(nodeCount: number = 0) {
       style: {
         'border-width': 3,
         'border-color': '#007FD4',
-        'background-color': '#FF8C00'
+        'shadow-blur': 18,
+        'shadow-color': '#007FD4',
+        'shadow-opacity': 0.5,
+        'shadow-offset-x': 0,
+        'shadow-offset-y': 0
       }
     },
     // Epicenter node style (impact source)

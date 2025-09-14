@@ -24,6 +24,7 @@ export function GraphToolbar({ onRescan, nodeCount, edgeCount, isOptimized, impa
 
   return (
     <div className="toolbar">
+      {/* Row 1: search + actions */}
       <div className="toolbar-row">
         {/* Search Input - Placeholder only */}
         <input
@@ -35,7 +36,7 @@ export function GraphToolbar({ onRescan, nodeCount, edgeCount, isOptimized, impa
           {...getPlaceholderAttributes(isToolbarFeatureEnabled('searchEnabled'))}
           data-testid="graph-search-input"
         />
-        
+
         {/* Action Buttons */}
         <div className="toolbar-actions">
           <button
@@ -45,19 +46,21 @@ export function GraphToolbar({ onRescan, nodeCount, edgeCount, isOptimized, impa
             {...getPlaceholderAttributes(isToolbarFeatureEnabled('fitEnabled'))}
             data-testid="graph-fit-button"
           >
-            Fit
+            {/* simple inline icon */}
+            <span aria-hidden>⤢</span> Fit
           </button>
-          
+
           {/* Reset View Button - Only show when impact filter is active */}
           {impactState?.isActive && onResetImpactView && (
             <Button 
               onClick={onResetImpactView}
               data-testid="graph-reset-view-button"
+              class="btn-secondary btn-sm"
             >
-              Reset View
+              ↺ Reset
             </Button>
           )}
-          
+
           <div className="toolbar-dropdown">
             <button
               className="toolbar-button toolbar-dropdown-button"
@@ -66,17 +69,18 @@ export function GraphToolbar({ onRescan, nodeCount, edgeCount, isOptimized, impa
               {...getPlaceholderAttributes(isToolbarFeatureEnabled('layoutEnabled'))}
               data-testid="graph-layout-button"
             >
-              Layout ▼
+              ⚙ Layout ▼
             </button>
           </div>
-          
+
           {/* Re-scan Button - Functional */}
-          <Button onClick={onRescan} data-testid="graph-rescan-button">
-            Re-scan
+          <Button onClick={onRescan} data-testid="graph-rescan-button" class="btn-primary btn-sm">
+            ⟳ Re-scan
           </Button>
         </div>
       </div>
       
+      {/* Row 2: filters + stats */}
       <div className="toolbar-row">
         {/* Filter Chips - Placeholders */}
         <div className="toolbar-filters">
@@ -99,7 +103,7 @@ export function GraphToolbar({ onRescan, nodeCount, edgeCount, isOptimized, impa
         {(nodeCount !== undefined && edgeCount !== undefined) && (
           <div className="toolbar-stats">
             <span className="toolbar-stat">
-              {nodeCount} nodes, {edgeCount} edges
+              {nodeCount} nodes • {edgeCount} edges
             </span>
             {isOptimized && (
               <span className="toolbar-stat toolbar-stat-optimized">
