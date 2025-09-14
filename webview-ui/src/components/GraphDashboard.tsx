@@ -292,13 +292,13 @@ export function GraphDashboard() {
         forwardAdj: forwardAdjRef.current,
         reverseAdj: reverseAdjRef.current,
         root: nodeId,
-        depth: 1,
+        depth: Number.MAX_SAFE_INTEGER, // full depth
         lens: 'children',
         maxChildren
       })
 
-      // Create new breadcrumb
-      const newCrumb = formatCrumb(activeGraph, nodeId, 1, 'children')
+      // Create new breadcrumb (store full depth)
+      const newCrumb = formatCrumb(activeGraph, nodeId, Number.MAX_SAFE_INTEGER, 'children')
 
       // Update focus state
       setFocusState(prev => ({
@@ -531,7 +531,7 @@ export function GraphDashboard() {
                   forwardAdj: forwardAdjRef.current,
                   reverseAdj: reverseAdjRef.current,
                   root: impactData.sourceFile,
-                  depth: 1,
+                  depth: Number.MAX_SAFE_INTEGER, // full depth for initial impact focus
                   lens: 'children',
                   maxChildren: 100
                 })
@@ -546,11 +546,11 @@ export function GraphDashboard() {
                 setFocusState({
                   isActive: true,
                   root: impactData.sourceFile,
-                  depth: 1,
+                  depth: Number.MAX_SAFE_INTEGER,
                   lens: 'children',
                   visibleNodes: visibilityResult.visibleNodes,
                   visibleEdges: visibilityResult.visibleEdges,
-                  crumbs: [sourceCrumb],
+                  crumbs: [formatCrumb(filteredGraph, impactData.sourceFile, Number.MAX_SAFE_INTEGER, 'children')],
                   positionCache: {},
                   error: null,
                   childrenInfo: {
