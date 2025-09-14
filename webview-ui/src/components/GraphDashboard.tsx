@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState, useRef } from 'preact/hooks'
 import { messenger } from '../services/messenger'
 import { GraphToolbar } from './GraphToolbar'
 import { GraphCanvas } from './GraphCanvas'
+import { Button } from './Button'
 
 interface Node {
   id: string
@@ -189,30 +190,42 @@ export function GraphDashboard() {
       
       {/* Main Content Area */}
       <div className="graph-dashboard-content">
+        {/* Impact banner */}
+        {impactState.isActive && (
+          <div className="banner-impact" role="status" aria-live="polite">
+            <span className="banner-text">Impact View — source: {impactState.data?.sourceFile}</span>
+            <Button class="btn-secondary btn-sm" onClick={handleResetImpactView} data-testid="graph-reset-banner-button">↺ Reset View</Button>
+          </div>
+        )}
+
         {/* Loading State */}
         {state.type === 'loading' && (
-          <div className="graph-dashboard-message">
+          <div className="state-message">
+            <div>⌛</div>
             <p>Loading graph...</p>
           </div>
         )}
         
         {/* Scanning State */}
         {state.type === 'scanning' && (
-          <div className="graph-dashboard-message">
+          <div className="state-message">
+            <div>🔎</div>
             <p>{state.message}</p>
           </div>
         )}
         
         {/* Rendering State */}
         {state.type === 'rendering' && (
-          <div className="graph-dashboard-message">
+          <div className="state-message">
+            <div>🧩</div>
             <p>{state.message}</p>
           </div>
         )}
         
         {/* Error State */}
         {state.type === 'error' && (
-          <div className="graph-dashboard-message graph-dashboard-error">
+          <div className="state-message graph-dashboard-error">
+            <div>⚠</div>
             <p>Error: {state.message}</p>
             <button 
               onClick={() => messenger.post('graph/load')}

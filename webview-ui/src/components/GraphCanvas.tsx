@@ -147,6 +147,13 @@ export function GraphCanvas({ data, isRendering, onRenderingChange, impactSource
             layout: layoutConfig
           })
 
+          // Inject a synthetic data property on nodes so the label outline can reference the webview background
+          // We re-use Cytoscape's data API to expose a runtime-derived color without re-creating the stylesheet
+          const bg = getComputedStyle(document.documentElement).getPropertyValue('--vscode-editor-background').trim() || '#1e1e1e'
+          cyRef.current.nodes().forEach(n => {
+            n.data('textOutlineColor', bg)
+          })
+
           // Add event handlers for interactions
           cyRef.current.on('tap', 'node', (evt) => {
             // Single-click highlighting (node gets selected automatically by Cytoscape)
