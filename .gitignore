@@ -4,3 +4,4 @@ out/
 .ai-content-media
 *.vsix
 .vscode-test/
+docs/_reports/
