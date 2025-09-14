@@ -2,7 +2,7 @@
   "name": "kiro-constellation",
   "displayName": "Kiro Constellation",
   "publisher": "xXValhallaCoderXx",
-  "description": "Bare-bones Kiro MCP server (ping/echo) + setup helper, with a side panel UI.",
+  "description": "Kiro MCP server (ping + impact analysis) setup helper with a side panel UI.",
   "version": "0.0.1",
   "type": "module",
   "engines": { "vscode": "^1.85.0" },
@@ -29,7 +29,6 @@
       ]
     },
     "commands": [
-      { "command": "constellation.selfTest", "title": "Constellation: Self-test MCP server" },
       { "command": "constellation.openUserMcpConfig", "title": "Constellation: Open user MCP config" },
       { "command": "constellation.scanDependencies", "title": "Constellation: Scan Dependencies" },
       { "command": "constellation.openGraphView", "title": "Constellation: Open Graph View" }

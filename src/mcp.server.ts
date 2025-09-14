@@ -34,16 +34,6 @@ server.registerTool(
   }
 );
 
-// echo -> returns what you sent
-server.registerTool(
-  "echo",
-  {
-    title: "Echo",
-    description: "Replies with the same text you send.",
-    inputSchema: { message: z.string() },
-  },
-  async ({ message }) => ({ content: [{ type: "text", text: message }] })
-);
 
 // constellation_impactAnalysis -> analyzes dependency impact of changing a source file
 server.registerTool(

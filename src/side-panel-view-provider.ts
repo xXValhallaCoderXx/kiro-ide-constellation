@@ -16,31 +16,28 @@ export class SidePanelViewProvider implements vscode.WebviewViewProvider {
     return this.extensionContext;
   }
 
-  resolveWebviewView(webviewView: vscode.WebviewView): void | Thenable<void> {
+  async resolveWebviewView(webviewView: vscode.WebviewView): Promise<void> {
     const { webview } = webviewView;
 
-    // Handle messages via centralized messenger
-    webview.onDidReceiveMessage((msg) => {
-      import('./services/messenger.service.js').then(({ handleWebviewMessage }) =>
-        handleWebviewMessage(msg, {
-          revealGraphView: () => void vscode.commands.executeCommand('constellation.openGraphView'),
-          log: (s) => console.log(s),
-          postMessage: (message) => webview.postMessage(message),
-          extensionContext: this.getExtensionContext(),
-          openFile: async (path: string) => {
-            try {
-              const doc = await vscode.workspace.openTextDocument(vscode.Uri.file(path));
-              await vscode.window.showTextDocument(doc);
-            } catch (error) {
-              console.error('Failed to open file:', path, error);
-            }
-          },
-          triggerScan: async () => {
-            const { runScan } = await import('./services/dependency-cruiser.service.js');
-            await runScan(this.getExtensionContext());
-          }
-        })
-      ).catch(() => {/* ignore */})
+    // Handle messages via centralized router
+    const { configureGraphMessaging } = await import('./services/message-router.service.js');
+    configureGraphMessaging(webview, {
+      revealGraphView: () => void vscode.commands.executeCommand('constellation.openGraphView'),
+      log: (s) => console.log(s),
+      postMessage: (message) => webview.postMessage(message),
+      extensionContext: this.getExtensionContext(),
+      openFile: async (path: string) => {
+        try {
+          const doc = await vscode.workspace.openTextDocument(vscode.Uri.file(path));
+          await vscode.window.showTextDocument(doc);
+        } catch (error) {
+          console.error('Failed to open file:', path, error);
+        }
+      },
+      triggerScan: async () => {
+        const { runScan } = await import('./services/dependency-cruiser.service.js');
+        await runScan(this.getExtensionContext());
+      }
     });
     webview.options = {
       enableScripts: true,

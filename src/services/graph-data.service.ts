@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 import { runScan } from './dependency-cruiser.service.js';
+import { getWorkspaceRoot } from './workspace.service.js';
 
 // Error message constants for different failure scenarios
 // Requirements: R2.5, R7.3
@@ -238,10 +239,7 @@ function checkFileSize(filePath: string): { isLarge: boolean; sizeInMB: number }
  * Requirements: R2.5 (graceful handling for missing workspace)
  */
 function detectWorkspace(): string | null {
-  if (!vscode.workspace.workspaceFolders || vscode.workspace.workspaceFolders.length === 0) {
-    return null;
-  }
-  return vscode.workspace.workspaceFolders[0].uri.fsPath;
+  return getWorkspaceRoot();
 }
 
 /**

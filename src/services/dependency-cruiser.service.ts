@@ -19,14 +19,13 @@ interface DependencyAnalysisResult {
  * Detects and validates the current workspace
  * @returns WorkspaceInfo object or null if no workspace is available
  */
+import { getWorkspaceRoot } from './workspace.service.js';
+
 function detectWorkspace(): WorkspaceInfo | null {
-    // Check if any workspace folders are open
-    if (!vscode.workspace.workspaceFolders || vscode.workspace.workspaceFolders.length === 0) {
+    const workspaceRoot = getWorkspaceRoot();
+    if (!workspaceRoot) {
         return null;
     }
-
-    // Use the first workspace folder
-    const workspaceRoot = vscode.workspace.workspaceFolders[0].uri.fsPath;
 
     // Check for TypeScript config
     const tsconfigPath = path.join(workspaceRoot, 'tsconfig.json');
