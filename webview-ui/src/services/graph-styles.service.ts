@@ -5,24 +5,53 @@
 import type { FileType } from './file-type.service';
 
 /**
- * CSS variable mapping for file type colors
+ * Default hex colors for file types (used if CSS vars are absent)
  */
-export const FILE_TYPE_COLORS: Record<FileType, string> = {
-  ts: 'var(--kiro-node-ts, #569CD6)',
-  tsx: 'var(--kiro-node-tsx, #4FC1FF)',
-  js: 'var(--kiro-node-js, #E3D300)',
-  jsx: 'var(--kiro-node-jsx, #FFBD45)',
-  json: 'var(--kiro-node-json, #8DC891)',
-  other: 'var(--kiro-node-other, #B180D7)'
+const DEFAULT_FILE_TYPE_COLORS: Record<FileType, string> = {
+  ts: '#569CD6',
+  tsx: '#4FC1FF',
+  js: '#E3D300',
+  jsx: '#FFBD45',
+  json: '#8DC891',
+  other: '#B180D7'
 };
 
 /**
- * Get the color for a specific file type
- * @param fileType - The file type
- * @returns CSS color value (CSS variable with fallback)
+ * CSS variable names for file types, resolved at runtime from global.css
+ */
+const FILE_TYPE_VAR_NAMES: Record<FileType, string> = {
+  ts: '--kiro-node-ts',
+  tsx: '--kiro-node-tsx',
+  js: '--kiro-node-js',
+  jsx: '--kiro-node-jsx',
+  json: '--kiro-node-json',
+  other: '--kiro-node-other'
+};
+
+/**
+ * Resolve a CSS variable from :root with a fallback. If execution environment
+ * cannot access document (e.g., SSR), returns the fallback.
+ */
+function resolveCssVar(varName: string, fallback: string): string {
+  try {
+    if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+      const styles = getComputedStyle(document.documentElement);
+      const value = styles.getPropertyValue(varName).trim();
+      return value || fallback;
+    }
+  } catch {
+    /* ignore */
+  }
+  return fallback;
+}
+
+/**
+ * Get the concrete color for a specific file type (hex string).
  */
 export function getFileTypeColor(fileType: FileType): string {
-  return FILE_TYPE_COLORS[fileType] || FILE_TYPE_COLORS.other;
+  const varName = FILE_TYPE_VAR_NAMES[fileType] ?? FILE_TYPE_VAR_NAMES.other;
+  const fallback = DEFAULT_FILE_TYPE_COLORS[fileType] ?? DEFAULT_FILE_TYPE_COLORS.other;
+  return resolveCssVar(varName, fallback);
 }
 
 /**
@@ -32,7 +61,16 @@ export function getFileTypeColor(fileType: FileType): string {
  */
 export function generateGraphStylesheet(nodeCount: number = 0) {
   const isLargeGraph = nodeCount > 500;
-  const isMediumGraph = nodeCount > 200;
+
+  // Resolve concrete colors once per stylesheet build
+  const colors: Record<FileType, string> = {
+    ts: getFileTypeColor('ts'),
+    tsx: getFileTypeColor('tsx'),
+    js: getFileTypeColor('js'),
+    jsx: getFileTypeColor('jsx'),
+    json: getFileTypeColor('json'),
+    other: getFileTypeColor('other')
+  };
 
   // Base styles
   const baseStyles = [
@@ -41,20 +79,20 @@ export function generateGraphStylesheet(nodeCount: number = 0) {
       selector: 'node',
       style: {
         'label': 'data(label)',
-        'color': 'var(--vscode-foreground, #CCCCCC)',
+        'color': '#CCCCCC',
         'font-size': isLargeGraph ? '10px' : '12px',
         'text-valign': 'center',
         'text-halign': 'center',
         'width': isLargeGraph ? '20px' : '30px',
         'height': isLargeGraph ? '20px' : '30px',
-        'background-color': FILE_TYPE_COLORS.other // Default fallback
+        'background-color': colors.other // Default fallback
       }
     },
     // Edge styles
     {
       selector: 'edge',
       style: {
-        'line-color': 'var(--vscode-foreground, #666666)',
+        'line-color': '#666666',
         'width': isLargeGraph ? 1 : 2,
         'opacity': isLargeGraph ? 0.4 : 0.6,
         'curve-style': 'bezier'
@@ -65,17 +103,17 @@ export function generateGraphStylesheet(nodeCount: number = 0) {
       selector: 'node:selected',
       style: {
         'border-width': 3,
-        'border-color': 'var(--vscode-focusBorder, #007FD4)',
-        'background-color': 'var(--vscode-charts-orange, #FF8C00)'
+        'border-color': '#007FD4',
+        'background-color': '#FF8C00'
       }
     }
   ];
 
   // File type specific styles
-  const fileTypeStyles = Object.entries(FILE_TYPE_COLORS).map(([fileType, color]) => ({
+  const fileTypeStyles = (Object.keys(colors) as FileType[]).map((fileType) => ({
     selector: `node[ext = "${fileType}"]`,
     style: {
-      'background-color': color
+      'background-color': colors[fileType]
     }
   }));
 
