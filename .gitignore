@@ -3,3 +3,4 @@ out/
 .constellation
 .ai-content-media
 *.vsix
+.vscode-test/

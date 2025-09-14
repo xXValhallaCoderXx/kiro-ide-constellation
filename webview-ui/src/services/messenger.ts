@@ -15,11 +15,37 @@ type GraphResponseMessage =
   | { type: 'graph/status'; message: string }
   | { type: 'graph/impact'; payload: { sourceFile: string; affectedFiles: string[] } }
 
+// Onboarding-specific message types for webview -> extension
+type OnboardingMessage =
+  | { type: 'onboarding/change-mode'; mode: 'Default' | 'Onboarding' }
+  | { type: 'onboarding/get-mode' }
+  | { type: 'onboarding/get-status' }
+
+// Onboarding-specific message types for extension -> webview
+type OnboardingResponseMessage =
+  | { type: 'onboarding/mode-changed'; mode: 'Default' | 'Onboarding' }
+  | { type: 'onboarding/mode-error'; message: string }
+  | { type: 'onboarding/current-mode'; mode: 'Default' | 'Onboarding' }
+  | { type: 'onboarding/status-update'; payload: OnboardingStatusPayload }
+  | { type: 'onboarding/walkthrough-complete' }
+  | { type: 'onboarding/walkthrough-error'; message: string }
+
+// Onboarding status payload type
+type OnboardingStatusPayload = {
+  isActive: boolean
+  currentStep?: number
+  totalSteps?: number
+  currentFile?: string
+  explanation?: string
+}
+
 type Message =
   | { type: 'open-graph-view' }
   | { type: 'ping' }
   | GraphMessage
   | GraphResponseMessage
+  | OnboardingMessage
+  | OnboardingResponseMessage
 
 function getApi() {
   return typeof acquireVsCodeApi === 'function' ? acquireVsCodeApi() : undefined

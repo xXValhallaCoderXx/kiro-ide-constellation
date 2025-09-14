@@ -35,6 +35,290 @@ server.registerTool(
 );
 
 
+// constellation_onboarding.plan -> generates structured onboarding plans
+server.registerTool(
+  "constellation_onboarding.plan",
+  {
+    title: "Generate Onboarding Plan",
+    description: "Generates a structured walkthrough plan for onboarding users to specific codebase topics",
+    inputSchema: {
+      request: z.string().describe("The user's request describing what they want to learn about the codebase")
+    },
+  },
+  async ({ request }) => {
+    try {
+      // This tool generates plans based on the user's request
+      // For Phase 1, we'll create a simple plan structure that can be enhanced later
+      
+      // Generate a basic plan structure based on the request
+      const plan = {
+        version: 1,
+        topic: request.substring(0, 100), // Truncate topic to reasonable length
+        createdAt: new Date().toISOString(),
+        steps: [
+          {
+            filePath: "README.md",
+            lineStart: 1,
+            lineEnd: 10,
+            explanation: `Starting with the project overview to understand ${request}`
+          },
+          {
+            filePath: "package.json",
+            lineStart: 1,
+            lineEnd: 20,
+            explanation: "Examining project dependencies and configuration"
+          }
+        ]
+      };
+
+      // Generate user-friendly summary
+      const userSummary = `I've created a walkthrough plan for "${request}". This plan includes ${plan.steps.length} steps that will guide you through relevant files in your codebase. The walkthrough will start with the project overview and then examine key configuration files.`;
+
+      return {
+        content: [{
+          type: "text",
+          text: JSON.stringify({
+            plan,
+            userSummary
+          })
+        }]
+      };
+
+    } catch (error) {
+      console.error('MCP server: Plan generation failed:', error);
+      
+      let errorMessage = "Failed to generate onboarding plan";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      
+      return {
+        content: [{
+          type: "text",
+          text: JSON.stringify({
+            error: errorMessage,
+            plan: null,
+            userSummary: "Sorry, I couldn't generate a plan for your request. Please try again with a different topic."
+          })
+        }]
+      };
+    }
+  }
+);
+
+// constellation_onboarding.commitPlan -> commits a plan and starts execution
+server.registerTool(
+  "constellation_onboarding.commitPlan",
+  {
+    title: "Commit Onboarding Plan",
+    description: "Commits an onboarding plan to persistent storage and begins execution",
+    inputSchema: {
+      plan: z.object({
+        version: z.number(),
+        topic: z.string(),
+        createdAt: z.string(),
+        steps: z.array(z.object({
+          filePath: z.string(),
+          lineStart: z.number(),
+          lineEnd: z.number(),
+          explanation: z.string()
+        }))
+      }).describe("The onboarding plan to commit and execute")
+    },
+  },
+  async ({ plan }) => {
+    try {
+      const port = process.env.CONSTELLATION_BRIDGE_PORT;
+      const token = process.env.CONSTELLATION_BRIDGE_TOKEN;
+      
+      if (!port || !token) {
+        console.warn('MCP server: Extension bridge environment variables not available');
+        return {
+          content: [{
+            type: "text",
+            text: JSON.stringify({
+              error: "Extension bridge not available. Please ensure the Constellation extension is running and properly configured."
+            })
+          }]
+        };
+      }
+
+      // Forward request to extension HTTP bridge
+      const response = await fetch(`http://127.0.0.1:${port}/onboarding/commitPlan`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ plan })
+      });
+
+      if (!response.ok) {
+        // Handle HTTP errors gracefully
+        let errorText = "Network error";
+        try {
+          const responseText = await response.text();
+          try {
+            const errorData = JSON.parse(responseText);
+            errorText = errorData.error || responseText;
+          } catch {
+            errorText = responseText || `HTTP ${response.status}`;
+          }
+        } catch {
+          errorText = `HTTP ${response.status}`;
+        }
+        
+        console.warn(`MCP server: HTTP bridge request failed with status ${response.status}:`, errorText);
+        
+        return {
+          content: [{
+            type: "text",
+            text: JSON.stringify({
+              error: `Request failed: ${errorText}`
+            })
+          }]
+        };
+      }
+
+      // Parse and return the commit result
+      const result = await response.json();
+      return {
+        content: [{
+          type: "text",
+          text: JSON.stringify(result)
+        }]
+      };
+
+    } catch (error) {
+      console.error('MCP server: Plan commit request failed:', error);
+      
+      let errorMessage = "Unknown error occurred during plan commitment";
+      
+      if (error instanceof Error) {
+        errorMessage = error.message;
+        
+        // Provide more specific error messages for common failure scenarios
+        if (error.message.includes('ECONNREFUSED') || error.message.includes('fetch failed')) {
+          errorMessage = "Cannot connect to extension. Please ensure the Constellation extension is running.";
+        } else if (error.message.includes('timeout')) {
+          errorMessage = "Request timed out. The extension may be busy processing the plan.";
+        } else if (error.message.includes('ENOTFOUND')) {
+          errorMessage = "Network error: Cannot resolve extension bridge address.";
+        }
+      }
+      
+      return {
+        content: [{
+          type: "text",
+          text: JSON.stringify({
+            error: errorMessage
+          })
+        }]
+      };
+    }
+  }
+);
+
+// constellation_onboarding.nextStep -> advances to the next step in the walkthrough
+server.registerTool(
+  "constellation_onboarding.nextStep",
+  {
+    title: "Next Onboarding Step",
+    description: "Advances to the next step in the active onboarding walkthrough",
+    inputSchema: {},
+  },
+  async () => {
+    try {
+      const port = process.env.CONSTELLATION_BRIDGE_PORT;
+      const token = process.env.CONSTELLATION_BRIDGE_TOKEN;
+      
+      if (!port || !token) {
+        console.warn('MCP server: Extension bridge environment variables not available');
+        return {
+          content: [{
+            type: "text",
+            text: JSON.stringify({
+              error: "Extension bridge not available. Please ensure the Constellation extension is running and properly configured."
+            })
+          }]
+        };
+      }
+
+      // Forward request to extension HTTP bridge
+      const response = await fetch(`http://127.0.0.1:${port}/onboarding/nextStep`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      });
+
+      if (!response.ok) {
+        // Handle HTTP errors gracefully
+        let errorText = "Network error";
+        try {
+          const responseText = await response.text();
+          try {
+            const errorData = JSON.parse(responseText);
+            errorText = errorData.error || responseText;
+          } catch {
+            errorText = responseText || `HTTP ${response.status}`;
+          }
+        } catch {
+          errorText = `HTTP ${response.status}`;
+        }
+        
+        console.warn(`MCP server: HTTP bridge request failed with status ${response.status}:`, errorText);
+        
+        return {
+          content: [{
+            type: "text",
+            text: JSON.stringify({
+              error: `Request failed: ${errorText}`
+            })
+          }]
+        };
+      }
+
+      // Parse and return the step result
+      const result = await response.json();
+      return {
+        content: [{
+          type: "text",
+          text: JSON.stringify(result)
+        }]
+      };
+
+    } catch (error) {
+      console.error('MCP server: Next step request failed:', error);
+      
+      let errorMessage = "Unknown error occurred during step progression";
+      
+      if (error instanceof Error) {
+        errorMessage = error.message;
+        
+        // Provide more specific error messages for common failure scenarios
+        if (error.message.includes('ECONNREFUSED') || error.message.includes('fetch failed')) {
+          errorMessage = "Cannot connect to extension. Please ensure the Constellation extension is running.";
+        } else if (error.message.includes('timeout')) {
+          errorMessage = "Request timed out. The extension may be busy processing the step.";
+        } else if (error.message.includes('ENOTFOUND')) {
+          errorMessage = "Network error: Cannot resolve extension bridge address.";
+        }
+      }
+      
+      return {
+        content: [{
+          type: "text",
+          text: JSON.stringify({
+            error: errorMessage
+          })
+        }]
+      };
+    }
+  }
+);
+
 // constellation_impactAnalysis -> analyzes dependency impact of changing a source file
 server.registerTool(
   "constellation_impactAnalysis",

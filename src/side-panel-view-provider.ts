@@ -6,7 +6,9 @@ export class SidePanelViewProvider implements vscode.WebviewViewProvider {
 
   constructor(
     private readonly extensionUri: vscode.Uri,
-    private readonly extensionContext?: vscode.ExtensionContext
+    private readonly extensionContext?: vscode.ExtensionContext,
+    private readonly onboardingModeService?: any,
+    private readonly onboardingWalkthroughService?: any
   ) {}
 
   private getExtensionContext(): vscode.ExtensionContext {
@@ -37,7 +39,9 @@ export class SidePanelViewProvider implements vscode.WebviewViewProvider {
       triggerScan: async () => {
         const { runScan } = await import('./services/dependency-cruiser.service.js');
         await runScan(this.getExtensionContext());
-      }
+      },
+      onboardingModeService: this.onboardingModeService,
+      onboardingWalkthroughService: this.onboardingWalkthroughService
     });
     webview.options = {
       enableScripts: true,

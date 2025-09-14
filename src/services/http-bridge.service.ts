@@ -3,14 +3,19 @@ import * as http from "node:http";
 import * as path from "node:path";
 import { randomBytes } from "node:crypto";
 import { computeImpact } from "./impact-analysis.service.js";
+import { onboardingModeService, type OnboardingMode } from "./onboarding-mode.service.js";
+import { OnboardingWalkthroughService, type OnboardingPlan } from "./onboarding-walkthrough.service.js";
 
 export interface BridgeInfo {
   port: number;
   token: string;
 }
 
-export async function startHttpBridge(context: vscode.ExtensionContext): Promise<BridgeInfo> {
+export async function startHttpBridge(context: vscode.ExtensionContext, walkthroughService?: OnboardingWalkthroughService): Promise<BridgeInfo> {
   const token = randomBytes(32).toString("base64url");
+  
+  // Use provided walkthrough service or create a new one for backward compatibility
+  const walkthrough = walkthroughService || new OnboardingWalkthroughService();
 
   const server = http.createServer(async (req, res) => {
     try {
@@ -114,14 +119,14 @@ export async function startHttpBridge(context: vscode.ExtensionContext): Promise
             const wsRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? "";
             const toNodeId = (p: string): string | null => {
               try {
-                if (!p) return null;
+                if (!p) {return null;}
                 // Normalize slashes
                 const slashed = p.replace(/\\/g, '/');
                 // If already relative, return as-is
-                if (!path.isAbsolute(slashed)) return slashed;
-                if (!wsRoot) return null;
+                if (!path.isAbsolute(slashed)) {return slashed;}
+                if (!wsRoot) {return null;}
                 const rel = path.relative(wsRoot, slashed).replace(/\\/g, '/');
-                if (rel.startsWith('..')) return null; // outside workspace
+                if (rel.startsWith('..')) {return null;} // outside workspace
                 return rel;
               } catch { return null; }
             };
@@ -173,6 +178,230 @@ export async function startHttpBridge(context: vscode.ExtensionContext): Promise
             }));
           }
         });
+        
+        return;
+      }
+
+      if (req.url.startsWith("/persona")) {
+        // Handle persona mode switching
+        let body = "";
+        let bodySize = 0;
+        const maxBodySize = 1024 * 1024; // 1MB limit
+        
+        req.on("data", (chunk) => {
+          bodySize += chunk.length;
+          if (bodySize > maxBodySize) {
+            res.statusCode = 413; // Payload Too Large
+            res.setHeader("Content-Type", "application/json");
+            res.end(JSON.stringify({ 
+              error: "Request body too large",
+              success: false
+            }));
+            return;
+          }
+          body += chunk.toString();
+        });
+        
+        req.on("end", async () => {
+          try {
+            // Parse JSON request body
+            let requestData;
+            try {
+              requestData = JSON.parse(body);
+            } catch (parseError) {
+              res.statusCode = 400;
+              res.setHeader("Content-Type", "application/json");
+              res.end(JSON.stringify({ 
+                error: "Invalid JSON in request body",
+                success: false
+              }));
+              return;
+            }
+            
+            const action = requestData.action;
+            
+            if (!action || typeof action !== "string" || !["enable", "disable"].includes(action)) {
+              res.statusCode = 400;
+              res.setHeader("Content-Type", "application/json");
+              res.end(JSON.stringify({ 
+                error: "Missing or invalid action in request body. Expected: { action: 'enable' | 'disable' }",
+                success: false
+              }));
+              return;
+            }
+            
+            // Perform mode switch
+            let newMode: OnboardingMode;
+            let message: string;
+            
+            if (action === "enable") {
+              await onboardingModeService.switchToOnboarding();
+              newMode = "Onboarding";
+              message = "Successfully switched to Onboarding mode";
+            } else {
+              await onboardingModeService.switchToDefault();
+              newMode = "Default";
+              message = "Successfully switched to Default mode";
+            }
+            
+            // Return success response
+            res.statusCode = 200;
+            res.setHeader("Content-Type", "application/json");
+            res.end(JSON.stringify({
+              success: true,
+              mode: newMode,
+              message
+            }));
+            
+          } catch (error) {
+            console.error('HTTP bridge persona switching error:', error);
+            
+            res.statusCode = 500;
+            res.setHeader("Content-Type", "application/json");
+            
+            let errorMessage = "Unknown error occurred during persona switching";
+            if (error instanceof Error) {
+              errorMessage = error.message;
+              
+              // Provide more specific error codes for different failure types
+              if (error.message.includes('No workspace folder open')) {
+                res.statusCode = 400; // Bad Request - no workspace
+              } else if (error.message.includes('permission') || error.message.includes('EACCES')) {
+                res.statusCode = 403; // Forbidden - permission denied
+              }
+            }
+            
+            res.end(JSON.stringify({ 
+              error: errorMessage,
+              success: false
+            }));
+          }
+        });
+        
+        return;
+      }
+
+      if (req.url.startsWith("/onboarding/commitPlan")) {
+        // Handle onboarding plan commitment
+        let body = "";
+        let bodySize = 0;
+        const maxBodySize = 1024 * 1024; // 1MB limit
+        
+        req.on("data", (chunk) => {
+          bodySize += chunk.length;
+          if (bodySize > maxBodySize) {
+            res.statusCode = 413; // Payload Too Large
+            res.setHeader("Content-Type", "application/json");
+            res.end(JSON.stringify({ 
+              error: "Request body too large"
+            }));
+            return;
+          }
+          body += chunk.toString();
+        });
+        
+        req.on("end", async () => {
+          try {
+            // Parse JSON request body
+            let requestData;
+            try {
+              requestData = JSON.parse(body);
+            } catch (parseError) {
+              res.statusCode = 400;
+              res.setHeader("Content-Type", "application/json");
+              res.end(JSON.stringify({ 
+                error: "Invalid JSON in request body"
+              }));
+              return;
+            }
+            
+            const plan = requestData.plan as OnboardingPlan;
+            
+            if (!plan) {
+              res.statusCode = 400;
+              res.setHeader("Content-Type", "application/json");
+              res.end(JSON.stringify({ 
+                error: "Missing plan in request body. Expected: { plan: OnboardingPlan }"
+              }));
+              return;
+            }
+            
+            // Commit plan using walkthrough service
+            const result = await walkthrough.commitPlan(plan);
+            
+            // Return success response
+            res.statusCode = 200;
+            res.setHeader("Content-Type", "application/json");
+            res.end(JSON.stringify(result));
+            
+          } catch (error) {
+            console.error('HTTP bridge commit plan error:', error);
+            
+            res.statusCode = 500;
+            res.setHeader("Content-Type", "application/json");
+            
+            let errorMessage = "Unknown error occurred during plan commitment";
+            if (error instanceof Error) {
+              errorMessage = error.message;
+              
+              // Provide more specific error codes for different failure types
+              if (error.message.includes('No workspace folder open')) {
+                res.statusCode = 400; // Bad Request - no workspace
+              } else if (error.message.includes('validation') || error.message.includes('Invalid') || error.message.includes('required')) {
+                res.statusCode = 400; // Bad Request - validation error
+              } else if (error.message.includes('permission') || error.message.includes('EACCES')) {
+                res.statusCode = 403; // Forbidden - permission denied
+              } else if (error.message.includes('not found') || error.message.includes('ENOENT')) {
+                res.statusCode = 404; // Not Found - file doesn't exist
+              }
+            }
+            
+            res.end(JSON.stringify({ 
+              error: errorMessage
+            }));
+          }
+        });
+        
+        return;
+      }
+
+      if (req.url.startsWith("/onboarding/nextStep")) {
+        // Handle onboarding step progression
+        try {
+          // Advance to next step using walkthrough service
+          const result = await walkthrough.nextStep();
+          
+          // Return success response
+          res.statusCode = 200;
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify(result));
+          
+        } catch (error) {
+          console.error('HTTP bridge next step error:', error);
+          
+          res.statusCode = 500;
+          res.setHeader("Content-Type", "application/json");
+          
+          let errorMessage = "Unknown error occurred during step progression";
+          if (error instanceof Error) {
+            errorMessage = error.message;
+            
+            // Provide more specific error codes for different failure types
+            if (error.message.includes('No active walkthrough')) {
+              res.statusCode = 412; // Precondition Failed - no active walkthrough
+            } else if (error.message.includes('No workspace folder open')) {
+              res.statusCode = 400; // Bad Request - no workspace
+            } else if (error.message.includes('not found') || error.message.includes('ENOENT')) {
+              res.statusCode = 404; // Not Found - file doesn't exist
+            } else if (error.message.includes('permission') || error.message.includes('EACCES')) {
+              res.statusCode = 403; // Forbidden - permission denied
+            }
+          }
+          
+          res.end(JSON.stringify({ 
+            error: errorMessage
+          }));
+        }
         
         return;
       }
