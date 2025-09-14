@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'preact/hooks'
+import { useCallback, useEffect, useState } from 'preact/hooks'
 import { messenger } from '../services/messenger'
 import { GraphToolbar } from './GraphToolbar'
 import { GraphCanvas } from './GraphCanvas'
@@ -76,15 +76,15 @@ export function GraphDashboard() {
     messenger.on(handleMessage)
   }, [])
 
-  const handleRescan = () => {
+  const handleRescan = useCallback(() => {
     // Reset rendering state when starting a new scan
     setIsRendering(false)
     messenger.post('graph/scan')
-  }
+  }, [])
 
-  const handleRenderingChange = (rendering: boolean) => {
+  const handleRenderingChange = useCallback((rendering: boolean) => {
     setIsRendering(rendering)
-  }
+  }, [])
 
   return (
     <div className="graph-dashboard">

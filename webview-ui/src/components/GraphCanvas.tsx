@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'preact/hooks'
+import { useEffect, useRef } from 'preact/hooks'
 import cytoscape, { Core } from 'cytoscape'
 import { messenger } from '../services/messenger'
 import { getFileExt } from '../services/file-type.service'
@@ -42,17 +42,22 @@ interface GraphCanvasProps {
 export function GraphCanvas({ data, isRendering, onRenderingChange }: GraphCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const cyRef = useRef<Core | null>(null)
+  // Keep a stable reference to the callback so the effect below doesn't re-run
+  const onRenderingChangeRef = useRef(onRenderingChange)
+  useEffect(() => { onRenderingChangeRef.current = onRenderingChange }, [onRenderingChange])
 
-  // Create/update Cytoscape instance when data changes
+  // Create/update Cytoscape instance only when data changes
   useEffect(() => {
     if (data && containerRef.current) {
-      onRenderingChange(true)
-      
+      // Notify parent that (re)render is starting for new data only
+      onRenderingChangeRef.current?.(true)
+
       // Clean up previous instance to prevent memory leaks
       if (cyRef.current) {
         try {
-          // Remove all event listeners before destroying
-          cyRef.current.removeAllListeners()
+          // Cytoscape doesn't have removeAllListeners; defensively try off('*')
+          // @ts-ignore - off('*') is accepted at runtime
+          cyRef.current.off?.('*')
           cyRef.current.destroy()
         } catch (error) {
           console.warn('Error destroying previous Cytoscape instance:', error)
@@ -88,7 +93,7 @@ export function GraphCanvas({ data, isRendering, onRenderingChange }: GraphCanva
       // Use setTimeout for large graphs to prevent UI blocking
       const nodeCount = data.nodes.length
       const renderDelay = nodeCount > 200 ? 50 : 0
-      
+
       setTimeout(() => {
         try {
           // Create layout configuration with performance optimizations
@@ -141,17 +146,17 @@ export function GraphCanvas({ data, isRendering, onRenderingChange }: GraphCanva
 
           // Handle layout completion for performance monitoring
           cyRef.current.on('layoutstop', () => {
-            onRenderingChange(false)
+            onRenderingChangeRef.current?.(false)
             console.log(`Graph layout completed for ${nodeCount} nodes`)
           })
 
         } catch (error) {
           console.error('Error creating Cytoscape instance:', error)
-          onRenderingChange(false)
+          onRenderingChangeRef.current?.(false)
         }
       }, renderDelay)
     }
-  }, [data, onRenderingChange])
+  }, [data])
 
   // Enhanced cleanup on unmount
   useEffect(() => {
