@@ -2,3 +2,4 @@ node_modules/
 out/
 .constellation
 .ai-content-media
+*.vsix

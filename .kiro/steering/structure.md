@@ -26,8 +26,9 @@
   - Command registration and webview provider
   - Node.js version validation
 - **`mcp.server.ts`**: Standalone MCP server implementation
-  - Tool registration (ping, echo)
+  - Tool registration (ping, constellation_impactAnalysis)
   - MCP SDK integration
+  - HTTP bridge communication for UI integration
   - Self-test functionality with `--selftest` flag
 - **`side-panel-view-provider.ts`**: Webview panel management
   - Preact UI integration
@@ -37,6 +38,11 @@
   - `mcp-config.service.ts`: Kiro MCP configuration handling
   - `node-version.service.ts`: Node.js version validation
   - `dependency-cruiser.service.ts`: Background dependency scanning integration
+  - `impact-analysis.service.ts`: BFS-based dependency impact analysis
+  - `http-bridge.service.ts`: Secure loopback HTTP server for MCP communication
+  - `graph-data.service.ts`: Dependency data transformation and loading
+  - `messenger.service.ts`: Centralized webview message handling
+  - `workspace.service.ts`: Workspace validation and utilities
 - **`shared/constants.ts`**: Shared constants and configuration
 - **`test/`**: VS Code test framework integration
 
@@ -44,7 +50,18 @@
 - **`src/components/`**: Preact components (PascalCase .tsx files)
   - `App.tsx`: Main application component
   - `GraphDashboard.tsx`: Dashboard visualization component
+  - `GraphCanvas.tsx`: Cytoscape.js graph rendering component
+  - `GraphToolbar.tsx`: Graph interaction controls
   - `Button.tsx`: Reusable button component
+- **`src/views/`**: Page-level view components
+  - `SidePanelView.tsx`: Main side panel interface
+- **`src/services/`**: UI service layer
+  - `messenger.ts`: Webview-to-extension messaging
+  - `graph-styles.service.ts`: Cytoscape styling and layout
+  - `file-type.service.ts`: File type detection and icons
+  - `extension-config.service.ts`: Extension configuration access
+- **`src/types/`**: TypeScript type definitions
+  - `vscode-webview.d.ts`: VS Code webview API types
 - **`src/main.tsx`**: Preact application entry point
 - **`src/styles/global.css`**: Global styling
 - **`vite.config.ts`**: Vite build configuration for webview
@@ -52,9 +69,10 @@
 
 ## Key Configuration Files
 - **`package.json`**: Extension manifest with VS Code contributions
-  - Commands: self-test, open MCP config, scan dependencies
+  - Commands: open MCP config, scan dependencies, open graph view
   - Views: Activity bar container and side panel
   - Settings: Node path, workspace config, server ID
+  - MCP Tools: ping, constellation_impactAnalysis
 - **`tsconfig.json`**: TypeScript compilation (ES2022, NodeNext modules)
 - **`eslint.config.mjs`**: Code style and linting rules
 - **`.vscodeignore`**: Files excluded from extension package

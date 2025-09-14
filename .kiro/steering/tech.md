@@ -101,8 +101,8 @@ npm run clean:mcp:ws # Clean workspace MCP config
 - `@modelcontextprotocol/sdk`: ^1.18.0 (MCP server implementation)
 - `zod`: ^3.23.8 (Schema validation)
 - `preact`: ^10.24.3 (UI framework)
-- `dependency-cruiser`: ^16.8.0 (Codebase dependency analysis)
-- `cytoscape`: ^3.30.4 (Interactive graph visualization)
+- `dependency-cruiser`: ^17.0.1 (Codebase dependency analysis)
+- `cytoscape`: ^3.27.0 (Interactive graph visualization)
 
 ### Development Dependencies
 - `typescript`: ^5.9.2 (Language and compiler)
