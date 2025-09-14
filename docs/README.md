@@ -1,9 +1,15 @@
 # Kiro Constellation
 
-A bare-bones Kiro/VS Code extension that installs and runs a tiny local Model Context Protocol (MCP) server and auto-registers it in Kiro. It ships two tools:
+A Kiro/VS Code extension that provides a comprehensive MCP (Model Context Protocol) server with interactive dependency graph visualization, impact analysis, and guided onboarding capabilities. It ships multiple tools:
 
-- ping → responds with "pong"
-- echo → responds with the same text you send
+**Core Tools:**
+- `ping` → responds with "pong" and opens graph view
+- `constellation_impactAnalysis` → analyzes dependency impact of file changes
+
+**Onboarding Tools:**
+- `constellation_onboardingplan` → generates structured walkthrough plans
+- `constellation_onboardingcommitPlan` → commits and executes walkthrough plans  
+- `constellation_onboardingnextStep` → advances to next step in active walkthroughs
 
 On activation the extension:
 1) Ensures Node.js 18+ is available.
@@ -50,6 +56,8 @@ Side panel UI
 - The extension contributes a Constellation icon to the Activity Bar which opens a side panel.
 - The side panel is a webview backed by a Preact app (bundled via Vite) that renders into #root.
 - The UI assets are built into out/ui and loaded via webview.asWebviewUri.
+- **Onboarding Mode Toggle**: Switch between Default and Onboarding modes with safe persona backup/restore
+- **Walkthrough Status**: Display current step progress and walkthrough information when active
 
 Dependency scan (background)
 - On activation the extension runs a background dependency scan of the first workspace folder using dependency-cruiser.
@@ -88,4 +96,22 @@ Read next
 - docs/development.md — recommended dev loop, when to reload/restart
 - docs/events.md — end-to-end messaging and bridge overview
 - docs/troubleshooting.md — common problems and quick fixes
+
+Onboarding mode (new)
+- Toggle in Side Panel: A Mode dropdown lets you switch between Default and Onboarding.
+- Enable (Default → Onboarding):
+  - Confirms with a dialog.
+  - Moves the entire ./.kiro/steering directory to ./.constellation/steering/backup/<timestamp> (rename with copy+delete fallback).
+  - Recreates ./.kiro/steering and writes onboarding-guide.md (strict persona) from an embedded template.
+  - The Side Panel shows “Onboarding Mode”.
+- Disable (Onboarding → Default):
+  - Confirms with a dialog.
+  - Restores the most recent backup back to ./.kiro/steering.
+  - Cleans up all backups by removing ./.constellation/steering/backup.
+
+Implementation notes
+- Embedded persona template lives in code and is written to ./.kiro/steering/onboarding-guide.md on enable.
+- Backup/restore is implemented in src/services/onboarding-mode.service.ts
+- UI components: webview-ui/src/components/OnboardingModeToggle.tsx and OnboardingStatus.tsx
+- Status and errors are sent via onboarding/* webview messages (see docs/events.md)
 

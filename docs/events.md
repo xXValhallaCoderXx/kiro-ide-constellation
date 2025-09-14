@@ -64,3 +64,27 @@ Future
 - Add graph/load/data/open-file/scan as per cytoscape-graph-initial-prd.md.
 - Optional: add more endpoints to the HTTP bridge if tools need to drive UI (e.g., focus node, load subset).
 
+Onboarding UI messages (current)
+
+UI → Extension
+- onboarding/change-mode { mode: 'Default' | 'Onboarding' }
+  - Requests a mode switch. Extension performs backup/restore + persona write, then replies with success or error.
+- onboarding/get-mode
+  - Requests current mode (Default/Onboarding).
+- onboarding/get-status
+  - Requests current walkthrough status (if any).
+
+Extension → UI
+- onboarding/mode-changed { mode }
+  - Emitted after a successful mode change.
+- onboarding/mode-error { message }
+  - Emitted if a mode change fails (e.g., filesystem error).
+- onboarding/current-mode { mode }
+  - Response to onboarding/get-mode.
+- onboarding/status-update { payload }
+  - Current walkthrough step/file/explanation snapshot for display.
+- onboarding/walkthrough-complete
+  - Emitted when a walkthrough completes.
+- onboarding/walkthrough-error { message }
+  - Emitted if an execution error occurs.
+
