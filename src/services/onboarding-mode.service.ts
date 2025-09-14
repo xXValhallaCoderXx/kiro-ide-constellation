@@ -276,6 +276,11 @@ export class OnboardingModeService {
 
       // Restore from backup (exclude metadata file and any nested backups)
       await this.copyDirectoryRecursive(mostRecentBackup, steeringDir, ['.backup-metadata.json', '.backups']);
+
+      // Cleanup all backups after successful restore
+      try {
+        await fs.promises.rm(backupBaseDir, { recursive: true, force: true });
+      } catch {/* ignore cleanup errors */}
       
     } catch (error) {
       throw new Error(`Failed to restore steering documents: ${error instanceof Error ? error.message : 'Unknown error'}`);
