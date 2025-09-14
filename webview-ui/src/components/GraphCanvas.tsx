@@ -83,8 +83,8 @@ export function GraphCanvas({ data, isRendering, onRenderingChange, impactSource
           const ext = getFileExt(node.path)
           const role = impactSourceId
             ? (node.id === impactSourceId
-                ? 'source'
-                : (directChildren.has(node.id) ? 'direct-child' : 'indirect-child'))
+              ? 'source'
+              : (directChildren.has(node.id) ? 'direct-child' : 'indirect-child'))
             : 'normal'
           return {
             data: {
@@ -211,10 +211,10 @@ export function GraphCanvas({ data, isRendering, onRenderingChange, impactSource
           </div>
         </div>
       )}
-      
+
       {/* Cytoscape container */}
-      <div 
-        ref={containerRef} 
+      <div
+        ref={containerRef}
         className="graph-canvas-container"
         data-testid="graph-canvas"
       />
