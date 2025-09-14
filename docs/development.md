@@ -8,6 +8,8 @@ UI layer
 - Preact app bundled with Vite lives in webview-ui/.
 - Output goes to out/ui (main.js, style.css). The webview provider loads from there.
 - Components use PascalCase .tsx files (e.g., App.tsx, GraphDashboard.tsx, Button.tsx). Non-components use kebab-case .ts.
+- Services layer provides business logic (focus-mode.service.ts, graph-styles.service.ts, etc.)
+- Focus mode state managed entirely in UI with performance optimizations
 
 Edit–build loop
 - F5 (Run Extension or Run Extension (Dev MCP)) starts two background tasks:
@@ -97,4 +99,36 @@ Onboarding mode (implementation map)
 - UI: webview-ui/src/components/OnboardingModeToggle.tsx
 - UI: webview-ui/src/components/OnboardingStatus.tsx
 - Messaging: onboarding/* events (docs/events.md)
+
+## UI Component Development
+
+### Component Architecture
+- **Single Responsibility**: Each component has one clear purpose
+- **Type Safety**: All props and state use TypeScript interfaces
+- **Performance**: Use `useMemo` and `useCallback` for expensive operations
+- **Error Boundaries**: Implement error handling for async operations
+
+### Focus Mode Development Patterns
+- **Adjacency Maps**: Always use pre-computed adjacency maps for graph traversal
+- **BFS Algorithms**: Implement cycle detection and depth limiting
+- **Performance Monitoring**: Log operations that exceed 50ms threshold
+- **Position Caching**: Maintain node positions during focus changes
+
+### Service Layer Guidelines
+- **Pure Functions**: Prefer pure functions for business logic
+- **Error Handling**: Comprehensive error handling with user-friendly messages
+- **Performance**: Monitor timing and implement optimizations
+- **Testing**: Unit tests for all public functions
+
+### Development Workflow
+1. **Start UI development**: `npm run dev:ui` for hot reload
+2. **Component changes**: Automatic rebuild and browser refresh
+3. **Service changes**: Restart extension for service layer updates
+4. **Performance testing**: Test with large graphs (1000+ nodes)
+
+### Performance Considerations
+- **Large Graphs**: Implement fan-out capping and visibility filtering
+- **Memory Management**: Clean up event listeners and cache entries
+- **Rendering**: Use `display:none` for hidden nodes (no DOM removal)
+- **Layout Stability**: Maintain positions during focus operations
 

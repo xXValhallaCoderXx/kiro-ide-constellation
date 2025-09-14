@@ -15,7 +15,7 @@ UI → Ext (webview messaging)
   - Receiver: src/side-panel-view-provider.ts → src/services/messenger.service.ts
   - Action: runs command constellation.openGraphView
 
-Planned graph messages (PRD)
+Graph messages (implemented)
 - graph/load
   - UI asks Ext for data; Ext replies with graph/data or graph/error
 - graph/data { nodes, edges, meta }
@@ -24,6 +24,16 @@ Planned graph messages (PRD)
   - UI double‑click node → Ext opens file in the editor
 - graph/scan
   - UI asks Ext to re-run the dependency scan, then send graph/data
+- graph/status { message }
+  - Ext → UI progress updates during scanning operations
+- graph/error { message }
+  - Ext → UI error notifications for graph operations
+
+Focus mode messages (UI-only)
+- Focus mode state is managed entirely within the webview UI
+- No extension communication required for focus operations
+- State includes: active focus, breadcrumb trail, depth settings, visible nodes/edges
+- Performance metrics logged to console for monitoring
 
 MCP → Ext (HTTP bridge)
 - POST /open-graph

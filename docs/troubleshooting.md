@@ -49,3 +49,29 @@ Onboarding mode issues
 - After switching back to Default, backups still exist
   - The extension removes ./.constellation/steering/backup on successful restore. If a partial restore or failure occurred, backups are left intact for manual review.
 
+## Graph Focus Mode Issues
+
+### Performance Problems
+- **Slow focus operations**: Check graph size and fan-out ratios. Large graphs (1000+ nodes) may need lower depth settings
+- **Memory growth**: Monitor position cache size and cleanup frequency in console logs
+- **Layout instability**: Verify position caching is working correctly - nodes should maintain positions during focus changes
+- **Console warnings**: Operations >50ms will log performance warnings - consider optimizing graph structure
+
+### Navigation Problems
+- **Breadcrumbs not updating**: Check focus state management in GraphDashboard component
+- **Esc key not working**: Verify keyboard event listeners are attached to document
+- **Reset not clearing**: Ensure both focus and impact states are cleared when reset is clicked
+- **Double-click not focusing**: Check that Cytoscape.js event handlers are properly registered
+
+### Integration Issues
+- **Impact analysis conflicts**: Verify focus mode activates correctly when impact analysis runs
+- **Graph data problems**: Check graph validation and adjacency building in console
+- **UI component errors**: Monitor browser console for React/Preact component issues
+- **State synchronization**: Ensure focus state and graph state remain synchronized
+
+### Large Graph Handling
+- **Fan-out capping**: Focus mode limits to 100 children per node - check if this affects your use case
+- **Depth limitations**: Maximum 3 levels of depth for performance - use lower depths for large graphs
+- **Memory management**: Position cache is automatically cleaned up, but monitor for memory leaks
+- **Performance degradation**: Use browser dev tools to profile performance with large datasets
+
