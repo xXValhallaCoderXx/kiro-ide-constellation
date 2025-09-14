@@ -15,27 +15,7 @@ const server = new McpServer({
 // Graph Context Service
 // Requirements: 3.1, 3.2, 4.1, 7.3
 
-interface GraphNode {
-  id: string; // workspace-relative path
-  label?: string;
-  type?: string;
-}
-
-interface GraphEdge {
-  source: string; // importer
-  target: string; // imported
-  type?: string;
-}
-
-interface GraphData {
-  nodes: GraphNode[];
-  edges: GraphEdge[];
-  metadata?: {
-    scanTime: string;
-    fileCount: number;
-    dependencyCount: number;
-  };
-}
+import type { GraphNode, GraphEdge, GraphData } from "./shared/graph.types.js";
 
 interface GraphContext {
   seedId: string | null;
@@ -44,7 +24,7 @@ interface GraphContext {
   limit: number;
 }
 
-// Dependency cruiser input format (compatible with existing graph-data.service.ts)
+// Dependency cruiser input format (mirror of src/services/graph-data.service.ts expectations)
 interface DepCruiseResult {
   version: 1;
   generatedAt: string;
