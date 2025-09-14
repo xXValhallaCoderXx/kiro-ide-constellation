@@ -1,3 +1,6 @@
+// TODO - DEPRECATED: This component is being replaced by the new Atomic Design ButtonIcon and ButtonLink atoms
+// Please use atoms/ButtonIcon for floating icon buttons or atoms/ButtonLink for link-style buttons
+
 import type { ComponentChildren } from 'preact'
 import type { JSX } from 'preact'
 
