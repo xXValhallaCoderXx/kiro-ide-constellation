@@ -14,6 +14,7 @@ type GraphResponseMessage =
   | { type: 'graph/error'; message: string }
   | { type: 'graph/status'; message: string }
   | { type: 'graph/impact'; payload: { sourceFile: string; affectedFiles: string[] } }
+  | { type: 'graph/metrics'; payload: { horizonDays: number; available: boolean; metrics: Record<string, { commitCount: number; churn: number; lastModifiedAt: number | null; authorCount: number; primaryAuthor?: string }> } }
 
 // Onboarding-specific message types for webview -> extension
 type OnboardingMessage =

@@ -13,6 +13,7 @@ export type GraphOutboundMessage =
   | { type: 'graph/error'; message: string }
   | { type: 'graph/status'; message: string }
   | { type: 'graph/impact'; payload: { sourceFile: string; affectedFiles: string[] } }
+  | { type: 'graph/metrics'; payload: { horizonDays: number; available: boolean; metrics: Record<string, { commitCount: number; churn: number; lastModifiedAt: number | null; authorCount: number; primaryAuthor?: string }> } }
 
 // Onboarding-specific message types for webview -> extension communication
 export type OnboardingInboundMessage =
@@ -135,6 +136,15 @@ async function handleGraphLoad(ctx: {
     );
     
     ctx.postMessage({ type: 'graph/data', payload: graphData });
+
+    // Try to post cached/precomputed git metrics without blocking
+    try {
+      const { readGitMetrics } = await import('./git-metrics.service.js')
+      const env = await readGitMetrics(ctx.extensionContext)
+      if (env) {
+        ctx.postMessage({ type: 'graph/metrics', payload: { horizonDays: env.horizonDays, available: env.available, metrics: env.metrics } })
+      }
+    } catch {/* ignore */}
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error occurred';
     ctx.postMessage({ type: 'graph/error', message });
@@ -164,6 +174,17 @@ async function handleGraphScan(ctx: {
     }
 
     ctx.postMessage({ type: 'graph/status', message: 'Scanning project...' });
+
+    // Kick off git metrics refresh in the background (pre-scan flavor)
+    void (async () => {
+      try {
+        const { ensureGitMetrics } = await import('./git-metrics.service.js')
+        const env = await ensureGitMetrics(ctx.extensionContext!)
+        if (env) {
+          ctx.postMessage?.({ type: 'graph/metrics', payload: { horizonDays: env.horizonDays, available: env.available, metrics: env.metrics } })
+        }
+      } catch {/* ignore */}
+    })();
     
     if (ctx.triggerScan) {
       await ctx.triggerScan();

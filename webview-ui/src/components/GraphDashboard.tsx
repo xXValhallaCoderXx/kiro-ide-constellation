@@ -3,6 +3,7 @@ import { messenger } from '../services/messenger'
 import { GraphToolbar } from './GraphToolbar'
 import { GraphCanvas, GraphCanvasRef } from './GraphCanvas'
 import { Button } from './Button'
+import { FileInfoPanel } from './FileInfoPanel'
 import { FocusBreadcrumb } from './FocusBreadcrumb'
 import { 
   buildAdjacency, 
@@ -78,11 +79,23 @@ type ComponentState =
   | { type: 'scanning'; message: string }
   | { type: 'rendering'; message: string }
 
+// Git metrics payload type for UI
+interface FileGitMetrics90d {
+  commitCount: number
+  churn: number
+  lastModifiedAt: number | null
+  authorCount: number
+  primaryAuthor?: string
+}
+
 export function GraphDashboard() {
   const [state, setState] = useState<ComponentState>({ type: 'loading' })
   const [isRendering, setIsRendering] = useState(false)
   const [fullGraphData, setFullGraphData] = useState<GraphData | null>(null)
   const [impactState, setImpactState] = useState<ImpactState>({ isActive: false })
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
+  const [gitMetrics, setGitMetrics] = useState<Record<string, FileGitMetrics90d>>({})
+  const [gitMetricsReady, setGitMetricsReady] = useState(false)
   const [focusState, setFocusState] = useState<FocusState>({
     isActive: false,
     root: null,
@@ -580,6 +593,15 @@ export function GraphDashboard() {
         case 'graph/status':
           setState({ type: 'scanning', message: msg.message })
           break
+        case 'graph/metrics': {
+          // Git metrics arrived (pre-scan or cached)
+          const payload = msg.payload as { horizonDays: number; available: boolean; metrics: Record<string, FileGitMetrics90d> }
+          if (payload && typeof payload === 'object') {
+            setGitMetrics(payload.metrics || {})
+            setGitMetricsReady(true)
+          }
+          break
+        }
       }
     }
 
@@ -771,14 +793,34 @@ export function GraphDashboard() {
         
         {/* Graph Canvas */}
         {state.type === 'data' && (
-          <GraphCanvas
-            ref={graphCanvasRef}
-            data={state.data}
-            isRendering={isRendering}
-            onRenderingChange={handleRenderingChange}
-            impactSourceId={impactState.isActive ? impactState.data?.sourceFile : undefined}
-            onNodeDrill={handleNodeDrill}
-          />
+          <>
+            <GraphCanvas
+              ref={graphCanvasRef}
+              data={state.data}
+              isRendering={isRendering}
+              onRenderingChange={handleRenderingChange}
+              impactSourceId={impactState.isActive ? impactState.data?.sourceFile : undefined}
+              onNodeDrill={handleNodeDrill}
+              onNodeSelect={(id) => setSelectedNodeId(id)}
+            />
+
+            {/* File info panel in top-right */}
+            {selectedNodeId && (
+              <FileInfoPanel
+                nodeId={selectedNodeId}
+                node={state.data.nodes.find(n => n.id === selectedNodeId) || null}
+                inDegree={reverseAdjRef.current.get(selectedNodeId)?.length || 0}
+                outDegree={forwardAdjRef.current.get(selectedNodeId)?.length || 0}
+                metrics={gitMetrics[selectedNodeId]}
+                metricsReady={gitMetricsReady}
+                onOpenFile={() => {
+                  const node = state.data.nodes.find(n => n.id === selectedNodeId)
+                  if (node?.path) messenger.post('graph/open-file', { path: node.path })
+                }}
+                onClose={() => setSelectedNodeId(null)}
+              />
+            )}
+          </>
         )}
       </div>
     </div>

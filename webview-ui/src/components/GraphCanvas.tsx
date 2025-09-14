@@ -52,10 +52,11 @@ interface GraphCanvasProps {
   onRenderingChange: (rendering: boolean) => void
   impactSourceId?: string
   onNodeDrill?: (nodeId: string) => void
+  onNodeSelect?: (nodeId: string) => void
 }
 
 export const GraphCanvas = forwardRef<GraphCanvasRef, GraphCanvasProps>(
-  ({ data, isRendering, onRenderingChange, impactSourceId, onNodeDrill }, ref) => {
+  ({ data, isRendering, onRenderingChange, impactSourceId, onNodeDrill, onNodeSelect }, ref) => {
     const containerRef = useRef<HTMLDivElement>(null)
     const cyRef = useRef<Core | null>(null)
     // Keep a stable reference to the callback so the effect below doesn't re-run
@@ -280,7 +281,9 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, GraphCanvasProps>(
           cyRef.current.on('tap', 'node', (evt) => {
             // Single-click highlighting (node gets selected automatically by Cytoscape)
             const node = evt.target
-            console.log('Node selected:', node.data('label'))
+            const nodeId = node.id()
+            if (onNodeSelect) onNodeSelect(nodeId)
+            else console.log('Node selected:', node.data('label'))
           })
 
           cyRef.current.on('dbltap', 'node', (evt) => {
