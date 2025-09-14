@@ -105,7 +105,7 @@ export class OnboardingModeService {
   private static instance: OnboardingModeService;
   private currentMode: OnboardingMode = 'Default';
   private readonly STEERING_DIR = '.kiro/steering';
-  private readonly BACKUP_BASE_DIR = '.kiro/.backups/steering';
+  private readonly BACKUP_BASE_DIR = '.constellation/steering/backup';
   private readonly ONBOARDING_PERSONA_FILE = 'onboarding-guide.md';
 
   private constructor() {}
@@ -203,50 +203,47 @@ export class OnboardingModeService {
 
     const steeringDir = path.join(workspaceRoot, this.STEERING_DIR);
     const backupBaseDir = path.join(workspaceRoot, this.BACKUP_BASE_DIR);
-    
-    // Check if steering directory exists
+
+    // Ensure backup base directory exists
+    await fs.promises.mkdir(backupBaseDir, { recursive: true });
+
+    // If steering directory doesn't exist, create an empty timestamped backup directory
     try {
       await fs.promises.access(steeringDir, fs.constants.F_OK);
     } catch {
-      // If steering directory doesn't exist, create an empty backup
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-      const backupDir = path.join(backupBaseDir, timestamp);
-      await fs.promises.mkdir(backupDir, { recursive: true });
-      return backupDir;
+      const emptyTs = new Date().toISOString().replace(/[:.]/g, '-');
+      const emptyBackupDir = path.join(backupBaseDir, emptyTs);
+      await fs.promises.mkdir(emptyBackupDir, { recursive: true });
+      return emptyBackupDir;
     }
 
-    // Check if we need to create a backup (idempotence check)
-    const needsBackup = await this.shouldCreateBackup(steeringDir, backupBaseDir);
-    if (!needsBackup) {
-      // Return the most recent backup path
-      const mostRecentBackup = await this.findMostRecentBackup(backupBaseDir);
-      if (mostRecentBackup) {
-        return mostRecentBackup;
-      }
-    }
-
-    // Create timestamped backup directory
+    // Move (rename) the entire steering directory to a timestamped backup directory
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const backupDir = path.join(backupBaseDir, timestamp);
-    
-    // Ensure backup base directory exists
-    await fs.promises.mkdir(backupBaseDir, { recursive: true });
-    
-    // Recursively copy steering directory to backup (exclude the backups directory to avoid recursion)
-    await this.copyDirectoryRecursive(steeringDir, backupDir, ['.backups']);
-    
-    // Create backup metadata
-    const fileCount = await this.countFilesRecursive(backupDir);
-    const metadata: BackupMetadata = {
-      timestamp,
-      originalPath: steeringDir,
-      backupPath: backupDir,
-      fileCount
-    };
-    
-    const metadataPath = path.join(backupDir, '.backup-metadata.json');
-    await fs.promises.writeFile(metadataPath, JSON.stringify(metadata, null, 2));
-    
+
+    // Make sure the parent of backupDir exists (already ensured for backupBaseDir)
+    try {
+      await fs.promises.rename(steeringDir, backupDir);
+    } catch (err) {
+      // Fallback to copy+delete if rename fails (e.g., cross-device)
+      await fs.promises.mkdir(backupDir, { recursive: true });
+      await this.copyDirectoryRecursive(steeringDir, backupDir, []);
+      await fs.promises.rm(steeringDir, { recursive: true, force: true });
+    }
+
+    // Write backup metadata into the backup directory
+    try {
+      const fileCount = await this.countFilesRecursive(backupDir);
+      const metadata: BackupMetadata = {
+        timestamp,
+        originalPath: steeringDir,
+        backupPath: backupDir,
+        fileCount
+      };
+      const metadataPath = path.join(backupDir, '.backup-metadata.json');
+      await fs.promises.writeFile(metadataPath, JSON.stringify(metadata, null, 2));
+    } catch {/* ignore metadata errors */}
+
     return backupDir;
   }
 
@@ -349,7 +346,7 @@ export class OnboardingModeService {
    */
   private async hasDirectoryChanged(currentDir: string, backupDir: string): Promise<boolean> {
     try {
-      const currentFiles = await this.getDirectoryFileList(currentDir, ['.backups']);
+      const currentFiles = await this.getDirectoryFileList(currentDir, []);
       const backupFiles = await this.getDirectoryFileList(backupDir, ['.backup-metadata.json']);
       
       // Quick check: different number of files
