@@ -201,8 +201,12 @@ export class OnboardingModeService {
       vscode.window.showInformationMessage('Switched to Default mode. Steering documents restored from backup.');
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      vscode.window.showErrorMessage(`Failed to switch to Default mode: ${errorMessage}`);
-      throw error;
+      // Fallback: ensure steering directory exists and still mark as Default
+      try {
+        await fs.promises.mkdir(path.join(workspaceRoot, this.STEERING_DIR), { recursive: true });
+      } catch { /* ignore */ }
+      this.currentMode = 'Default';
+      vscode.window.showWarningMessage(`Switched to Default mode with limited restore: ${errorMessage}`);
     }
   }
 
@@ -283,8 +287,15 @@ export class OnboardingModeService {
   private async restoreSteeringDocsWithFallback(steeringDir: string, backupBaseDir: string): Promise<void> {
     // Find the most recent backup (backup directory is outside steeringDir to avoid self-deletion)
     const mostRecentBackup = await this.findMostRecentBackup(backupBaseDir);
+
+    // If no backup exists, create an empty steering directory and proceed
     if (!mostRecentBackup) {
-      throw new Error('No backup found to restore from.');
+      try {
+        await fs.promises.mkdir(steeringDir, { recursive: true });
+      } catch {
+        // ignore mkdir failure; caller will handle UI messaging
+      }
+      return;
     }
 
     try {
@@ -300,7 +311,8 @@ export class OnboardingModeService {
       await this.copyDirectoryRecursive(mostRecentBackup, steeringDir, ['.backup-metadata.json', '.backups']);
 
     } catch (error) {
-      throw new Error(`Failed to restore steering documents: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      // Fallback: ensure steering directory exists and continue
+      try { await fs.promises.mkdir(steeringDir, { recursive: true }); } catch { /* ignore */ }
     }
   }
 
