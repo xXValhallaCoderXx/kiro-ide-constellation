@@ -7,6 +7,8 @@ import { runScan } from "./services/dependency-cruiser.service.js";
 import { startHttpBridge } from "./services/http-bridge.service.js";
 
 let graphPanel: vscode.WebviewPanel | undefined;
+let graphWebviewReady = false;
+let pendingImpactPayload: { sourceFile: string; affectedFiles: string[] } | null = null;
 
 export async function activate(context: vscode.ExtensionContext) {
   try {
@@ -114,8 +116,25 @@ export async function activate(context: vscode.ExtensionContext) {
               }
             );
             
+            // Reset readiness for a newly created panel
+            graphWebviewReady = false;
+            
             // Set up message handling for graph panel
             const messageDisposable = graphPanel.webview.onDidReceiveMessage((msg) => {
+              // Intercept webview readiness handshake
+              try {
+                if (msg && typeof msg.type === 'string' && msg.type === 'graph/ready') {
+                  graphWebviewReady = true;
+                  if (pendingImpactPayload && graphPanel) {
+                    graphPanel.webview.postMessage({
+                      type: 'graph/impact',
+                      payload: pendingImpactPayload,
+                    });
+                    pendingImpactPayload = null;
+                  }
+                }
+              } catch {/* ignore */}
+
               import('./services/messenger.service.js').then(({ handleWebviewMessage }) =>
                 handleWebviewMessage(msg, {
                   revealGraphView: () => void vscode.commands.executeCommand('constellation.openGraphView'),
@@ -145,18 +164,24 @@ export async function activate(context: vscode.ExtensionContext) {
             graphPanel.onDidDispose(() => { 
               messageDisposable.dispose();
               graphPanel = undefined; 
+              graphWebviewReady = false;
+              pendingImpactPayload = null;
             });
           }),
           vscode.commands.registerCommand("constellation.showImpact", async (payload: { sourceFile: string; affectedFiles: string[] }) => {
+            // Store payload so we can deliver it after webview is ready
+            pendingImpactPayload = payload;
+
             // Ensure graph panel exists and is visible
             await vscode.commands.executeCommand('constellation.openGraphView');
             
-            // Send impact data to webview
-            if (graphPanel) {
+            // If ready, send immediately; otherwise, it will send on graph/ready
+            if (graphPanel && graphWebviewReady && pendingImpactPayload) {
               graphPanel.webview.postMessage({
                 type: 'graph/impact',
-                payload
+                payload: pendingImpactPayload
               });
+              pendingImpactPayload = null;
             }
           })
         );

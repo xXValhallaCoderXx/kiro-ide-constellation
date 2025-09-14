@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'preact/hooks'
+import { useCallback, useEffect, useState, useRef } from 'preact/hooks'
 import { messenger } from '../services/messenger'
 import { GraphToolbar } from './GraphToolbar'
 import { GraphCanvas } from './GraphCanvas'
@@ -55,6 +55,9 @@ export function GraphDashboard() {
   const [isRendering, setIsRendering] = useState(false)
   const [fullGraphData, setFullGraphData] = useState<GraphData | null>(null)
   const [impactState, setImpactState] = useState<ImpactState>({ isActive: false })
+  // Keep latest impact state in a ref to avoid stale closure inside message handler
+  const impactRef = useRef<ImpactState>({ isActive: false })
+  useEffect(() => { impactRef.current = impactState }, [impactState])
 
   // Function to compute filtered graph from affected files list
   const computeFilteredGraph = useCallback((graphData: GraphData, affectedFiles: string[]): GraphData => {
@@ -94,32 +97,45 @@ export function GraphDashboard() {
 
   // Initialize component and request graph data
   useEffect(() => {
+    // Signal readiness so the extension can safely send impact payloads
+    messenger.post('graph/ready')
+
     // Request graph data on mount
     messenger.post('graph/load')
 
     // Listen for messages from extension
     const handleMessage = (msg: any) => {
       switch (msg.type) {
-        case 'graph/data':
+        case 'graph/data': {
+          const graphPayload = msg.payload as GraphData
           // Store full graph data for reset functionality
-          setFullGraphData(msg.payload)
-          
+          setFullGraphData(graphPayload)
+
+          // If an impact arrived before data, apply it now (using ref to avoid stale closure)
+          if (impactRef.current.isActive && impactRef.current.data) {
+            const filteredGraph = computeFilteredGraph(graphPayload, impactRef.current.data.affectedFiles)
+            setImpactState((prev) => ({ ...prev, filteredGraph }))
+            setState({ type: 'data', data: filteredGraph })
+            break
+          }
+
           // Check if this is a large graph that needs rendering indication
-          const nodeCount = msg.payload.nodes.length
+          const nodeCount = graphPayload.nodes.length
           if (nodeCount > 200) {
             setState({ type: 'rendering', message: `Rendering ${nodeCount} nodes...` })
             // Use setTimeout to allow UI to update before heavy rendering
             setTimeout(() => {
-              setState({ type: 'data', data: msg.payload })
+              setState({ type: 'data', data: graphPayload })
             }, 100)
           } else {
-            setState({ type: 'data', data: msg.payload })
+            setState({ type: 'data', data: graphPayload })
           }
           break
-        case 'graph/impact':
+        }
+        case 'graph/impact': {
           // Handle impact analysis data
+          const impactData = msg.payload as ImpactData
           if (fullGraphData) {
-            const impactData = msg.payload as ImpactData
             const filteredGraph = computeFilteredGraph(fullGraphData, impactData.affectedFiles)
             
             // Update impact state
@@ -131,8 +147,12 @@ export function GraphDashboard() {
             
             // Update display to show filtered graph
             setState({ type: 'data', data: filteredGraph })
+          } else {
+            // Defer until we receive graph/data
+            setImpactState({ isActive: true, data: impactData })
           }
           break
+        }
         case 'graph/error':
           setState({ type: 'error', message: msg.message })
           break

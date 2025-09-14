@@ -176,6 +176,81 @@ function checkFileExistsOnDisk(filePath: string, workspaceRoot: string): boolean
 }
 
 /**
+ * Resolve the best matching node id in the graph for a given (possibly imprecise) workspace-relative path.
+ * Heuristics:
+ *  - exact id match
+ *  - case-insensitive id match
+ *  - extension swaps (.js<->.ts, .jsx<->.tsx)
+ *  - basename-only (case-insensitive) with best directory match when unique
+ */
+function resolveSourceIdInGraph(graphData: GraphData, normalizedFilePath: string): string | null {
+  const ids = graphData.nodes.map(n => n.id);
+  const idSet = new Set(ids);
+  if (idSet.has(normalizedFilePath)) {
+    return normalizedFilePath;
+  }
+
+  const lowerToOriginal = new Map<string, string>();
+  for (const id of ids) {
+    const lower = id.toLowerCase();
+    if (!lowerToOriginal.has(lower)) lowerToOriginal.set(lower, id);
+  }
+
+  const lowerNorm = normalizedFilePath.toLowerCase();
+  if (lowerToOriginal.has(lowerNorm)) {
+    return lowerToOriginal.get(lowerNorm)!;
+  }
+
+  // Try extension swaps
+  const ext = path.extname(normalizedFilePath).toLowerCase();
+  const dir = path.posix.dirname(normalizedFilePath);
+  const base = path.basename(normalizedFilePath, ext);
+  const swapPairs: Record<string, string> = { '.js': '.ts', '.ts': '.js', '.jsx': '.tsx', '.tsx': '.jsx' };
+  if (swapPairs[ext]) {
+    const swapped = path.posix.join(dir, `${base}${swapPairs[ext]}`);
+    if (idSet.has(swapped)) return swapped;
+    const swappedLower = swapped.toLowerCase();
+    if (lowerToOriginal.has(swappedLower)) return lowerToOriginal.get(swappedLower)!;
+  }
+
+  // Basename-only (case-insensitive) heuristic
+  const targetBaseLower = base.toLowerCase();
+  const byBasename = new Map<string, string[]>();
+  for (const id of ids) {
+    const idExt = path.extname(id);
+    const idBaseLower = path.basename(id, idExt).toLowerCase();
+    const arr = byBasename.get(idBaseLower) ?? [];
+    arr.push(id);
+    byBasename.set(idBaseLower, arr);
+  }
+  const candidates = byBasename.get(targetBaseLower) ?? [];
+  if (candidates.length === 1) {
+    return candidates[0];
+  }
+  if (candidates.length > 1) {
+    const dirLower = dir.toLowerCase();
+    // Prefer candidate with the closest directory match
+    const scored = candidates.map(id => {
+      const idDirLower = path.posix.dirname(id).toLowerCase();
+      // simple scoring: length of common suffix match
+      let score = 0;
+      const minLen = Math.min(idDirLower.length, dirLower.length);
+      for (let i = 0; i < minLen; i++) {
+        const a = idDirLower[idDirLower.length - 1 - i];
+        const b = dirLower[dirLower.length - 1 - i];
+        if (a === b) score++; else break;
+      }
+      return { id, score };
+    });
+    scored.sort((a, b) => b.score - a.score);
+    if (scored[0].score > 0) return scored[0].id;
+    return scored[0].id; // fallback to first candidate
+  }
+
+  return null;
+}
+
+/**
  * Main function to compute dependency impact for a given file
  * Requirements: 1.1, 1.2, 1.4, 1.5, 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 6.1, 6.2, 6.4, 6.5
  */
@@ -222,9 +297,12 @@ export async function computeImpact(
     
     // Build adjacency map for efficient traversal
     const adjacencyMap = buildAdjacencyMap(graphData);
+
+    // Try to resolve to an existing node id if the provided path isn't present as-is
+    const resolvedSourceId = resolveSourceIdInGraph(graphData, normalizedFilePath);
     
-    // Check if file exists in dependency graph
-    if (!adjacencyMap.has(normalizedFilePath)) {
+    // Check if file exists in dependency graph (after heuristic resolution)
+    if (!resolvedSourceId || !adjacencyMap.has(resolvedSourceId)) {
       // Check if file exists on disk but not in graph
       // Requirements: 1.4, 6.1
       const fileExistsOnDisk = checkFileExistsOnDisk(normalizedFilePath, workspaceRoot);
@@ -261,14 +339,14 @@ export async function computeImpact(
     }
     
     // Perform BFS traversal to find affected files
-    const { affectedFiles, traversalStats } = performBFSTraversal(normalizedFilePath, adjacencyMap);
+    const { affectedFiles, traversalStats } = performBFSTraversal(resolvedSourceId, adjacencyMap);
     
     // Performance consideration for large graphs (requirement 6.4)
     // The actual performance optimization happens in the UI layer,
     // but we ensure our service doesn't cause additional overhead
     return {
       affectedFiles,
-      sourceFile: normalizedFilePath,
+      sourceFile: resolvedSourceId,
       traversalStats
     };
     

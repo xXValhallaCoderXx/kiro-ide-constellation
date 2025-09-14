@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import * as http from "node:http";
+import * as path from "node:path";
 import { randomBytes } from "node:crypto";
 import { computeImpact } from "./impact-analysis.service.js";
 
@@ -109,17 +110,38 @@ export async function startHttpBridge(context: vscode.ExtensionContext): Promise
             // Compute impact analysis
             const impactResult = await computeImpact(context, filePath);
             
+            // Normalize paths to workspace-relative node ids for UI filtering
+            const wsRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? "";
+            const toNodeId = (p: string): string | null => {
+              try {
+                if (!p) return null;
+                // Normalize slashes
+                const slashed = p.replace(/\\/g, '/');
+                // If already relative, return as-is
+                if (!path.isAbsolute(slashed)) return slashed;
+                if (!wsRoot) return null;
+                const rel = path.relative(wsRoot, slashed).replace(/\\/g, '/');
+                if (rel.startsWith('..')) return null; // outside workspace
+                return rel;
+              } catch { return null; }
+            };
+
+            const normalizedSource = toNodeId(impactResult.sourceFile) ?? impactResult.sourceFile;
+            const normalizedAffected = (impactResult.affectedFiles || [])
+              .map(toNodeId)
+              .filter((x): x is string => !!x);
+
             // Trigger impact display in webview
             await vscode.commands.executeCommand("constellation.showImpact", {
-              sourceFile: impactResult.sourceFile,
-              affectedFiles: impactResult.affectedFiles
+              sourceFile: normalizedSource,
+              affectedFiles: normalizedAffected
             });
             
             // Return impact analysis results
             res.statusCode = 200;
             res.setHeader("Content-Type", "application/json");
             res.end(JSON.stringify({
-              affectedFiles: impactResult.affectedFiles
+              affectedFiles: normalizedAffected
             }));
             
           } catch (error) {

@@ -115,7 +115,12 @@ export function generateGraphStylesheet(nodeCount: number = 0) {
         'height': isLargeGraph ? '26px' : '39px', // 30% larger than base size
         'border-width': '3px',
         'border-color': '#FF8C00',
-        'box-shadow': '0 0 10px rgba(255, 140, 0, 0.5)' // Subtle halo effect
+        // Cytoscape shadow styles for halo effect
+        'shadow-blur': 20,
+        'shadow-color': '#FF8C00',
+        'shadow-opacity': 0.6,
+        'shadow-offset-x': 0,
+        'shadow-offset-y': 0,
       }
     }
   ];

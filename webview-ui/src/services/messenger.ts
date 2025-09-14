@@ -6,6 +6,7 @@ type GraphMessage =
   | { type: 'graph/load' }
   | { type: 'graph/open-file'; path: string }
   | { type: 'graph/scan' }
+  | { type: 'graph/ready' }
 
 // Graph-specific message types for extension -> webview
 type GraphResponseMessage =
