@@ -146,6 +146,18 @@ export async function activate(context: vscode.ExtensionContext) {
               messageDisposable.dispose();
               graphPanel = undefined; 
             });
+          }),
+          vscode.commands.registerCommand("constellation.showImpact", async (payload: { sourceFile: string; affectedFiles: string[] }) => {
+            // Ensure graph panel exists and is visible
+            await vscode.commands.executeCommand('constellation.openGraphView');
+            
+            // Send impact data to webview
+            if (graphPanel) {
+              graphPanel.webview.postMessage({
+                type: 'graph/impact',
+                payload
+              });
+            }
           })
         );
       } catch (err: any) {

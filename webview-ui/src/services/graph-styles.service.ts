@@ -106,6 +106,17 @@ export function generateGraphStylesheet(nodeCount: number = 0) {
         'border-color': '#007FD4',
         'background-color': '#FF8C00'
       }
+    },
+    // Epicenter node style (impact source)
+    {
+      selector: 'node[isSource = true]',
+      style: {
+        'width': isLargeGraph ? '26px' : '39px', // 30% larger than base size
+        'height': isLargeGraph ? '26px' : '39px', // 30% larger than base size
+        'border-width': '3px',
+        'border-color': '#FF8C00',
+        'box-shadow': '0 0 10px rgba(255, 140, 0, 0.5)' // Subtle halo effect
+      }
     }
   ];
 

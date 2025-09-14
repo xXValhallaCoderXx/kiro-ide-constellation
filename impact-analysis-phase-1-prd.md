@@ -244,13 +244,7 @@ server.registerTool(
 
 12. Testing Plan
 
-- Unit
-  - computeImpact: BFS correctness on synthetic GraphData with cycles and multiple branches
-  - http-bridge: route parsing and auth
-  - mcp.server: tool registration and response formatting
-- Integration
-  - With a sample workspace, run impact on a file with known dependencies; assert returned JSON and webview filter message emitted
-  - Commands: constellation.openGraphView + constellation.showImpact sequencing
+No Unit or Integration tests
 - Manual/UX
   - Confirm visual highlight and Reset View
   - Confirm double-click open-file still works in filtered mode
@@ -261,10 +255,6 @@ server.registerTool(
 - Docs: Update README usage and add short demo steps
 - Demo script alignment: matches Section 6.4
 
-14. Open Questions
-
-- Should MVP also support “dependents” blast radius (reverse traversal)? If yes, add a flag: mode: 'dependencies' | 'dependents'. Default: 'dependencies'.
-- If scan is stale (generatedAt old), should impact auto-trigger re-scan or show a warning?
 
 Appendix A — Pseudocode
 

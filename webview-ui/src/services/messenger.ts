@@ -12,6 +12,7 @@ type GraphResponseMessage =
   | { type: 'graph/data'; payload: any } // GraphData type from extension
   | { type: 'graph/error'; message: string }
   | { type: 'graph/status'; message: string }
+  | { type: 'graph/impact'; payload: { sourceFile: string; affectedFiles: string[] } }
 
 type Message =
   | { type: 'open-graph-view' }

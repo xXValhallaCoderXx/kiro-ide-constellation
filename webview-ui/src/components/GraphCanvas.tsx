@@ -37,9 +37,10 @@ interface GraphCanvasProps {
   data: GraphData
   isRendering: boolean
   onRenderingChange: (rendering: boolean) => void
+  impactSourceId?: string
 }
 
-export function GraphCanvas({ data, isRendering, onRenderingChange }: GraphCanvasProps) {
+export function GraphCanvas({ data, isRendering, onRenderingChange, impactSourceId }: GraphCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const cyRef = useRef<Core | null>(null)
   // Keep a stable reference to the callback so the effect below doesn't re-run
@@ -76,7 +77,8 @@ export function GraphCanvas({ data, isRendering, onRenderingChange }: GraphCanva
               label: node.label,
               path: node.path,
               language: node.language,
-              ext: ext // Add file extension for styling
+              ext: ext, // Add file extension for styling
+              isSource: impactSourceId === node.id // Mark epicenter node for highlighting
             }
           }
         }),
@@ -156,7 +158,7 @@ export function GraphCanvas({ data, isRendering, onRenderingChange }: GraphCanva
         }
       }, renderDelay)
     }
-  }, [data])
+  }, [data, impactSourceId])
 
   // Enhanced cleanup on unmount
   useEffect(() => {
