@@ -18,7 +18,7 @@ Example ~/.kiro/settings/mcp.json after activation:
       "args": ["/absolute/path/to/kiro-ide-constellation/out/mcpServer.js"],
       "env": {},
       "disabled": false,
-      "autoApprove": ["ping", "constellation_impactAnalysis"]
+      "autoApprove": ["ping", "constellation_impactAnalysis", "constellation_onboarding.finalize"]
     }
   }
 }

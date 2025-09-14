@@ -319,6 +319,132 @@ server.registerTool(
   }
 );
 
+// constellation_onboarding.finalize -> finalizes onboarding walkthrough with cleanup
+server.registerTool(
+  "constellation_onboarding.finalize",
+  {
+    title: "Finalize Onboarding",
+    description: "Finalizes the onboarding walkthrough with summary generation and cleanup",
+    inputSchema: {
+      chosenAction: z.union([
+        z.literal("document"),
+        z.literal("test-plan"),
+        z.null()
+      ]).describe("The user's chosen action: 'document', 'test-plan', or null")
+    },
+  },
+  async ({ chosenAction }) => {
+    try {
+      const port = process.env.CONSTELLATION_BRIDGE_PORT;
+      const token = process.env.CONSTELLATION_BRIDGE_TOKEN;
+      
+      if (!port || !token) {
+        console.warn('MCP server: Extension bridge environment variables not available');
+        return {
+          content: [{
+            type: "text",
+            text: JSON.stringify({
+              error: "Extension bridge not available. Please ensure the Constellation extension is running and properly configured.",
+              status: "error"
+            })
+          }]
+        };
+      }
+
+      // Validate chosenAction parameter at MCP level for additional security
+      const validActions = ['document', 'test-plan', null];
+      if (!validActions.includes(chosenAction)) {
+        console.warn('MCP server: Invalid chosenAction parameter:', chosenAction);
+        return {
+          content: [{
+            type: "text",
+            text: JSON.stringify({
+              error: "Invalid chosenAction parameter. Expected: 'document', 'test-plan', or null",
+              status: "error"
+            })
+          }]
+        };
+      }
+
+      // Forward request to extension HTTP bridge with validated input
+      const response = await fetch(`http://127.0.0.1:${port}/onboarding/finalize`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ chosenAction })
+      });
+
+      if (!response.ok) {
+        // Handle HTTP errors gracefully with enhanced logging
+        let errorText = "Network error";
+        try {
+          const responseText = await response.text();
+          try {
+            const errorData = JSON.parse(responseText);
+            errorText = errorData.error || responseText;
+          } catch {
+            errorText = responseText || `HTTP ${response.status}`;
+          }
+        } catch {
+          errorText = `HTTP ${response.status}`;
+        }
+        
+        console.warn(`MCP server: Finalize HTTP bridge request failed with status ${response.status}:`, errorText);
+        
+        return {
+          content: [{
+            type: "text",
+            text: JSON.stringify({
+              error: `Request failed: ${errorText}`,
+              status: "error"
+            })
+          }]
+        };
+      }
+
+      // Parse and return the finalize results
+      const result = await response.json();
+      return {
+        content: [{
+          type: "text",
+          text: JSON.stringify(result)
+        }]
+      };
+
+    } catch (error) {
+      // Handle network failures and other errors gracefully
+      let errorMessage = "Unknown error occurred during finalization";
+      
+      if (error instanceof Error) {
+        errorMessage = error.message;
+        
+        // Provide more specific error messages for common failure scenarios
+        if (error.message.includes('ECONNREFUSED') || error.message.includes('fetch failed')) {
+          errorMessage = "Cannot connect to extension. Please ensure the Constellation extension is running.";
+        } else if (error.message.includes('timeout')) {
+          errorMessage = "Request timed out. The extension may be busy processing the finalization.";
+        } else if (error.message.includes('ENOTFOUND')) {
+          errorMessage = "Network error: Cannot resolve extension bridge address.";
+        }
+      }
+      
+      console.error('MCP server: Finalize request failed:', error);
+      
+      return {
+        content: [{
+          type: "text",
+          text: JSON.stringify({
+            error: errorMessage,
+            status: "error"
+          })
+        }]
+      };
+    }
+  }
+);
+
 // constellation_impactAnalysis -> analyzes dependency impact of changing a source file
 server.registerTool(
   "constellation_impactAnalysis",

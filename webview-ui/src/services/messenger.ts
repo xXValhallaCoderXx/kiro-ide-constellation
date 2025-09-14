@@ -29,6 +29,7 @@ type OnboardingResponseMessage =
   | { type: 'onboarding/status-update'; payload: OnboardingStatusPayload }
   | { type: 'onboarding/walkthrough-complete' }
   | { type: 'onboarding/walkthrough-error'; message: string }
+  | { type: 'onboarding/finalize-complete'; payload: FinalizeCompletePayload }
 
 // Onboarding status payload type
 type OnboardingStatusPayload = {
@@ -37,6 +38,26 @@ type OnboardingStatusPayload = {
   totalSteps?: number
   currentFile?: string
   explanation?: string
+}
+
+// Finalize completion payload type
+type FinalizeCompletePayload = {
+  chosenAction: 'document' | 'test-plan' | null
+  summary: {
+    topic: string
+    stepCount: number
+    files: string[]
+    highlights: Array<{
+      filePath: string
+      lineStart: number
+      lineEnd: number
+    }>
+    bulletSummary: string[]
+  }
+  cleanup: {
+    mode: 'Default'
+    removedPlan: string | null
+  }
 }
 
 type Message =

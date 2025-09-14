@@ -707,9 +707,50 @@ body {
   background: rgba(255, 255, 255, 0.1);
 }
 
+.onboarding-status-cleanup {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: var(--vscode-inputValidation-warningBackground, var(--vscode-charts-orange));
+  border: 1px solid var(--vscode-inputValidation-warningBorder, var(--vscode-charts-orange));
+  color: var(--vscode-inputValidation-warningForeground, var(--vscode-foreground));
+}
+
+.cleanup-content {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cleanup-icon {
+  font-size: 14px;
+}
+
+.cleanup-message {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.cleanup-dismiss {
+  padding: 0 4px;
+  font-size: 14px;
+  line-height: 1;
+  background: transparent;
+  border: none;
+  color: var(--vscode-inputValidation-warningForeground, var(--vscode-foreground));
+  cursor: pointer;
+  border-radius: 2px;
+}
+
+.cleanup-dismiss:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
 /* Focus styles for onboarding status */
 .complete-dismiss:focus,
-.error-dismiss:focus {
+.error-dismiss:focus,
+.cleanup-dismiss:focus {
   outline: 2px solid var(--vscode-focusBorder);
   outline-offset: 2px;
 }

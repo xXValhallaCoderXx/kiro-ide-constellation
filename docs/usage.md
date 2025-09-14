@@ -21,6 +21,7 @@ npm run build
 - Try the core tools:
   - `#[constellation-mcp] ping` → pong (also opens graph view)
   - `#[constellation-mcp] constellation_impactAnalysis { "filePath": "src/index.ts" }`
+  - `#[constellation-mcp] constellation_onboarding.finalize { "chosenAction": "document" }`
 - Try the onboarding tools (when in Onboarding mode):
   - `#[constellation-mcp] constellation_onboardingplan { "request": "Show me how authentication works" }`
   - `#[constellation-mcp] constellation_onboardingcommitPlan { "plan": {...} }`

@@ -3,6 +3,7 @@ import { renderHtml } from "./services/webview.service.js";
 
 export class SidePanelViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = "constellation.sidePanel";
+  private webview?: vscode.Webview;
 
   constructor(
     private readonly extensionUri: vscode.Uri,
@@ -10,6 +11,10 @@ export class SidePanelViewProvider implements vscode.WebviewViewProvider {
     private readonly onboardingModeService?: any,
     private readonly onboardingWalkthroughService?: any
   ) {}
+
+  public postMessage(message: any): void {
+    this.webview?.postMessage(message);
+  }
 
   private getExtensionContext(): vscode.ExtensionContext {
     if (!this.extensionContext) {
@@ -20,6 +25,7 @@ export class SidePanelViewProvider implements vscode.WebviewViewProvider {
 
   async resolveWebviewView(webviewView: vscode.WebviewView): Promise<void> {
     const { webview } = webviewView;
+    this.webview = webview;
 
     // Handle messages via centralized router
     const { configureGraphMessaging } = await import('./services/message-router.service.js');

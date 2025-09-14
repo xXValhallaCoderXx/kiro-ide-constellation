@@ -5,13 +5,14 @@ import { randomBytes } from "node:crypto";
 import { computeImpact } from "./impact-analysis.service.js";
 import { onboardingModeService, type OnboardingMode } from "./onboarding-mode.service.js";
 import { OnboardingWalkthroughService, type OnboardingPlan } from "./onboarding-walkthrough.service.js";
+import { SecurityService } from "./security.service.js";
 
 export interface BridgeInfo {
   port: number;
   token: string;
 }
 
-export async function startHttpBridge(context: vscode.ExtensionContext, walkthroughService?: OnboardingWalkthroughService): Promise<BridgeInfo> {
+export async function startHttpBridge(context: vscode.ExtensionContext, walkthroughService?: OnboardingWalkthroughService, webviewProvider?: any): Promise<BridgeInfo> {
   const token = randomBytes(32).toString("base64url");
   
   // Use provided walkthrough service or create a new one for backward compatibility
@@ -31,11 +32,19 @@ export async function startHttpBridge(context: vscode.ExtensionContext, walkthro
       if (req.method !== "POST") { res.statusCode = 405; res.end(); return; }
       if (!req.url) { res.statusCode = 404; res.end(); return; }
 
-      // Auth - Requirements 6.5
+      // Auth - Requirements 6.5 with security logging
       const auth = req.headers["authorization"] || "";
       const expected = `Bearer ${token}`;
       if (auth !== expected) { 
-        console.warn('HTTP bridge authentication failed:', { received: auth ? 'Bearer [REDACTED]' : 'none', expected: 'Bearer [REDACTED]' });
+        // Log security violation with sanitized information
+        console.warn('[SECURITY] HTTP bridge authentication failed:', { 
+          remoteAddress: host,
+          userAgent: req.headers['user-agent'] || 'unknown',
+          url: req.url,
+          method: req.method,
+          timestamp: new Date().toISOString()
+        });
+        
         res.statusCode = 401; 
         res.setHeader("Content-Type", "application/json");
         res.end(JSON.stringify({ 
@@ -54,7 +63,7 @@ export async function startHttpBridge(context: vscode.ExtensionContext, walkthro
       }
 
       if (req.url.startsWith("/impact-analysis")) {
-        // Parse request body to get filePath with size limits
+        // Parse request body to get filePath with enhanced security validation
         let body = "";
         let bodySize = 0;
         const maxBodySize = 1024 * 1024; // 1MB limit
@@ -62,6 +71,14 @@ export async function startHttpBridge(context: vscode.ExtensionContext, walkthro
         req.on("data", (chunk) => {
           bodySize += chunk.length;
           if (bodySize > maxBodySize) {
+            // Log security violation for oversized requests
+            console.warn('[SECURITY] Request body size limit exceeded:', {
+              size: bodySize,
+              maxSize: maxBodySize,
+              remoteAddress: host,
+              timestamp: new Date().toISOString()
+            });
+            
             res.statusCode = 413; // Payload Too Large
             res.setHeader("Content-Type", "application/json");
             res.end(JSON.stringify({ 
@@ -75,15 +92,15 @@ export async function startHttpBridge(context: vscode.ExtensionContext, walkthro
         
         req.on("end", async () => {
           try {
-            // Parse JSON request body with error handling
+            // Parse and validate JSON request body with security checks
             let requestData;
             try {
-              requestData = JSON.parse(body);
+              requestData = SecurityService.validateJsonInput(body, maxBodySize);
             } catch (parseError) {
               res.statusCode = 400;
               res.setHeader("Content-Type", "application/json");
               res.end(JSON.stringify({ 
-                error: "Invalid JSON in request body",
+                error: `Invalid JSON in request body: ${parseError instanceof Error ? parseError.message : 'Parse error'}`,
                 affectedFiles: []
               }));
               return;
@@ -101,12 +118,15 @@ export async function startHttpBridge(context: vscode.ExtensionContext, walkthro
               return;
             }
             
-            // Additional validation for empty or whitespace-only paths
-            if (filePath.trim().length === 0) {
+            // Validate file path with security checks
+            try {
+              const workspaceRoot = SecurityService.validateWorkspace();
+              SecurityService.validateAndNormalizePath(filePath, workspaceRoot, false);
+            } catch (pathError) {
               res.statusCode = 400;
               res.setHeader("Content-Type", "application/json");
               res.end(JSON.stringify({ 
-                error: "filePath cannot be empty",
+                error: `Invalid file path: ${pathError instanceof Error ? pathError.message : 'Path validation failed'}`,
                 affectedFiles: []
               }));
               return;
@@ -191,6 +211,14 @@ export async function startHttpBridge(context: vscode.ExtensionContext, walkthro
         req.on("data", (chunk) => {
           bodySize += chunk.length;
           if (bodySize > maxBodySize) {
+            // Log security violation for oversized requests
+            console.warn('[SECURITY] Persona request body size limit exceeded:', {
+              size: bodySize,
+              maxSize: maxBodySize,
+              remoteAddress: host,
+              timestamp: new Date().toISOString()
+            });
+            
             res.statusCode = 413; // Payload Too Large
             res.setHeader("Content-Type", "application/json");
             res.end(JSON.stringify({ 
@@ -204,15 +232,15 @@ export async function startHttpBridge(context: vscode.ExtensionContext, walkthro
         
         req.on("end", async () => {
           try {
-            // Parse JSON request body
+            // Parse and validate JSON request body with security checks
             let requestData;
             try {
-              requestData = JSON.parse(body);
+              requestData = SecurityService.validateJsonInput(body, maxBodySize);
             } catch (parseError) {
               res.statusCode = 400;
               res.setHeader("Content-Type", "application/json");
               res.end(JSON.stringify({ 
-                error: "Invalid JSON in request body",
+                error: `Invalid JSON in request body: ${parseError instanceof Error ? parseError.message : 'Parse error'}`,
                 success: false
               }));
               return;
@@ -290,6 +318,14 @@ export async function startHttpBridge(context: vscode.ExtensionContext, walkthro
         req.on("data", (chunk) => {
           bodySize += chunk.length;
           if (bodySize > maxBodySize) {
+            // Log security violation for oversized requests
+            console.warn('[SECURITY] CommitPlan request body size limit exceeded:', {
+              size: bodySize,
+              maxSize: maxBodySize,
+              remoteAddress: host,
+              timestamp: new Date().toISOString()
+            });
+            
             res.statusCode = 413; // Payload Too Large
             res.setHeader("Content-Type", "application/json");
             res.end(JSON.stringify({ 
@@ -302,15 +338,15 @@ export async function startHttpBridge(context: vscode.ExtensionContext, walkthro
         
         req.on("end", async () => {
           try {
-            // Parse JSON request body
+            // Parse and validate JSON request body with security checks
             let requestData;
             try {
-              requestData = JSON.parse(body);
+              requestData = SecurityService.validateJsonInput(body, maxBodySize);
             } catch (parseError) {
               res.statusCode = 400;
               res.setHeader("Content-Type", "application/json");
               res.end(JSON.stringify({ 
-                error: "Invalid JSON in request body"
+                error: `Invalid JSON in request body: ${parseError instanceof Error ? parseError.message : 'Parse error'}`
               }));
               return;
             }
@@ -402,6 +438,145 @@ export async function startHttpBridge(context: vscode.ExtensionContext, walkthro
             error: errorMessage
           }));
         }
+        
+        return;
+      }
+
+      if (req.url.startsWith("/onboarding/finalize")) {
+        // Handle onboarding finalization with enhanced security
+        let body = "";
+        let bodySize = 0;
+        const maxBodySize = 1024 * 1024; // 1MB limit
+        
+        req.on("data", (chunk) => {
+          bodySize += chunk.length;
+          if (bodySize > maxBodySize) {
+            // Log security violation for oversized requests
+            console.warn('[SECURITY] Finalize request body size limit exceeded:', {
+              size: bodySize,
+              maxSize: maxBodySize,
+              remoteAddress: host,
+              timestamp: new Date().toISOString()
+            });
+            
+            res.statusCode = 413; // Payload Too Large
+            res.setHeader("Content-Type", "application/json");
+            res.end(JSON.stringify({ 
+              error: "Request body too large",
+              status: 'error'
+            }));
+            return;
+          }
+          body += chunk.toString();
+        });
+        
+        req.on("end", async () => {
+          try {
+            // Parse and validate JSON request body with security checks
+            let requestData;
+            try {
+              requestData = SecurityService.validateJsonInput(body, maxBodySize);
+            } catch (parseError) {
+              res.statusCode = 400;
+              res.setHeader("Content-Type", "application/json");
+              res.end(JSON.stringify({ 
+                error: `Invalid JSON in request body: ${parseError instanceof Error ? parseError.message : 'Parse error'}`,
+                status: 'error'
+              }));
+              return;
+            }
+            
+            // Sanitize and validate chosenAction parameter
+            const chosenAction = SecurityService.sanitizeChosenAction(requestData.chosenAction);
+            
+            // Generate summary data before cleanup
+            const summary = walkthrough.getSummary();
+            
+            // Validate workspace and get root with security checks
+            const wsRoot = SecurityService.validateWorkspace();
+            
+            // Track plan file path before cleanup for response with security validation
+            const currentState = walkthrough.getCurrentState();
+            let removedPlan: string | null = null;
+            
+            if (currentState?.planPath) {
+              try {
+                // Validate that the plan path is within allowed directories
+                const relativePath = path.relative(wsRoot, currentState.planPath);
+                SecurityService.validateAndNormalizePath(relativePath, wsRoot, true);
+                removedPlan = relativePath;
+              } catch (error) {
+                // If path validation fails, log security violation and use null
+                console.warn('[SECURITY] Plan file path validation failed during finalize:', {
+                  planPath: currentState.planPath ? '[REDACTED]' : 'null',
+                  error: error instanceof Error ? error.message : 'Unknown error'
+                });
+                removedPlan = null;
+              }
+            }
+            
+            // Perform cleanup operations
+            await walkthrough.cleanup({ removePlan: true });
+            
+            // Ensure mode is switched to Default (this is also done in cleanup, but being explicit)
+            await onboardingModeService.switchToDefault();
+            
+            // Send finalize completion message to webview if provider is available
+            if (webviewProvider && webviewProvider.postMessage) {
+              const finalizePayload = {
+                chosenAction: chosenAction,
+                summary: summary,
+                cleanup: {
+                  mode: 'Default' as const,
+                  removedPlan: removedPlan
+                }
+              };
+              
+              webviewProvider.postMessage({
+                type: 'onboarding/finalize-complete',
+                payload: finalizePayload
+              });
+            }
+            
+            // Return structured response
+            res.statusCode = 200;
+            res.setHeader("Content-Type", "application/json");
+            res.end(JSON.stringify({
+              status: 'done',
+              chosenAction: chosenAction,
+              summary: summary,
+              cleanup: {
+                mode: 'Default',
+                removedPlan: removedPlan
+              }
+            }));
+            
+          } catch (error) {
+            console.error('HTTP bridge finalize error:', error);
+            
+            res.statusCode = 500;
+            res.setHeader("Content-Type", "application/json");
+            
+            let errorMessage = "Unknown error occurred during finalization";
+            if (error instanceof Error) {
+              errorMessage = error.message;
+              
+              // Provide more specific error codes for different failure types
+              if (error.message.includes('No workspace folder open')) {
+                res.statusCode = 400; // Bad Request - no workspace
+              } else if (error.message.includes('permission') || error.message.includes('EACCES')) {
+                res.statusCode = 403; // Forbidden - permission denied
+              } else if (error.message.includes('not found') || error.message.includes('ENOENT')) {
+                res.statusCode = 404; // Not Found - file doesn't exist
+              }
+            }
+            
+            res.end(JSON.stringify({ 
+              error: errorMessage,
+              status: 'error'
+            }));
+          }
+        });
         
         return;
       }

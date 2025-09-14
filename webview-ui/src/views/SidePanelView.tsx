@@ -54,6 +54,13 @@ export function SidePanelView() {
         case 'onboarding/walkthrough-error':
           // Error handling is managed by OnboardingStatus component
           break
+        case 'onboarding/finalize-complete':
+          // Finalize complete - ensure Default mode and no active walkthrough
+          setCurrentMode('Default')
+          setOnboardingStatus({
+            isActive: false
+          })
+          break
       }
     }
 

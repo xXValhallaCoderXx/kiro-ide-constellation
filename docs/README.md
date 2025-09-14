@@ -5,6 +5,7 @@ A Kiro/VS Code extension that provides a comprehensive MCP (Model Context Protoc
 **Core Tools:**
 - `ping` → responds with "pong" and opens graph view
 - `constellation_impactAnalysis` → analyzes dependency impact of file changes
+- `constellation_onboarding.finalize` → finalizes onboarding walkthrough with cleanup
 
 **Onboarding Tools:**
 - `constellation_onboardingplan` → generates structured walkthrough plans

@@ -96,9 +96,17 @@ const ONBOARDING_PERSONA_TEMPLATE = [
   '  - User: “next”',
   '  - You → tool: nextStep {}',
   '  - You: “Executing Step 2 of 2: `src/mcp.server.ts` (66–92). The MCP server forwards requests with Authorization and handles HTTP errors. Walkthrough complete.”',
+  'Finish protocol (Phase 2)',
+  '- When nextStep returns status = "complete", present two offers:',
+  '-   1) Summarize and document this feature',
+  '-   2) Suggest unit testing plan',
+  '- If the user selects one, call: #[constellation-mcp] constellation_onboarding.finalize { "chosenAction": "document" | "test-plan" }',
+  '- If the user declines or says "no", call: #[constellation-mcp] constellation_onboarding.finalize { "chosenAction": null }',
+  '- After the tool responds, print the short summary it returns, then say: "Sorry, this feature is not in the MVP."',
+  '- Confirm that cleanup is complete and that mode is back to Default.',
   '',
   'End state',
-  '- After completion or stop, summarize what was covered in 2–4 bullets and offer to draft a new plan for a follow-up topic.',
+  '- After completion or stop, summarize what was covered in 2–4 bullets and offer to draft a new plan for a follow-up topic (or finish via finalize).',
 ].join('\n');
 
 export class OnboardingModeService {
@@ -108,7 +116,7 @@ export class OnboardingModeService {
   private readonly BACKUP_BASE_DIR = '.constellation/steering/backup';
   private readonly ONBOARDING_PERSONA_FILE = 'onboarding-guide.md';
 
-  private constructor() {}
+  private constructor() { }
 
   public static getInstance(): OnboardingModeService {
     if (!OnboardingModeService.instance) {
@@ -152,12 +160,12 @@ export class OnboardingModeService {
     try {
       // Create backup of current steering documents
       const backupPath = await this.backupSteeringDocs();
-      
+
       // Write the onboarding persona file
       await this.writeOnboardingPersona();
-      
+
       this.currentMode = 'Onboarding';
-      
+
       vscode.window.showInformationMessage(
         `Switched to Onboarding mode. Steering documents backed up to: ${path.relative(workspaceRoot, backupPath)}`
       );
@@ -169,7 +177,7 @@ export class OnboardingModeService {
   }
 
   /**
-   * Switch to Default mode by restoring the most recent backup
+   * Switch to Default mode by restoring the most recent backup and cleaning up backups
    */
   public async switchToDefault(): Promise<void> {
     const workspaceRoot = getWorkspaceRoot();
@@ -178,11 +186,18 @@ export class OnboardingModeService {
     }
 
     try {
-      // Restore the most recent backup
+      // Restore steering documents from the most recent backup
       await this.restoreSteeringDocs();
-      
+
+      // Best-effort cleanup of all backups
+      const backupBaseDir = path.join(workspaceRoot, this.BACKUP_BASE_DIR);
+      try {
+        await fs.promises.rm(backupBaseDir, { recursive: true, force: true });
+      } catch {
+        // non-fatal
+      }
+
       this.currentMode = 'Default';
-      
       vscode.window.showInformationMessage('Switched to Default mode. Steering documents restored from backup.');
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
@@ -242,7 +257,7 @@ export class OnboardingModeService {
       };
       const metadataPath = path.join(backupDir, '.backup-metadata.json');
       await fs.promises.writeFile(metadataPath, JSON.stringify(metadata, null, 2));
-    } catch {/* ignore metadata errors */}
+    } catch {/* ignore metadata errors */ }
 
     return backupDir;
   }
@@ -258,7 +273,14 @@ export class OnboardingModeService {
 
     const backupBaseDir = path.join(workspaceRoot, this.BACKUP_BASE_DIR);
     const steeringDir = path.join(workspaceRoot, this.STEERING_DIR);
-    
+
+    await this.restoreSteeringDocsWithFallback(steeringDir, backupBaseDir);
+  }
+
+  /**
+   * Restore steering documents with fallback to empty directory creation
+   */
+  private async restoreSteeringDocsWithFallback(steeringDir: string, backupBaseDir: string): Promise<void> {
     // Find the most recent backup (backup directory is outside steeringDir to avoid self-deletion)
     const mostRecentBackup = await this.findMostRecentBackup(backupBaseDir);
     if (!mostRecentBackup) {
@@ -277,11 +299,6 @@ export class OnboardingModeService {
       // Restore from backup (exclude metadata file and any nested backups)
       await this.copyDirectoryRecursive(mostRecentBackup, steeringDir, ['.backup-metadata.json', '.backups']);
 
-      // Cleanup all backups after successful restore
-      try {
-        await fs.promises.rm(backupBaseDir, { recursive: true, force: true });
-      } catch {/* ignore cleanup errors */}
-      
     } catch (error) {
       throw new Error(`Failed to restore steering documents: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
@@ -353,7 +370,7 @@ export class OnboardingModeService {
     try {
       const currentFiles = await this.getDirectoryFileList(currentDir, []);
       const backupFiles = await this.getDirectoryFileList(backupDir, ['.backup-metadata.json']);
-      
+
       // Quick check: different number of files
       if (currentFiles.length !== backupFiles.length) {
         return true;
@@ -362,7 +379,7 @@ export class OnboardingModeService {
       // Check if file lists are different
       const currentSet = new Set(currentFiles);
       const backupSet = new Set(backupFiles);
-      
+
       for (const file of currentFiles) {
         if (!backupSet.has(file)) {
           return true;
@@ -373,11 +390,11 @@ export class OnboardingModeService {
       for (const relativePath of currentFiles) {
         const currentFilePath = path.join(currentDir, relativePath);
         const backupFilePath = path.join(backupDir, relativePath);
-        
+
         try {
           const currentContent = await fs.promises.readFile(currentFilePath, 'utf8');
           const backupContent = await fs.promises.readFile(backupFilePath, 'utf8');
-          
+
           if (currentContent !== backupContent) {
             return true;
           }
@@ -397,17 +414,17 @@ export class OnboardingModeService {
    */
   private async getDirectoryFileList(dir: string, excludeFiles: string[] = []): Promise<string[]> {
     const files: string[] = [];
-    
+
     const processDirectory = async (currentDir: string, relativePath: string = '') => {
       const entries = await fs.promises.readdir(currentDir, { withFileTypes: true });
-      
+
       for (const entry of entries) {
         const entryPath = path.join(relativePath, entry.name);
-        
+
         if (excludeFiles.includes(entry.name)) {
           continue;
         }
-        
+
         if (entry.isDirectory()) {
           await processDirectory(path.join(currentDir, entry.name), entryPath);
         } else {
@@ -425,17 +442,17 @@ export class OnboardingModeService {
    */
   private async copyDirectoryRecursive(src: string, dest: string, excludeFiles: string[] = []): Promise<void> {
     await fs.promises.mkdir(dest, { recursive: true });
-    
+
     const entries = await fs.promises.readdir(src, { withFileTypes: true });
-    
+
     for (const entry of entries) {
       if (excludeFiles.includes(entry.name)) {
         continue;
       }
-      
+
       const srcPath = path.join(src, entry.name);
       const destPath = path.join(dest, entry.name);
-      
+
       if (entry.isDirectory()) {
         await this.copyDirectoryRecursive(srcPath, destPath, excludeFiles);
       } else {
@@ -449,10 +466,10 @@ export class OnboardingModeService {
    */
   private async countFilesRecursive(dir: string): Promise<number> {
     let count = 0;
-    
+
     const processDirectory = async (currentDir: string) => {
       const entries = await fs.promises.readdir(currentDir, { withFileTypes: true });
-      
+
       for (const entry of entries) {
         if (entry.isDirectory()) {
           await processDirectory(path.join(currentDir, entry.name));

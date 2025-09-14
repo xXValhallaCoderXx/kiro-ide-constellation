@@ -17,6 +17,8 @@ interface OnboardingStatusState {
   explanation?: string
   isComplete: boolean
   error?: string
+  isCleanedUp: boolean
+  cleanupMessage?: string
 }
 
 export function OnboardingStatus({
@@ -32,7 +34,8 @@ export function OnboardingStatus({
     totalSteps,
     currentFile,
     explanation,
-    isComplete: false
+    isComplete: false,
+    isCleanedUp: false
   })
 
   // Listen for status updates from extension
@@ -43,19 +46,31 @@ export function OnboardingStatus({
           ...prev,
           ...msg.payload,
           isComplete: false,
-          error: undefined
+          error: undefined,
+          isCleanedUp: false
         }))
       } else if (msg.type === 'onboarding/walkthrough-complete') {
         setStatus(prev => ({
           ...prev,
           isComplete: true,
-          error: undefined
+          error: undefined,
+          isCleanedUp: false
         }))
       } else if (msg.type === 'onboarding/walkthrough-error') {
         setStatus(prev => ({
           ...prev,
           error: msg.message,
-          isComplete: false
+          isComplete: false,
+          isCleanedUp: false
+        }))
+      } else if (msg.type === 'onboarding/finalize-complete') {
+        setStatus(prev => ({
+          ...prev,
+          isActive: false,
+          isComplete: false,
+          isCleanedUp: true,
+          cleanupMessage: 'Tour cleaned up - switched back to Default mode',
+          error: undefined
         }))
       }
     }
@@ -86,8 +101,12 @@ export function OnboardingStatus({
     setStatus(prev => ({ ...prev, isComplete: false }))
   }
 
-  // Don't render anything if not active and no completion/error state
-  if (!status.isActive && !status.isComplete && !status.error) {
+  const handleDismissCleanup = () => {
+    setStatus(prev => ({ ...prev, isCleanedUp: false, cleanupMessage: undefined }))
+  }
+
+  // Don't render anything if not active and no completion/error/cleanup state
+  if (!status.isActive && !status.isComplete && !status.error && !status.isCleanedUp) {
     return null
   }
 
@@ -163,6 +182,23 @@ export function OnboardingStatus({
             className="error-dismiss"
             onClick={handleDismissError}
             title="Dismiss error"
+          >
+            ×
+          </button>
+        </div>
+      )}
+
+      {/* Cleanup notification */}
+      {status.isCleanedUp && (
+        <div className="onboarding-status-cleanup">
+          <div className="cleanup-content">
+            <span className="cleanup-icon">🧹</span>
+            <span className="cleanup-message">{status.cleanupMessage || 'Tour cleaned up'}</span>
+          </div>
+          <button 
+            className="cleanup-dismiss"
+            onClick={handleDismissCleanup}
+            title="Dismiss notification"
           >
             ×
           </button>

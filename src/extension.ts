@@ -39,7 +39,7 @@ export async function activate(context: vscode.ExtensionContext) {
         const serverJs = vscode.Uri.joinPath(context.extensionUri, "out", "mcp.server.js").fsPath;
 
         // Start local HTTP bridge for webview commands with onboarding services
-        const { port: bridgePort, token: bridgeToken } = await startHttpBridge(context, onboardingWalkthroughService);;
+        const { port: bridgePort, token: bridgeToken } = await startHttpBridge(context, onboardingWalkthroughService, provider);
 
         // Server ID (namespacing)
         const serverId = getEffectiveServerId();

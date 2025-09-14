@@ -28,6 +28,7 @@ export type OnboardingOutboundMessage =
   | { type: 'onboarding/status-update'; payload: OnboardingStatusPayload }
   | { type: 'onboarding/walkthrough-complete' }
   | { type: 'onboarding/walkthrough-error'; message: string }
+  | { type: 'onboarding/finalize-complete'; payload: FinalizeCompletePayload }
 
 // Onboarding status payload type
 export type OnboardingStatusPayload = {
@@ -36,6 +37,26 @@ export type OnboardingStatusPayload = {
   totalSteps?: number
   currentFile?: string
   explanation?: string
+}
+
+// Finalize completion payload type
+export type FinalizeCompletePayload = {
+  chosenAction: 'document' | 'test-plan' | null
+  summary: {
+    topic: string
+    stepCount: number
+    files: string[]
+    highlights: Array<{
+      filePath: string
+      lineStart: number
+      lineEnd: number
+    }>
+    bulletSummary: string[]
+  }
+  cleanup: {
+    mode: 'Default'
+    removedPlan: string | null
+  }
 }
 
 export type InboundMessage =
@@ -269,4 +290,11 @@ export function sendOnboardingWalkthroughError(
   message: string
 ) {
   postMessage({ type: 'onboarding/walkthrough-error', message });
+}
+
+export function sendOnboardingFinalizeComplete(
+  postMessage: (message: OnboardingOutboundMessage) => void,
+  payload: FinalizeCompletePayload
+) {
+  postMessage({ type: 'onboarding/finalize-complete', payload });
 }
