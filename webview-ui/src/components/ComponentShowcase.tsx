@@ -14,7 +14,7 @@ import {
   MetricBullet, 
   Tooltip, 
   DividerLine 
-} from '../atoms'
+} from './atoms'
 
 // Import molecules
 import { 
@@ -27,7 +27,7 @@ import {
   ZoomControlStack, 
   MiniMapPanel, 
   BreadcrumbItem 
-} from '../molecules'
+} from './molecules'
 
 export function ComponentShowcase() {
   const [searchValue, setSearchValue] = useState('')
