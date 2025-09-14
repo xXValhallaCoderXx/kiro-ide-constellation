@@ -95,7 +95,20 @@ export function generateGraphStylesheet(nodeCount: number = 0) {
         'line-color': '#666666',
         'width': isLargeGraph ? 1 : 2,
         'opacity': isLargeGraph ? 0.4 : 0.6,
-        'curve-style': 'bezier'
+        'curve-style': 'bezier',
+        'target-arrow-shape': 'triangle',
+        'target-arrow-color': '#666666',
+        'arrow-scale': 1.0
+      }
+    },
+    // Edges directly from the source node
+    {
+      selector: 'edge[fromSource = true]',
+      style: {
+        'line-color': '#FF8C00',
+        'target-arrow-color': '#FF8C00',
+        'width': isLargeGraph ? 2 : 3,
+        'opacity': 0.9
       }
     },
     // Selected node style
@@ -121,6 +134,21 @@ export function generateGraphStylesheet(nodeCount: number = 0) {
         'shadow-opacity': 0.6,
         'shadow-offset-x': 0,
         'shadow-offset-y': 0,
+      }
+    },
+    // Direct children of the source node
+    {
+      selector: 'node[role = "direct-child"]',
+      style: {
+        'border-width': 2,
+        'border-color': '#FFD700',
+      }
+    },
+    // Indirect children (descendants) of the source node
+    {
+      selector: 'node[role = "indirect-child"]',
+      style: {
+        'opacity': isLargeGraph ? 0.9 : 1
       }
     }
   ];

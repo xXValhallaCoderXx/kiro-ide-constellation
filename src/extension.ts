@@ -175,14 +175,34 @@ export async function activate(context: vscode.ExtensionContext) {
             // Ensure graph panel exists and is visible
             await vscode.commands.executeCommand('constellation.openGraphView');
             
-            // If ready, send immediately; otherwise, it will send on graph/ready
-            if (graphPanel && graphWebviewReady && pendingImpactPayload) {
-              graphPanel.webview.postMessage({
-                type: 'graph/impact',
-                payload: pendingImpactPayload
-              });
-              pendingImpactPayload = null;
+            // Helper to attempt immediate send
+            const trySend = () => {
+              if (graphPanel && graphWebviewReady && pendingImpactPayload) {
+                console.log('[Constellation] Sending impact payload to webview', {
+                  count: pendingImpactPayload.affectedFiles?.length ?? 0,
+                  source: pendingImpactPayload.sourceFile
+                });
+                graphPanel.webview.postMessage({
+                  type: 'graph/impact',
+                  payload: pendingImpactPayload
+                });
+                pendingImpactPayload = null;
+                return true;
+              }
+              return false;
+            };
+
+            // Try right away
+            if (trySend()) return;
+
+            // Fallback: retry a few times in case the ready signal just hasn't propagated yet
+            const retries = [100, 250, 500, 1000];
+            for (const delay of retries) {
+              await new Promise((r) => setTimeout(r, delay));
+              if (trySend()) return;
             }
+            // If still not sent, leave payload queued — it will be delivered on the next graph/ready
+            console.warn('[Constellation] Impact payload not sent yet; queued awaiting graph/ready');
           })
         );
       } catch (err: any) {
