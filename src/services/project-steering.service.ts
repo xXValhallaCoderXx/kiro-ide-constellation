@@ -16,9 +16,10 @@ export class ProjectSteeringService {
 
     const files: Array<{ name: string; content: string }> = []
 
-    files.push({
+files.push({
       name: 'project-structure.md',
       content: [
+        '** IMPORTANT: ALWAYS CALL THE MCP TOOL FIRST **',
         '# Project Structure',
         '',
         'Key directories:',
@@ -26,9 +27,10 @@ export class ProjectSteeringService {
       ].join('\n')
     })
 
-    files.push({
+files.push({
       name: 'project-tech.md',
       content: [
+        '** IMPORTANT: ALWAYS CALL THE MCP TOOL FIRST **',
         '# Project Tech',
         '',
         `Detected patterns: ${analysis.detectedPatterns.join(', ') || 'n/a'}`,
@@ -36,9 +38,10 @@ export class ProjectSteeringService {
       ].join('\n')
     })
 
-    files.push({
+files.push({
       name: 'project-product.md',
       content: [
+        '** IMPORTANT: ALWAYS CALL THE MCP TOOL FIRST **',
         '# Project Product',
         '',
         'Inferred feature domains (heuristic):',
@@ -47,9 +50,10 @@ export class ProjectSteeringService {
       ].join('\n')
     })
 
-    files.push({
+files.push({
       name: 'project-standings.md',
       content: [
+        '** IMPORTANT: ALWAYS CALL THE MCP TOOL FIRST **',
         '# Project Standards',
         '',
         '- File naming: kebab-case for .ts/.tsx files',
