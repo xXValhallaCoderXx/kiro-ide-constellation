@@ -1,0 +1,66 @@
+.chip {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 12px;
+  border-radius: var(--radius-chip);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: background-color var(--duration-fast) var(--ease-ui);
+  border: 1px solid transparent;
+  outline: none;
+}
+
+/* Variants */
+.chip.variant-brand {
+  background-color: var(--surface-tint-brand);
+  color: var(--accent-purple-soft-text);
+}
+
+.chip.variant-success {
+  background-color: var(--surface-tint-success);
+  color: var(--accent-green-soft-text);
+}
+
+/* Clickable states */
+.chip.clickable {
+  cursor: pointer;
+}
+
+.chip.clickable:hover {
+  /* The hover implementation needs to be variant-aware. */
+  /* This will be handled by the component logic if it gets more complex. */
+  /* For now, a simple overlay is fine. */
+}
+
+.chip.variant-brand.clickable:hover {
+  background-color: color-mix(in srgb, var(--surface-overlay-04), var(--surface-tint-brand));
+}
+
+.chip.variant-success.clickable:hover {
+  background-color: color-mix(in srgb, var(--surface-overlay-04), var(--surface-tint-success));
+}
+
+.chip.clickable:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+}
+
+/* Selected state */
+.chip.selected {
+  /* A border or a stronger background color could be used for selection */
+  border-color: var(--accent-brand);
+}
+
+/* If chip is a button, ensure it has the correct base styles */
+button.chip {
+  margin: 0;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  text-align: center;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}

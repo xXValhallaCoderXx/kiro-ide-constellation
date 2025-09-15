@@ -1,0 +1,37 @@
+.breadcrumb-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.breadcrumb-button {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: text-decoration var(--duration-fast) var(--ease-ui);
+}
+
+.breadcrumb-button:hover:not(:disabled) {
+  text-decoration: underline;
+}
+
+.breadcrumb-button:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.breadcrumb-button[disabled] {
+  color: var(--text-primary);
+  cursor: default;
+  text-decoration: none;
+}
+
+.breadcrumb-separator {
+  color: var(--text-muted);
+}

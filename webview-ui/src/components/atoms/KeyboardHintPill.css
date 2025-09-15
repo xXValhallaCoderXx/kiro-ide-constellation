@@ -1,0 +1,12 @@
+.keyboard-hint-pill {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 10px;
+  background-color: rgba(255, 255, 255, 0.06);
+  color: #CFCDE1;
+  border-radius: var(--radius-chip);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}

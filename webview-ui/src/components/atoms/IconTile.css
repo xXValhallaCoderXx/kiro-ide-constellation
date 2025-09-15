@@ -1,0 +1,15 @@
+.icon-tile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-tile);
+  flex-shrink: 0;
+}
+
+.icon-tile.variant-brand {
+  background-color: var(--surface-tint-brand);
+}
+
+.icon-tile.variant-success {
+  background-color: var(--surface-tint-success);
+}

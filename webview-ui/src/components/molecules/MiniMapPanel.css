@@ -1,0 +1,32 @@
+.minimap-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background-color: var(--surface-card);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-card);
+}
+
+.minimap-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.minimap-body {
+  height: 100px; /* Example height */
+  background-color: var(--surface-canvas);
+  border-radius: 8px;
+  position: relative;
+}
+
+.minimap-viewport {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 40px;
+  height: 30px;
+  border: 2px solid var(--border-strong);
+  background-color: var(--surface-overlay-04);
+}

@@ -1,0 +1,10 @@
+.metrics-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.metrics-inline-separator {
+  color: #6E6A86;
+  font-size: 12px;
+}
