@@ -4,7 +4,10 @@ import { type ProjectAnalysis } from './codebase-analysis.service.js'
 
 export class ProjectSteeringService {
   async generateSteeringDocs(workspaceRoot: string, analysisPath?: string): Promise<string[]> {
-    const analysisFile = analysisPath || path.join(workspaceRoot, '.constellation', 'oss', 'analysis', 'project-analysis.json')
+    let analysisFile = analysisPath || path.join(workspaceRoot, '.constellation', 'oss', 'analysis', 'project-analysis.json')
+    if (analysisPath && !path.isAbsolute(analysisPath)) {
+      analysisFile = path.join(workspaceRoot, analysisPath)
+    }
     const raw = await fs.promises.readFile(analysisFile, 'utf8')
     const analysis = JSON.parse(raw) as ProjectAnalysis
 

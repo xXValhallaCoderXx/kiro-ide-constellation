@@ -758,6 +758,60 @@ export async function startHttpBridge(context: vscode.ExtensionContext, walkthro
         return;
       }
 
+      if (req.url.startsWith("/oss/collect-steering-context")) {
+        try {
+          const workspaceRoot = SecurityService.validateWorkspace();
+          const analysisPath = path.join(workspaceRoot, '.constellation', 'oss', 'analysis', 'project-analysis.json');
+          const pkgPath = path.join(workspaceRoot, 'package.json');
+          const readmePath = path.join(workspaceRoot, 'README.md');
+          const tsconfigPath = path.join(workspaceRoot, 'tsconfig.json');
+
+          const analysis = fs.existsSync(analysisPath) ? JSON.parse(fs.readFileSync(analysisPath, 'utf8')) : null;
+          const pkg = fs.existsSync(pkgPath) ? JSON.parse(fs.readFileSync(pkgPath, 'utf8')) : null;
+          const readme = fs.existsSync(readmePath) ? fs.readFileSync(readmePath, 'utf8').slice(0, 65536) : null;
+          const tsconfig = fs.existsSync(tsconfigPath) ? JSON.parse(fs.readFileSync(tsconfigPath, 'utf8')) : null;
+
+          res.statusCode = 200;
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify({ status: 'ok', analysis, pkg, readme, tsconfig }));
+        } catch (error) {
+          const message = error instanceof Error ? error.message : 'Collect context failed';
+          res.statusCode = 500; res.setHeader('Content-Type', 'application/json'); res.end(JSON.stringify({ error: message }));
+        }
+        return;
+      }
+
+      if (req.url.startsWith("/oss/write-steering")) {
+        let body = ""; let bodySize = 0; const maxBodySize = 1024 * 1024;
+        req.on('data', (chunk) => { bodySize += chunk.length; if (bodySize > maxBodySize) { res.statusCode = 413; res.end(JSON.stringify({ error: 'Request body too large' })); return; } body += chunk.toString(); });
+        req.on('end', async () => {
+          try {
+            const data = SecurityService.validateJsonInput(body, maxBodySize);
+            const workspaceRoot = SecurityService.validateWorkspace();
+            const steeringDir = path.join(workspaceRoot, '.kiro', 'steering');
+            await fs.promises.mkdir(steeringDir, { recursive: true });
+            const written: string[] = [];
+            const maybeWrite = async (name: string, content?: string) => {
+              if (typeof content === 'string') {
+                const out = path.join(steeringDir, name);
+                await fs.promises.writeFile(out, content, 'utf8');
+                written.push(out);
+              }
+            };
+            await maybeWrite('project-structure.md', data.structure);
+            await maybeWrite('project-tech.md', data.tech);
+            await maybeWrite('project-product.md', data.product);
+            await maybeWrite('project-standings.md', data.standings);
+
+            res.statusCode = 200; res.setHeader('Content-Type','application/json'); res.end(JSON.stringify({ status: 'ok', written }));
+          } catch (error) {
+            const message = error instanceof Error ? error.message : 'Write steering failed';
+            res.statusCode = 500; res.setHeader('Content-Type','application/json'); res.end(JSON.stringify({ error: message }));
+          }
+        });
+        return;
+      }
+
       res.statusCode = 404; res.end();
     } catch (error) {
       // Handle unexpected server errors gracefully - Requirements 6.5, 6.6
