@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'preact/hooks'
 import { Button } from '../components/Button'
-import { OnboardingModeToggle } from '../components/OnboardingModeToggle'
+import { AgentModeToggle } from '../components/agent-mode-toggle'
 import { OnboardingStatus } from '../components/OnboardingStatus'
 import { messenger } from '../services/messenger'
 
@@ -13,7 +13,7 @@ interface OnboardingStatusState {
 }
 
 export function SidePanelView() {
-  const [currentMode, setCurrentMode] = useState<'Default' | 'Onboarding'>('Default')
+  const [currentMode, setCurrentMode] = useState<'Default' | 'Onboarding' | 'OpenSource'>('Default')
   const [isLoading, setIsLoading] = useState(false)
   const [onboardingStatus, setOnboardingStatus] = useState<OnboardingStatusState>({
     isActive: false
@@ -21,23 +21,23 @@ export function SidePanelView() {
 
   useEffect(() => {
     // Request current mode and status on component mount
-    messenger.post('onboarding/get-mode')
+    messenger.post('agent-mode/get')
     messenger.post('onboarding/get-status')
     
-    // Listen for onboarding-related messages
+    // Listen for onboarding- and agent-mode-related messages
     const handleMessage = (msg: any) => {
       switch (msg.type) {
-        case 'onboarding/current-mode':
+        case 'agent-mode/current':
           setCurrentMode(msg.mode)
           setIsLoading(false)
           break
-        case 'onboarding/mode-changed':
+        case 'agent-mode/changed':
           setCurrentMode(msg.mode)
           setIsLoading(false)
           break
-        case 'onboarding/mode-error':
+        case 'agent-mode/error':
           setIsLoading(false)
-          // Error handling is managed by OnboardingModeToggle component
+          // Error handling is managed by AgentModeToggle component
           break
         case 'onboarding/status-update':
           setOnboardingStatus(prev => ({
@@ -71,14 +71,14 @@ export function SidePanelView() {
     messenger.post('open-graph-view')
   }
 
-  const handleModeChange = (mode: 'Default' | 'Onboarding') => {
+  const handleModeChange = (mode: 'Default' | 'Onboarding' | 'OpenSource') => {
     setIsLoading(true)
     setCurrentMode(mode)
   }
 
   return (
     <div>
-      <OnboardingModeToggle 
+      <AgentModeToggle 
         currentMode={currentMode}
         onModeChange={handleModeChange}
         isLoading={isLoading}

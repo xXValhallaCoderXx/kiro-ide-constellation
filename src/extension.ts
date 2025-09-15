@@ -13,12 +13,14 @@ let graphProvider: any | null = null;
 
 export async function activate(context: vscode.ExtensionContext) {
   try {
-    // Initialize onboarding services
+    // Initialize onboarding services (legacy) and generic agent mode service
     const onboardingModeService = OnboardingModeService.getInstance();
     const onboardingWalkthroughService = new OnboardingWalkthroughService();
+    const { AgentModeService } = await import('./services/agent-mode.service.js');
+    const agentModeService = AgentModeService.getInstance();
 
     // Register side panel webview provider (visible when user clicks the Activity Bar icon)
-    const provider = new SidePanelViewProvider(context.extensionUri, context, onboardingModeService, onboardingWalkthroughService);
+    const provider = new SidePanelViewProvider(context.extensionUri, context, onboardingModeService, onboardingWalkthroughService, agentModeService);
     context.subscriptions.push(
       vscode.window.registerWebviewViewProvider(SidePanelViewProvider.viewType, provider)
     );

@@ -987,6 +987,117 @@ server.registerTool(
 
 
 // constellation_onboarding.plan -> generates structured onboarding plans with graph context integration
+// constellation_opensource.analyze
+server.registerTool(
+  "constellation_opensource.analyze",
+  {
+    title: "OSS Analyze",
+    description: "Analyze codebase and write project-analysis.json",
+    inputSchema: {},
+  },
+  async () => {
+    try {
+      const port = process.env.CONSTELLATION_BRIDGE_PORT;
+      const token = process.env.CONSTELLATION_BRIDGE_TOKEN;
+      if (!port || !token) {
+        return { content: [{ type: "text", text: JSON.stringify({ error: "Extension bridge not available" }) }] };
+      }
+      const resp = await fetch(`http://127.0.0.1:${port}/oss/analyze`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const text = await resp.text();
+      return { content: [{ type: "text", text }] };
+    } catch (error) {
+      return { content: [{ type: "text", text: JSON.stringify({ error: (error as Error).message || 'analyze failed' }) }] };
+    }
+  }
+);
+
+// constellation_opensource.generateSteering
+server.registerTool(
+  "constellation_opensource.generateSteering",
+  {
+    title: "OSS Generate Steering",
+    description: "Generate project steering docs in .kiro/steering",
+    inputSchema: { analysisPath: z.string().optional() },
+  },
+  async ({ analysisPath }) => {
+    try {
+      const port = process.env.CONSTELLATION_BRIDGE_PORT;
+      const token = process.env.CONSTELLATION_BRIDGE_TOKEN;
+      if (!port || !token) {
+        return { content: [{ type: "text", text: JSON.stringify({ error: "Extension bridge not available" }) }] };
+      }
+      const resp = await fetch(`http://127.0.0.1:${port}/oss/generate-steering`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ analysisPath })
+      });
+      const text = await resp.text();
+      return { content: [{ type: "text", text }] };
+    } catch (error) {
+      return { content: [{ type: "text", text: JSON.stringify({ error: (error as Error).message || 'generate-steering failed' }) }] };
+    }
+  }
+);
+
+// constellation_opensource.fetchIssue
+server.registerTool(
+  "constellation_opensource.fetchIssue",
+  {
+    title: "OSS Fetch Issue",
+    description: "Fetch GitHub issue and comments",
+    inputSchema: { url: z.string() },
+  },
+  async ({ url }) => {
+    try {
+      const port = process.env.CONSTELLATION_BRIDGE_PORT;
+      const token = process.env.CONSTELLATION_BRIDGE_TOKEN;
+      if (!port || !token) {
+        return { content: [{ type: "text", text: JSON.stringify({ error: "Extension bridge not available" }) }] };
+      }
+      const resp = await fetch(`http://127.0.0.1:${port}/oss/fetch-issue`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url })
+      });
+      const text = await resp.text();
+      return { content: [{ type: "text", text }] };
+    } catch (error) {
+      return { content: [{ type: "text", text: JSON.stringify({ error: (error as Error).message || 'fetch-issue failed' }) }] };
+    }
+  }
+);
+
+// constellation_opensource.generatePRD
+server.registerTool(
+  "constellation_opensource.generatePRD",
+  {
+    title: "OSS Generate PRD",
+    description: "Generate implementation PRD at repo root and mirror",
+    inputSchema: { owner: z.string(), repo: z.string(), issueNumber: z.number() },
+  },
+  async ({ owner, repo, issueNumber }) => {
+    try {
+      const port = process.env.CONSTELLATION_BRIDGE_PORT;
+      const token = process.env.CONSTELLATION_BRIDGE_TOKEN;
+      if (!port || !token) {
+        return { content: [{ type: "text", text: JSON.stringify({ error: "Extension bridge not available" }) }] };
+      }
+      const resp = await fetch(`http://127.0.0.1:${port}/oss/generate-prd`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ owner, repo, issueNumber })
+      });
+      const text = await resp.text();
+      return { content: [{ type: "text", text }] };
+    } catch (error) {
+      return { content: [{ type: "text", text: JSON.stringify({ error: (error as Error).message || 'generate-prd failed' }) }] };
+    }
+  }
+);
+
 server.registerTool(
   "constellation_onboarding.plan",
   {

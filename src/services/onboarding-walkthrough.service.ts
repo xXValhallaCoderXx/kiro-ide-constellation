@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { getWorkspaceRootOrThrow } from './workspace.service.js';
 import { onboardingModeService } from './onboarding-mode.service.js';
+import { agentModeService } from './agent-mode.service.js';
 import { SecurityService, GracefulErrorHandler } from './security.service.js';
 
 // Data Models
@@ -312,7 +313,12 @@ export class OnboardingWalkthroughService {
     operations.push({
       name: 'switchToDefaultMode',
       operation: async () => {
-        await onboardingModeService.switchToDefault();
+        // Prefer generic agent mode service if available
+        try {
+          await agentModeService.switchToDefault();
+        } catch {
+          await onboardingModeService.switchToDefault();
+        }
         return 'Default';
       },
       critical: false

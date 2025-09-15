@@ -672,6 +672,92 @@ export async function startHttpBridge(context: vscode.ExtensionContext, walkthro
         return;
       }
 
+      // OSS endpoints
+      if (req.url.startsWith("/oss/analyze")) {
+        // No body required
+        try {
+          const workspaceRoot = SecurityService.validateWorkspace();
+          const { CodebaseAnalysisService } = await import('./codebase-analysis.service.js');
+          const analysisService = new CodebaseAnalysisService(context);
+          const result = await analysisService.analyze(workspaceRoot);
+          res.statusCode = 200;
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ status: 'ok', analysis: result }));
+        } catch (error) {
+          const message = error instanceof Error ? error.message : 'Analyze failed';
+          res.statusCode = 500;
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ error: message }));
+        }
+        return;
+      }
+
+      if (req.url.startsWith("/oss/generate-steering")) {
+        let body = ""; let bodySize = 0; const maxBodySize = 1024 * 1024;
+        req.on('data', (chunk) => { bodySize += chunk.length; if (bodySize > maxBodySize) { res.statusCode = 413; res.end(JSON.stringify({ error: 'Request body too large' })); return; } body += chunk.toString(); });
+        req.on('end', async () => {
+          try {
+            const data = body ? SecurityService.validateJsonInput(body, maxBodySize) : {};
+            const analysisPath = typeof data.analysisPath === 'string' ? data.analysisPath : undefined;
+            const workspaceRoot = SecurityService.validateWorkspace();
+            const { ProjectSteeringService } = await import('./project-steering.service.js');
+            const svc = new ProjectSteeringService();
+            const written = await svc.generateSteeringDocs(workspaceRoot, analysisPath);
+            res.statusCode = 200;
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify({ status: 'ok', written }));
+          } catch (error) {
+            const message = error instanceof Error ? error.message : 'Generate steering failed';
+            res.statusCode = 500; res.setHeader('Content-Type', 'application/json'); res.end(JSON.stringify({ error: message }));
+          }
+        });
+        return;
+      }
+
+      if (req.url.startsWith("/oss/fetch-issue")) {
+        let body = ""; let bodySize = 0; const maxBodySize = 1024 * 1024;
+        req.on('data', (chunk) => { bodySize += chunk.length; if (bodySize > maxBodySize) { res.statusCode = 413; res.end(JSON.stringify({ error: 'Request body too large' })); return; } body += chunk.toString(); });
+        req.on('end', async () => {
+          try {
+            const data = SecurityService.validateJsonInput(body, maxBodySize);
+            const url = String(data.url || '');
+            if (!/^https?:\/\//i.test(url)) { res.statusCode = 400; res.setHeader('Content-Type','application/json'); res.end(JSON.stringify({ error: 'Invalid URL' })); return; }
+            const token = process.env.GITHUB_TOKEN; // Optional
+            const { GitHubIssueService } = await import('./github-issue.service.js');
+            const svc = new GitHubIssueService(undefined as any);
+            const result = await svc.fetchIssue(url, token);
+            res.statusCode = 200; res.setHeader('Content-Type', 'application/json'); res.end(JSON.stringify({ status: 'ok', issue: result }));
+          } catch (error) {
+            const message = error instanceof Error ? error.message : 'Fetch issue failed';
+            res.statusCode = 500; res.setHeader('Content-Type', 'application/json'); res.end(JSON.stringify({ error: message }));
+          }
+        });
+        return;
+      }
+
+      if (req.url.startsWith("/oss/generate-prd")) {
+        let body = ""; let bodySize = 0; const maxBodySize = 1024 * 1024;
+        req.on('data', (chunk) => { bodySize += chunk.length; if (bodySize > maxBodySize) { res.statusCode = 413; res.end(JSON.stringify({ error: 'Request body too large' })); return; } body += chunk.toString(); });
+        req.on('end', async () => {
+          try {
+            const data = SecurityService.validateJsonInput(body, maxBodySize);
+            const owner = String(data.owner || '');
+            const repo = String(data.repo || '');
+            const issueNumber = Number(data.issueNumber);
+            if (!owner || !repo || !issueNumber) { res.statusCode = 400; res.setHeader('Content-Type','application/json'); res.end(JSON.stringify({ error: 'Missing owner/repo/issueNumber' })); return; }
+            const workspaceRoot = SecurityService.validateWorkspace();
+            const { OssPrdService } = await import('./oss-prd.service.js');
+            const svc = new OssPrdService();
+            const result = await svc.generatePrd(workspaceRoot, { owner, repo, issueNumber });
+            res.statusCode = 200; res.setHeader('Content-Type','application/json'); res.end(JSON.stringify({ status: 'ok', ...result }));
+          } catch (error) {
+            const message = error instanceof Error ? error.message : 'Generate PRD failed';
+            res.statusCode = 500; res.setHeader('Content-Type','application/json'); res.end(JSON.stringify({ error: message }));
+          }
+        });
+        return;
+      }
+
       res.statusCode = 404; res.end();
     } catch (error) {
       // Handle unexpected server errors gracefully - Requirements 6.5, 6.6

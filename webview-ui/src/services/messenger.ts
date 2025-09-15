@@ -16,11 +16,22 @@ type GraphResponseMessage =
   | { type: 'graph/impact'; payload: { sourceFile: string; affectedFiles: string[] } }
   | { type: 'graph/metrics'; payload: { horizonDays: number; available: boolean; metrics: Record<string, { commitCount: number; churn: number; lastModifiedAt: number | null; authorCount: number; primaryAuthor?: string }> } }
 
+// Agent-mode generic messages for webview -> extension
+type AgentModeMessage =
+  | { type: 'agent-mode/change'; mode: 'Default' | 'Onboarding' | 'OpenSource' }
+  | { type: 'agent-mode/get' }
+
 // Onboarding-specific message types for webview -> extension
 type OnboardingMessage =
   | { type: 'onboarding/change-mode'; mode: 'Default' | 'Onboarding' }
   | { type: 'onboarding/get-mode' }
   | { type: 'onboarding/get-status' }
+
+// Agent-mode generic messages for extension -> webview
+type AgentModeResponseMessage =
+  | { type: 'agent-mode/current'; mode: 'Default' | 'Onboarding' | 'OpenSource' }
+  | { type: 'agent-mode/changed'; mode: 'Default' | 'Onboarding' | 'OpenSource' }
+  | { type: 'agent-mode/error'; message: string }
 
 // Onboarding-specific message types for extension -> webview
 type OnboardingResponseMessage =
@@ -66,6 +77,8 @@ type Message =
   | { type: 'ping' }
   | GraphMessage
   | GraphResponseMessage
+  | AgentModeMessage
+  | AgentModeResponseMessage
   | OnboardingMessage
   | OnboardingResponseMessage
 
