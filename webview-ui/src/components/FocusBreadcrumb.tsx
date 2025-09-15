@@ -1,4 +1,7 @@
 import { Button } from './Button';
+import { ButtonIcon } from './atoms/ButtonIcon';
+import { ButtonLink } from './atoms/ButtonLink';
+import { BreadcrumbItem } from './molecules/BreadcrumbItem';
 import type { Crumb } from '../services/focus-mode.service';
 
 export interface FocusBreadcrumbProps {
@@ -19,14 +22,12 @@ export function FocusBreadcrumb({ crumbs, onJump, onReset, onDepthChange, curren
       <div class="focus-crumbs-nav">
         {crumbs.map((crumb, index) => (
           <div key={`${crumb.root}-${index}`} class="focus-crumb-item">
-            <button
-              class="focus-crumb"
+            <BreadcrumbItem
+              label={crumb.label}
               onClick={() => onJump(index)}
               title={crumb.root}
               type="button"
-            >
-              <span class="focus-crumb-text">{crumb.label}</span>
-            </button>
+            />
             {index < crumbs.length - 1 && (
               <span class="focus-crumb-sep" aria-hidden="true">▶</span>
             )}
@@ -37,17 +38,17 @@ export function FocusBreadcrumb({ crumbs, onJump, onReset, onDepthChange, curren
         {onDepthChange && (
           <div class="focus-depth-controls" style="display:flex;align-items:center;gap:6px;">
             <span class="toolbar-label">Depth: {currentDepth === 0 || currentDepth === undefined ? 'All' : String(currentDepth)}</span>
-            <Button class="btn-secondary btn-sm" onClick={() => onDepthChange(-1)} type="button" title="Decrease depth">−</Button>
-            <Button class="btn-secondary btn-sm" onClick={() => onDepthChange(1)} type="button" title="Increase depth">+</Button>
+            <ButtonIcon class="btn-sm" iconName="minus" ariaLabel="Decrease depth" onClick={() => onDepthChange(-1)} />
+            <ButtonIcon class="btn-sm" iconName="plus" ariaLabel="Increase depth" onClick={() => onDepthChange(1)} />
           </div>
         )}
-        <Button 
+        <ButtonLink 
           class="focus-reset" 
           onClick={onReset}
           type="button"
         >
           Reset
-        </Button>
+        </ButtonLink>
       </div>
     </div>
   );

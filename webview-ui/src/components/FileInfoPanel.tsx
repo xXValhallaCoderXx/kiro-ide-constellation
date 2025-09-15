@@ -1,4 +1,5 @@
 import { useMemo } from 'preact/hooks'
+import { ButtonIcon } from './atoms/ButtonIcon'
 
 interface FileGitMetrics90d {
   commitCount: number
@@ -49,7 +50,9 @@ export function FileInfoPanel({ nodeId, node, inDegree, outDegree, metrics, metr
           <div className="file-info-title">{title}</div>
           <div className="file-info-path" title={pathText}>{pathText}</div>
         </div>
-        <button className="btn btn-ghost btn-sm file-info-close" aria-label="Close" onClick={onClose}>×</button>
+        <span className="file-info-close">
+          <ButtonIcon iconName="close" ariaLabel="Close" onClick={onClose} />
+        </span>
       </div>
 
       <div className="file-info-section">

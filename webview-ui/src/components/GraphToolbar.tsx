@@ -1,6 +1,11 @@
 import { Button } from './Button'
 import { getPlaceholderAttributes, isToolbarFeatureEnabled } from '../services/extension-config.service'
-import { getSupportedFileTypes, getFileTypeLabel } from '../services/graph-styles.service'
+import { getSupportedFileTypes } from '../services/graph-styles.service'
+import { SearchBar } from './molecules/SearchBar'
+import { MetricsInline } from './molecules/MetricsInline'
+import { ChipGroup } from './molecules/ChipGroup'
+import { ButtonLink } from './atoms/ButtonLink'
+import { useState } from 'preact/hooks'
 
 interface ImpactState {
   isActive: boolean
@@ -21,21 +26,26 @@ interface GraphToolbarProps {
 
 export function GraphToolbar({ onRescan, nodeCount, edgeCount, isOptimized, impactState, onResetImpactView }: GraphToolbarProps) {
   const fileTypes = getSupportedFileTypes()
+  const [searchValue, setSearchValue] = useState('')
+  const searchEnabled = isToolbarFeatureEnabled('searchEnabled')
+  const filtersEnabled = isToolbarFeatureEnabled('filtersEnabled')
 
   return (
     <div className="toolbar">
       {/* Row 1: search + actions */}
       <div className="toolbar-row">
-        {/* Search Input - Placeholder only */}
-        <input
-          type="text"
-          className="toolbar-input"
-          placeholder="Search files by name or path..."
-          readOnly
-          aria-label="Search graph nodes (coming soon)"
-          {...getPlaceholderAttributes(isToolbarFeatureEnabled('searchEnabled'))}
-          data-testid="graph-search-input"
-        />
+        {/* Search Input - Placeholder only (now atom/molecule-based) */}
+        <div style={{ flex: 1 }}>
+          <SearchBar
+            value={searchValue}
+            onChange={setSearchValue}
+            placeholder="Search files by name or path..."
+            ariaLabel="Search graph nodes (coming soon)"
+            disabled={!searchEnabled}
+            inputTestId="graph-search-input"
+            {...(searchEnabled ? {} : { 'aria-disabled': true })}
+          />
+        </div>
 
         {/* Action Buttons */}
         <div className="toolbar-actions">
@@ -52,13 +62,12 @@ export function GraphToolbar({ onRescan, nodeCount, edgeCount, isOptimized, impa
 
           {/* Reset View Button - Only show when impact filter is active */}
           {impactState?.isActive && onResetImpactView && (
-            <Button 
+            <ButtonLink 
               onClick={onResetImpactView}
               data-testid="graph-reset-view-button"
-              class="btn-secondary btn-sm"
             >
               ↺ Reset
-            </Button>
+            </ButtonLink>
           )}
 
           <div className="toolbar-dropdown">
@@ -82,29 +91,24 @@ export function GraphToolbar({ onRescan, nodeCount, edgeCount, isOptimized, impa
       
       {/* Row 2: filters + stats */}
       <div className="toolbar-row">
-        {/* Filter Chips - Placeholders */}
+        {/* Filter Chips - Placeholder using ChipGroup */}
         <div className="toolbar-filters">
           <span className="toolbar-label">Filters:</span>
-          {fileTypes.map((fileType) => (
-            <button
-              key={fileType}
-              className="toolbar-chip"
-              title={`Filter ${getFileTypeLabel(fileType)} files (coming soon)`}
-              aria-label={`Filter ${getFileTypeLabel(fileType)} files`}
-              {...getPlaceholderAttributes(isToolbarFeatureEnabled('filtersEnabled'))}
-              data-testid={`graph-filter-${fileType}`}
-            >
-              {fileType}
-            </button>
-          ))}
+          <ChipGroup
+            chips={fileTypes.map((fileType) => ({ label: fileType, variant: 'brand' as const }))}
+            selectMode="none"
+            disabled={!filtersEnabled}
+            chipTestIdFactory={(chip) => `graph-filter-${chip.label}`}
+          />
         </div>
         
         {/* Graph Stats */}
         {(nodeCount !== undefined && edgeCount !== undefined) && (
           <div className="toolbar-stats">
-            <span className="toolbar-stat">
-              {nodeCount} nodes • {edgeCount} edges
-            </span>
+            <MetricsInline items={[
+              { variant: 'neutral', text: `${nodeCount} nodes` },
+              { variant: 'neutral', text: `${edgeCount} edges` }
+            ]} />
             {isOptimized && (
               <span className="toolbar-stat toolbar-stat-optimized">
                 (optimized)
