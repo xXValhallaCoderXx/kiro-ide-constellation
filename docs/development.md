@@ -118,6 +118,57 @@ Onboarding mode (implementation map)
 - **Pure Functions**: Prefer pure functions for business logic
 - **Error Handling**: Comprehensive error handling with user-friendly messages
 - **Performance**: Monitor timing and implement optimizations
+
+## Atomic Design System Development
+
+### Component Creation Guidelines
+- **Atoms First**: Start with the smallest reusable components
+- **Composition Over Inheritance**: Build molecules by composing atoms
+- **Accessibility**: Include ARIA attributes and keyboard navigation from the start
+- **Consistent Props**: Use similar prop patterns across related components
+
+### Development Workflow
+1. **Identify Component Type**: Determine if it's an atom, molecule, or organism
+2. **Define TypeScript Interface**: Clear prop definitions with proper types
+3. **Implement Component**: Follow accessibility and performance guidelines
+4. **Add Styling**: Component-specific CSS with consistent naming conventions
+5. **Write Tests**: Unit tests for atoms, integration tests for molecules
+6. **Document Usage**: Examples and integration patterns
+
+### Git Metrics Integration Patterns
+- **Service Integration**: Use `GitMetricsService` for data access
+- **Loading States**: Always handle metrics loading and error states
+- **Performance**: Cache metrics data and avoid unnecessary re-computation
+- **UI Integration**: Display metrics in consistent formats across components
+
+```typescript
+// Example metrics integration pattern
+const [metrics, setMetrics] = useState<FileGitMetrics90d | null>(null)
+const [metricsReady, setMetricsReady] = useState(false)
+
+useEffect(() => {
+  loadMetricsForFile(filePath)
+    .then(setMetrics)
+    .finally(() => setMetricsReady(true))
+}, [filePath])
+```
+
+### Viewport and Zoom Development
+- **Coordinate Systems**: Understand Cytoscape vs DOM coordinate systems
+- **Performance**: Throttle viewport change events to prevent excessive updates
+- **State Management**: Maintain viewport state consistency across components
+- **User Experience**: Provide visual feedback for zoom and pan operations
+
+```typescript
+// Example viewport handling pattern
+const handleViewportChange = useCallback(
+  throttle((bounds: ViewportBounds) => {
+    setViewportBounds(bounds)
+    onViewportChange?.(bounds)
+  }, 100),
+  [onViewportChange]
+)
+```
 - **Testing**: Unit tests for all public functions
 
 ### Development Workflow

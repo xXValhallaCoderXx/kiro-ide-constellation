@@ -10,6 +10,8 @@ A Kiro/VS Code extension that provides a comprehensive MCP (Model Context Protoc
 **Graph Visualization Tools:**
 - Graph Focus Mode → drill-down navigation with breadcrumb trails and depth controls
 - Interactive dependency visualization → click to explore, double-click to focus
+- Zoom and viewport controls → programmatic zoom with mini-map navigation
+- Git metrics integration → file activity and collaboration insights
 
 **Onboarding Tools:**
 - `constellation_onboarding.plan` → generates structured walkthrough plans
@@ -66,6 +68,16 @@ Side panel UI
   - Breadcrumb navigation for exploration history
   - Depth controls (1-3 levels) for relationship visualization
   - Performance optimizations for large graphs (1000+ nodes)
+- **Enhanced Graph Controls**: Comprehensive graph interaction capabilities
+  - Zoom controls with programmatic zoom in/out/fit functionality
+  - Mini-map panel with viewport indicator for large graph navigation
+  - File info panel displaying Git metrics and dependency information
+  - Delayed click handling to prevent conflicts between single and double-click actions
+- **Git Metrics Integration**: Real-time file activity and collaboration insights
+  - 90-day commit activity tracking and churn analysis
+  - Author collaboration patterns and primary contributor identification
+  - Last modified timestamps with relative time formatting
+  - Visual indicators for high-activity and stable files
 - **Onboarding Mode Toggle**: Switch between Default and Onboarding modes with safe persona backup/restore
 - **Walkthrough Status**: Display current step progress and walkthrough information when active
 

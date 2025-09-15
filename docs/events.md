@@ -28,6 +28,12 @@ Graph messages (implemented)
   - Ext → UI progress updates during scanning operations
 - graph/error { message }
   - Ext → UI error notifications for graph operations
+- graph/viewport-change { bounds, viewport }
+  - UI → UI internal message for viewport tracking and mini-map updates
+- graph/zoom-request { action: 'in' | 'out' | 'fit' }
+  - UI → UI internal message for programmatic zoom control
+- graph/metrics-update { nodeId, metrics }
+  - UI → UI internal message when Git metrics data becomes available
 
 Focus mode messages (UI-only)
 - Focus mode state is managed entirely within the webview UI
