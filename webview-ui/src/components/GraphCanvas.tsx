@@ -69,8 +69,6 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, GraphCanvasProps>(
     // Keep a stable reference to the callback so the effect below doesn't re-run
     const onRenderingChangeRef = useRef(onRenderingChange)
     useEffect(() => { onRenderingChangeRef.current = onRenderingChange }, [onRenderingChange])
-    const onViewportChangeRef = useRef<GraphCanvasProps['onViewportChange']>()
-    useEffect(() => { onViewportChangeRef.current = (ref as any)?.props?.onViewportChange ?? onViewportChangeRef.current }, [])
 
     // Expose imperative API through ref
     useImperativeHandle(ref, () => ({
@@ -367,7 +365,7 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, GraphCanvasProps>(
           })
 
           // Track viewport changes for minimap
-          cyRef.current.on('pan zoom render resize', emitViewport)
+          cyRef.current.on('viewport resize', emitViewport)
           // Emit once after init
           emitViewport()
 
