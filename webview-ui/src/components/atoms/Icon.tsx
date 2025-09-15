@@ -15,6 +15,9 @@ export type IconName =
   | 'layout'
   | 'fit'
   | 'arrow-right'
+  | 'graph'
+  | 'scan'
+  | 'info'
 
 interface IconProps extends Omit<JSX.SVGAttributes<SVGSVGElement>, 'color'> {
   name: IconName
@@ -51,7 +54,13 @@ const paths: Record<IconName, string> = {
   fit:
     'M8 8h3V5M8 8V5h3M16 16h-3v3M16 16v3h-3M8 16H5v3M8 16v3H5M16 8h3V5M16 8V5h3',
   'arrow-right':
-    'M5 12h14M13 5l7 7-7 7'
+    'M5 12h14M13 5l7 7-7 7',
+  graph:
+    'M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0016.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 002 8.5c0 2.29 1.51 4.04 3 5.5l7 7z',
+  scan:
+    'M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2M12 8v8M8 12h8',
+  info:
+    'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 15c-.55 0-1-.45-1-1v-4c0-.55.45-1 1-1s1 .45 1 1v4c0 .55-.45 1-1 1zm1-8h-2V7h2v2z'
 }
 
 export function Icon({ name, size = 20, colorToken, title, ...rest }: IconProps) {

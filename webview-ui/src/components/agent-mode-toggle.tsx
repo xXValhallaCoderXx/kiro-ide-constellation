@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'preact/hooks'
 import { Button } from './Button'
+import { Icon } from './atoms/Icon'
+import { Tooltip } from './atoms/Tooltip'
 import { messenger } from '../services/messenger'
 import { SelectDropdown } from './molecules/SelectDropdown'
 
@@ -19,6 +21,13 @@ interface ConfirmationDialogProps {
   onCancel: () => void
   isLoading?: boolean
 }
+
+// Mode descriptions for tooltips
+const MODE_DESCRIPTIONS = {
+  Default: 'Standard mode with your current project configuration and settings.',
+  Onboarding: 'Guided mode that helps new users learn Constellation features step by step.',
+  OpenSource: 'Specialized mode for open source project analysis and contribution workflows.'
+} as const
 
 function ConfirmationDialog({
   isOpen,
@@ -158,6 +167,16 @@ export function AgentModeToggle({
               disabled={isLoading || isProcessing}
             />
           </div>
+          <Tooltip content={MODE_DESCRIPTIONS[selectedMode]}>
+            <div 
+              className="mode-help-icon"
+              tabIndex={0}
+              role="button"
+              aria-label={`Help for ${selectedMode} mode`}
+            >
+              <Icon name="info" size={16} colorToken="--text-secondary" />
+            </div>
+          </Tooltip>
           {(isLoading || isProcessing) && (
             <div className="mode-toggle-spinner">
               <span className="spinner">⟳</span>
@@ -165,13 +184,6 @@ export function AgentModeToggle({
           )}
         </div>
       </div>
-
-      <div className="mode-toggle-status">
-        <span className={`mode-indicator mode-indicator-${selectedMode.toLowerCase()}`}>
-          {selectedMode} Mode
-        </span>
-      </div>
-
       {error && (
         <div className="mode-toggle-error">
           <span className="error-icon">⚠</span>

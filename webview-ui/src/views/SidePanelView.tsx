@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'preact/hooks'
 import { Button } from '../components/Button'
+import { ConstellationButton } from '../components/constellation-button'
+import { IndexStatusSection } from '../components/index-status-section'
 import { AgentModeToggle } from '../components/agent-mode-toggle'
 import { OnboardingStatus } from '../components/OnboardingStatus'
 import { messenger } from '../services/messenger'
@@ -71,13 +73,17 @@ export function SidePanelView() {
     messenger.post('open-graph-view')
   }
 
+  const runScan = () => {
+    messenger.post('graph/scan')
+  }
+
   const handleModeChange = (mode: 'Default' | 'Onboarding' | 'OpenSource') => {
     setIsLoading(true)
     setCurrentMode(mode)
   }
 
   return (
-    <div>
+    <div className="constellation-sidebar">
       <AgentModeToggle 
         currentMode={currentMode}
         onModeChange={handleModeChange}
@@ -90,11 +96,26 @@ export function SidePanelView() {
         currentFile={onboardingStatus.currentFile}
         explanation={onboardingStatus.explanation}
       />
-      <div style={{ padding: '12px' }}>
-        <h1>Constellation</h1>
-        <p>Side Panel</p>
-        <Button onClick={openGraph}>Open Graph View</Button>
+      <div className="constellation-content">
+        <div className="constellation-header">
+          <p className="constellation-subtitle">Actions</p>
+        </div>
+        <div className="constellation-actions">
+          <ConstellationButton 
+            icon="graph" 
+            label="Open Graph View" 
+            onClick={openGraph}
+            variant="primary"
+          />
+          <ConstellationButton 
+            icon="scan" 
+            label="Run Scan" 
+            onClick={runScan}
+            variant="secondary"
+          />
+        </div>
       </div>
+      <IndexStatusSection />
     </div>
   )
 }

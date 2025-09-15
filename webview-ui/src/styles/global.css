@@ -1415,3 +1415,192 @@ body {
   outline: 2px solid var(--border-focus); 
   outline-offset: 2px; 
 }
+
+/* Constellation Sidebar Unified Styles */
+.constellation-sidebar {
+  height: 100%;
+  background: var(--vscode-sideBar-background);
+  color: var(--vscode-foreground);
+  display: flex;
+  flex-direction: column;
+}
+
+.constellation-content {
+  flex: 1;
+  padding: var(--kiro-space-3);
+  background: var(--vscode-sideBar-background);
+}
+
+.constellation-header {
+  margin-bottom: var(--kiro-space-4);
+}
+
+.constellation-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--vscode-foreground);
+  margin: 0 0 var(--kiro-space-1) 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.constellation-subtitle {
+  font-size: 12px;
+  color: var(--vscode-descriptionForeground);
+  margin: 0;
+}
+
+.constellation-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--kiro-space-2);
+  margin-bottom: var(--kiro-space-4);
+}
+
+/* Override onboarding toggle background to match */
+.onboarding-mode-toggle {
+  padding: var(--kiro-space-3);
+  border-bottom: 1px solid var(--kiro-border);
+  background: var(--vscode-sideBar-background);
+}
+
+/* Constellation Button Specific Styles */
+.constellation-btn {
+  width: 100%;
+  justify-content: flex-start;
+  text-align: left;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.constellation-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.constellation-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.constellation-btn.btn-secondary {
+  border-color: var(--kiro-border);
+}
+
+/* Mode Help Icon Styles */
+.mode-help-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--kiro-radius-1);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  opacity: 0.7;
+}
+
+.mode-help-icon:hover {
+  opacity: 1;
+  background: var(--surface-overlay-04);
+}
+
+.mode-help-icon:focus {
+  outline: 2px solid var(--vscode-focusBorder);
+  outline-offset: 2px;
+  opacity: 1;
+}
+
+/* Index Status Section Styles */
+.index-status-section {
+  padding: var(--kiro-space-3);
+  background: var(--vscode-sideBar-background);
+  border-top: 1px solid var(--kiro-border);
+}
+
+.index-status-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--kiro-space-3);
+}
+
+.index-status-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--vscode-foreground);
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.index-status-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--kiro-radius-1);
+  background: transparent;
+}
+
+.index-status-indicator.indexed {
+  background: var(--surface-tint-success);
+}
+
+.index-status-indicator.not-indexed {
+  background: var(--vscode-inputValidation-warningBackground, color-mix(in srgb, var(--kiro-warning) 15%, transparent));
+}
+
+.index-status-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--kiro-space-3) var(--kiro-space-2);
+  margin-bottom: var(--kiro-space-3);
+}
+
+.index-stat {
+  display: flex;
+  flex-direction: column;
+  gap: var(--kiro-space-1);
+}
+
+.index-stat-label {
+  font-size: 11px;
+  color: var(--vscode-descriptionForeground);
+  font-weight: 500;
+}
+
+.index-stat-value {
+  font-size: 14px;
+  color: var(--vscode-foreground);
+  font-weight: 600;
+}
+
+.index-status-loading,
+.index-status-error {
+  display: flex;
+  align-items: center;
+  gap: var(--kiro-space-2);
+  padding: var(--kiro-space-2) 0;
+  font-size: 12px;
+  color: var(--vscode-descriptionForeground);
+}
+
+.index-status-error {
+  color: var(--vscode-errorForeground);
+}
+
+.index-status-message {
+  display: flex;
+  align-items: center;
+  gap: var(--kiro-space-2);
+  padding: var(--kiro-space-2);
+  background: var(--surface-tint-brand);
+  border-radius: var(--kiro-radius-1);
+  font-size: 11px;
+  color: var(--accent-purple-soft-text);
+}
+
+.index-status-spinner {
+  animation: spin 1s linear infinite;
+}
