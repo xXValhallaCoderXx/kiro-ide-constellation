@@ -57,10 +57,11 @@ interface GraphCanvasProps {
   impactSourceId?: string
   onNodeDrill?: (nodeId: string) => void
   onNodeSelect?: (nodeId: string) => void
+  onViewportChange?: (payload: { bounds: { x1: number; y1: number; x2: number; y2: number; w: number; h: number }; viewport: { x1: number; y1: number; x2: number; y2: number; w: number; h: number } }) => void
 }
 
 export const GraphCanvas = forwardRef<GraphCanvasRef, GraphCanvasProps>(
-  ({ data, isRendering, onRenderingChange, impactSourceId, onNodeDrill, onNodeSelect }, ref) => {
+  ({ data, isRendering, onRenderingChange, impactSourceId, onNodeDrill, onNodeSelect, onViewportChange }, ref) => {
     const containerRef = useRef<HTMLDivElement>(null)
     const cyRef = useRef<Core | null>(null)
     const lastFitRef = useRef<number>(Date.now())
@@ -68,6 +69,8 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, GraphCanvasProps>(
     // Keep a stable reference to the callback so the effect below doesn't re-run
     const onRenderingChangeRef = useRef(onRenderingChange)
     useEffect(() => { onRenderingChangeRef.current = onRenderingChange }, [onRenderingChange])
+    const onViewportChangeRef = useRef<GraphCanvasProps['onViewportChange']>()
+    useEffect(() => { onViewportChangeRef.current = (ref as any)?.props?.onViewportChange ?? onViewportChangeRef.current }, [])
 
     // Expose imperative API through ref
     useImperativeHandle(ref, () => ({
@@ -302,6 +305,15 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, GraphCanvasProps>(
             layout: layoutConfig
           })
 
+          // Emit viewport helper
+          const emitViewport = () => {
+            try {
+              const bb = cyRef.current!.elements().boundingBox()
+              const vp = cyRef.current!.extent()
+              onViewportChange?.({ bounds: { ...bb, w: bb.w, h: bb.h }, viewport: vp as any })
+            } catch {/* ignore */}
+          }
+
           // Inject a synthetic data property on nodes so the label outline can reference the webview background
           // We re-use Cytoscape's data API to expose a runtime-derived color without re-creating the stylesheet
           const bg = getComputedStyle(document.documentElement).getPropertyValue('--vscode-editor-background').trim() || '#1e1e1e'
@@ -350,8 +362,14 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, GraphCanvasProps>(
           // Handle layout completion for performance monitoring
           cyRef.current.on('layoutstop', () => {
             onRenderingChangeRef.current?.(false)
+            emitViewport()
             console.log(`Graph layout completed for ${nodeCount} nodes`)
           })
+
+          // Track viewport changes for minimap
+          cyRef.current.on('pan zoom render resize', emitViewport)
+          // Emit once after init
+          emitViewport()
 
         } catch (error) {
           console.error('Error creating Cytoscape instance:', error)
