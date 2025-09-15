@@ -125,8 +125,14 @@ export class AgentModeService {
     return this.currentMode;
   }
 
-  /** Switch to a specific mode */
+  /** Switch to a specific mode with confirmation */
   public async switchTo(mode: AgentMode): Promise<void> {
+    // Show confirmation dialog using VS Code's native modal
+    const confirmed = await this.showConfirmationDialog(mode);
+    if (!confirmed) {
+      return; // User cancelled
+    }
+
     if (mode === 'Default') {
       await this.switchToDefault();
       return;
@@ -275,6 +281,49 @@ export class AgentModeService {
     const base = path.join(workspaceRoot, this.OSS_BASE);
     const ephemeral = [path.join(base, 'issues'), path.join(base, 'prds'), path.join(base, 'tmp'), path.join(base, 'cache')];
     for (const d of ephemeral) { try { await fs.promises.rm(d, { recursive: true, force: true }); } catch {/* ignore */} }
+  }
+
+  /** Show native VS Code confirmation dialog for mode switching */
+  private async showConfirmationDialog(mode: AgentMode): Promise<boolean> {
+    const currentMode = await this.getCurrentMode();
+    
+    // No confirmation needed if switching to the same mode
+    if (currentMode === mode) {
+      return true;
+    }
+
+    let title: string;
+    let message: string;
+    let confirmButton: string;
+
+    switch (mode) {
+      case 'Onboarding':
+        title = 'Switch to Onboarding Mode';
+        message = 'This will backup your current steering documents and activate the onboarding persona. Your existing configuration will be safely stored and can be restored later.';
+        confirmButton = 'Switch to Onboarding';
+        break;
+      case 'OpenSource':
+        title = 'Switch to Open Source Mode';
+        message = 'This will backup your current steering documents and activate the OSS contributor persona. It will also prepare .constellation/oss for analysis and planning.';
+        confirmButton = 'Switch to Open Source';
+        break;
+      case 'Default':
+        title = 'Switch to Default Mode';
+        message = 'This will restore your previous steering documents and deactivate special personas. Any analysis artifacts remain under .constellation/oss.';
+        confirmButton = 'Switch to Default';
+        break;
+      default:
+        return false;
+    }
+
+    const choice = await vscode.window.showWarningMessage(
+      title,
+      { modal: true, detail: message },
+      confirmButton,
+      'Cancel'
+    );
+
+    return choice === confirmButton;
   }
 }
 

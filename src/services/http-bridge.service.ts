@@ -495,8 +495,50 @@ export async function startHttpBridge(context: vscode.ExtensionContext, walkthro
       if (req.url.startsWith("/onboarding/nextStep")) {
         // Handle onboarding step progression
         try {
+          // Get summary before advancing (since nextStep clears state on completion)
+          const summaryBeforeStep = walkthrough.getSummary();
+          
           // Advance to next step using walkthrough service
           const result = await walkthrough.nextStep();
+
+          // If the walkthrough completed, trigger graph focus view with walkthrough files
+          if (result.status === 'complete' && summaryBeforeStep.files && summaryBeforeStep.files.length > 0) {
+            try {
+              // Normalize paths to workspace-relative node ids for UI filtering (same as impact analysis)
+              const wsRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? "";
+              const toNodeId = (p: string): string | null => {
+                try {
+                  if (!p) { return null; }
+                  // Normalize slashes
+                  const slashed = p.replace(/\\/g, '/');
+                  // If already relative, return as-is
+                  if (!path.isAbsolute(slashed)) { return slashed; }
+                  if (!wsRoot) { return null; }
+                  const rel = path.relative(wsRoot, slashed).replace(/\\/g, '/');
+                  if (rel.startsWith('..')) { return null; } // outside workspace
+                  return rel;
+                } catch { return null; }
+              };
+
+              // Create a synthetic impact payload from the walkthrough summary
+              // Use the first file as the "source" and all files as "affected" to create a focused graph view
+              const normalizedSource = toNodeId(summaryBeforeStep.files[0]) ?? summaryBeforeStep.files[0];
+              const normalizedAffected = summaryBeforeStep.files
+                .map(toNodeId)
+                .filter((x): x is string => !!x);
+
+              // Trigger the graph view with focus (same mechanism as impact analysis)
+              await vscode.commands.executeCommand("constellation.showImpact", {
+                sourceFile: normalizedSource,
+                affectedFiles: normalizedAffected
+              });
+
+              console.log(`Onboarding completion: Opened graph view focused on ${normalizedAffected.length} walkthrough files:`, normalizedAffected);
+            } catch (error) {
+              // Don't let graph view errors break the step progression
+              console.warn('Failed to open graph view after onboarding completion:', error);
+            }
+          }
 
           // Return success response
           res.statusCode = 200;
@@ -627,6 +669,52 @@ export async function startHttpBridge(context: vscode.ExtensionContext, walkthro
                 type: 'onboarding/finalize-complete',
                 payload: finalizePayload
               });
+            }
+
+            // Trigger graph focus view with walkthrough files if we have files to show
+            if (summary.files && summary.files.length > 0) {
+              try {
+                // Normalize paths to workspace-relative node ids for UI filtering (same as impact analysis)
+                const wsRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? "";
+                const toNodeId = (p: string): string | null => {
+                  try {
+                    if (!p) { return null; }
+                    // Normalize slashes
+                    const slashed = p.replace(/\\/g, '/');
+                    // If already relative, return as-is
+                    if (!path.isAbsolute(slashed)) { return slashed; }
+                    if (!wsRoot) { return null; }
+                    const rel = path.relative(wsRoot, slashed).replace(/\\/g, '/');
+                    if (rel.startsWith('..')) { return null; } // outside workspace
+                    return rel;
+                  } catch { return null; }
+                };
+
+                // Create a synthetic impact payload from the walkthrough summary
+                // Use the first file as the "source" and all files as "affected" to create a focused graph view
+                const normalizedSource = toNodeId(summary.files[0]) ?? summary.files[0];
+                const normalizedAffected = summary.files
+                  .map(toNodeId)
+                  .filter((x): x is string => !!x);
+
+                console.log(`Onboarding completion debug:`, {
+                  wsRoot,
+                  originalFiles: summary.files,
+                  normalizedSource,
+                  normalizedAffected
+                });
+
+                // Trigger the graph view with focus (same mechanism as impact analysis)
+                await vscode.commands.executeCommand("constellation.showImpact", {
+                  sourceFile: normalizedSource,
+                  affectedFiles: normalizedAffected
+                });
+
+                console.log(`Onboarding completion: Opened graph view focused on ${normalizedAffected.length} walkthrough files:`, normalizedAffected);
+              } catch (error) {
+                // Don't let graph view errors break the finalization process
+                console.warn('Failed to open graph view after onboarding completion:', error);
+              }
             }
 
             // Return structured response

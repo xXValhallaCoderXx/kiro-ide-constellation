@@ -51,15 +51,55 @@
 
 html, body, #root {
   height: 100%;
+  overflow: hidden; /* Prevent scrolling */
 }
 
 body {
   margin: 0;
+  padding: 0;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
     Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", Arial,
     "Apple Color Emoji", "Segoe UI Emoji";
   color: var(--vscode-foreground);
   background: var(--vscode-editor-background);
+  overflow: hidden; /* Prevent scrolling */
+}
+
+/* Override background for sidebar view - force sidebar background everywhere */
+#root[data-view="sidepanel"],
+body {
+  background-color: var(--vscode-sideBar-background) !important;
+}
+
+/* Restore proper button backgrounds in sidebar */
+#root[data-view="sidepanel"] .btn-primary,
+#root[data-view="sidepanel"] .button {
+  background: var(--vscode-button-background) !important;
+  color: var(--vscode-button-foreground) !important;
+}
+
+#root[data-view="sidepanel"] .btn-secondary {
+  background: var(--vscode-button-secondaryBackground, var(--vscode-button-background)) !important;
+  color: var(--vscode-button-secondaryForeground, var(--vscode-button-foreground)) !important;
+}
+
+#root[data-view="sidepanel"] .btn-ghost {
+  background: transparent !important;
+  color: var(--kiro-text) !important;
+  border-color: var(--kiro-border) !important;
+}
+
+/* Fix select dropdown background */
+#root[data-view="sidepanel"] .select-element {
+  background: var(--vscode-dropdown-background) !important;
+  color: var(--vscode-dropdown-foreground) !important;
+}
+
+/* Ensure proper height for sidebar */
+#root[data-view="sidepanel"] {
+  height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
 }
 
 .button {
@@ -347,6 +387,20 @@ body {
 .tooltip-left { right: calc(100% + 6px); top: 50%; transform: translateY(-50%); }
 .tooltip-right { left: calc(100% + 6px); top: 50%; transform: translateY(-50%); }
 
+/* Special positioning for mode help tooltip to avoid cutoff */
+.mode-help-icon .tooltip-content {
+  left: -140px; /* Position to fit within sidebar width */
+  right: auto;
+  top: calc(100% + 6px);
+  transform: none;
+  white-space: normal; /* Allow text wrapping if needed */
+  max-width: 160px; /* Constrain width to fit in sidebar */
+  width: 160px; /* Fixed width for consistent sizing */
+  font-size: 11px; /* Smaller text */
+  line-height: 1.3; /* Tighter line spacing */
+  padding: 4px 6px; /* Smaller padding */
+}
+
 .divider-line { background: rgba(255,255,255,0.08); }
 .divider-horizontal { height:1px; width:100%; }
 .divider-vertical { width:1px; height:100%; }
@@ -379,7 +433,7 @@ body {
 .select-label { display:flex; align-items:center; gap:6px; color: var(--text-secondary); font-size: 12px; }
 .select-help { display:inline-flex; }
 .select-shell { position: relative; }
-.select-element { -webkit-appearance:none; appearance:none; width:100%; height:40px; border-radius: var(--radius-input); background: var(--surface-card); color: var(--text-primary); border: 1px solid var(--border-subtle); padding: 0 34px 0 12px; }
+.select-element { -webkit-appearance:none; appearance:none; width:100%; height: 32px; border-radius: var(--kiro-radius-1); background: var(--vscode-dropdown-background); color: var(--vscode-dropdown-foreground); border: 1px solid var(--vscode-dropdown-border); padding: 0 34px 0 12px; font-size: 12px; min-width: 0; /* Allow shrinking */ }
 .select-element:focus { outline: 2px solid var(--border-focus); outline-offset:2px; }
 .select-chevron { position:absolute; right:10px; top:50%; transform: translateY(-50%); pointer-events:none; }
 
@@ -641,22 +695,25 @@ body {
 .mode-toggle-header {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
+  justify-content: space-between;
+  margin-bottom: var(--kiro-space-2);
+}
+
+.mode-label-with-help {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .mode-toggle-label {
   font-size: 12px;
   font-weight: 500;
   color: var(--vscode-foreground);
-  min-width: 40px;
 }
 
 .mode-toggle-controls {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex: 1;
+  width: 100%;
+  min-width: 0; /* Allow shrinking */
 }
 
 .mode-toggle-dropdown {
@@ -680,25 +737,6 @@ body {
   cursor: not-allowed;
 }
 
-.mode-toggle-spinner {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 16px;
-  height: 16px;
-}
-
-.spinner {
-  display: inline-block;
-  animation: spin 1s linear infinite;
-  font-size: 12px;
-  color: var(--vscode-progressBar-background);
-}
-
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
 
 .mode-toggle-status {
   display: flex;
@@ -762,96 +800,6 @@ body {
   background: var(--vscode-button-hoverBackground);
 }
 
-/* Modal Dialog Styles */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.modal-dialog {
-  background: var(--vscode-editorWidget-background);
-  border: 1px solid var(--vscode-widget-border);
-  border-radius: 6px;
-  min-width: 320px;
-  max-width: 480px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-}
-
-.modal-header {
-  padding: 16px 16px 0 16px;
-}
-
-.modal-title {
-  margin: 0;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--vscode-foreground);
-}
-
-.modal-body {
-  padding: 12px 16px;
-}
-
-.modal-message {
-  margin: 0;
-  font-size: 12px;
-  line-height: 1.4;
-  color: var(--vscode-descriptionForeground);
-}
-
-.modal-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  padding: 0 16px 16px 16px;
-}
-
-.modal-button {
-  padding: 6px 12px;
-  font-size: 12px;
-  border-radius: 4px;
-  cursor: pointer;
-  border: 1px solid transparent;
-}
-
-.modal-button-secondary {
-  background: var(--vscode-button-secondaryBackground);
-  color: var(--vscode-button-secondaryForeground);
-  border-color: var(--vscode-button-border);
-}
-
-.modal-button-secondary:hover:not(:disabled) {
-  background: var(--vscode-button-secondaryHoverBackground);
-}
-
-.modal-button-primary {
-  background: var(--vscode-button-background);
-  color: var(--vscode-button-foreground);
-  border-color: var(--vscode-button-border);
-}
-
-.modal-button-primary:hover:not(:disabled) {
-  background: var(--vscode-button-hoverBackground);
-}
-
-.modal-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-/* Focus styles for modal */
-.modal-button:focus {
-  outline: 2px solid var(--vscode-focusBorder);
-  outline-offset: 2px;
-}
 
 .mode-toggle-dropdown:focus {
   outline: 2px solid var(--vscode-focusBorder);
@@ -1414,4 +1362,202 @@ body {
 .focus-ring { 
   outline: 2px solid var(--border-focus); 
   outline-offset: 2px; 
+}
+
+/* Constellation Sidebar Unified Styles */
+.constellation-sidebar {
+  height: 100%;
+  background: var(--vscode-sideBar-background);
+  color: var(--vscode-foreground);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* Prevent all scrolling */
+}
+
+.constellation-content {
+  flex: 1;
+  padding: var(--kiro-space-3);
+  background: var(--vscode-sideBar-background);
+  overflow: hidden; /* Prevent all scrolling */
+  min-height: 0; /* Allow flex child to shrink */
+}
+
+.constellation-header {
+  margin-bottom: var(--kiro-space-4);
+}
+
+.constellation-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--vscode-foreground);
+  margin: 0 0 var(--kiro-space-1) 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.constellation-subtitle {
+  font-size: 12px;
+  color: var(--vscode-descriptionForeground);
+  margin: 0;
+}
+
+.constellation-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--kiro-space-2);
+  margin-bottom: var(--kiro-space-4);
+}
+
+/* Override onboarding toggle background to match */
+.onboarding-mode-toggle {
+  padding: var(--kiro-space-3);
+  border-bottom: 1px solid var(--kiro-border);
+  background: var(--vscode-sideBar-background);
+  overflow: hidden; /* Prevent all scrolling */
+}
+
+/* Constellation Button Specific Styles */
+.constellation-btn {
+  width: 100%;
+  justify-content: flex-start;
+  text-align: left;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.constellation-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.constellation-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.constellation-btn.btn-secondary {
+  border-color: var(--kiro-border);
+}
+
+/* Mode Help Icon Styles */
+.mode-help-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--kiro-radius-1);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  opacity: 0.7;
+}
+
+.mode-help-icon:hover {
+  opacity: 1;
+  background: var(--surface-overlay-04);
+}
+
+.mode-help-icon:focus {
+  outline: 2px solid var(--vscode-focusBorder);
+  outline-offset: 2px;
+  opacity: 1;
+}
+
+/* Index Status Section Styles */
+.index-status-section {
+  padding: var(--kiro-space-3);
+  background: var(--vscode-sideBar-background);
+  border-top: 1px solid var(--kiro-border);
+}
+
+.index-status-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--kiro-space-3);
+}
+
+.index-status-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--vscode-foreground);
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.index-status-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--kiro-radius-1);
+  background: transparent;
+}
+
+.index-status-indicator.indexed {
+  background: var(--surface-tint-success);
+}
+
+.index-status-indicator.not-indexed {
+  background: var(--vscode-inputValidation-warningBackground, color-mix(in srgb, var(--kiro-warning) 15%, transparent));
+}
+
+.index-status-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--kiro-space-3) var(--kiro-space-2);
+  margin-bottom: var(--kiro-space-3);
+}
+
+.index-stat {
+  display: flex;
+  flex-direction: column;
+  gap: var(--kiro-space-1);
+}
+
+.index-stat-label {
+  font-size: 11px;
+  color: var(--vscode-descriptionForeground);
+  font-weight: 500;
+}
+
+.index-stat-value {
+  font-size: 14px;
+  color: var(--vscode-foreground);
+  font-weight: 600;
+}
+
+.index-status-loading,
+.index-status-error {
+  display: flex;
+  align-items: center;
+  gap: var(--kiro-space-2);
+  padding: var(--kiro-space-2) 0;
+  font-size: 12px;
+  color: var(--vscode-descriptionForeground);
+}
+
+.index-status-error {
+  color: var(--vscode-errorForeground);
+}
+
+.index-status-message {
+  display: flex;
+  align-items: center;
+  gap: var(--kiro-space-2);
+  padding: var(--kiro-space-2);
+  background: var(--surface-tint-brand);
+  border-radius: var(--kiro-radius-1);
+  font-size: 11px;
+  color: var(--accent-purple-soft-text);
+}
+
+.index-status-spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
