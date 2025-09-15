@@ -737,25 +737,6 @@ body {
   cursor: not-allowed;
 }
 
-.mode-toggle-spinner {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 16px;
-  height: 16px;
-}
-
-.spinner {
-  display: inline-block;
-  animation: spin 1s linear infinite;
-  font-size: 12px;
-  color: var(--vscode-progressBar-background);
-}
-
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
 
 .mode-toggle-status {
   display: flex;
@@ -819,96 +800,6 @@ body {
   background: var(--vscode-button-hoverBackground);
 }
 
-/* Modal Dialog Styles */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.modal-dialog {
-  background: var(--vscode-editorWidget-background);
-  border: 1px solid var(--vscode-widget-border);
-  border-radius: 6px;
-  min-width: 320px;
-  max-width: 480px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-}
-
-.modal-header {
-  padding: 16px 16px 0 16px;
-}
-
-.modal-title {
-  margin: 0;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--vscode-foreground);
-}
-
-.modal-body {
-  padding: 12px 16px;
-}
-
-.modal-message {
-  margin: 0;
-  font-size: 12px;
-  line-height: 1.4;
-  color: var(--vscode-descriptionForeground);
-}
-
-.modal-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  padding: 0 16px 16px 16px;
-}
-
-.modal-button {
-  padding: 6px 12px;
-  font-size: 12px;
-  border-radius: 4px;
-  cursor: pointer;
-  border: 1px solid transparent;
-}
-
-.modal-button-secondary {
-  background: var(--vscode-button-secondaryBackground);
-  color: var(--vscode-button-secondaryForeground);
-  border-color: var(--vscode-button-border);
-}
-
-.modal-button-secondary:hover:not(:disabled) {
-  background: var(--vscode-button-secondaryHoverBackground);
-}
-
-.modal-button-primary {
-  background: var(--vscode-button-background);
-  color: var(--vscode-button-foreground);
-  border-color: var(--vscode-button-border);
-}
-
-.modal-button-primary:hover:not(:disabled) {
-  background: var(--vscode-button-hoverBackground);
-}
-
-.modal-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-/* Focus styles for modal */
-.modal-button:focus {
-  outline: 2px solid var(--vscode-focusBorder);
-  outline-offset: 2px;
-}
 
 .mode-toggle-dropdown:focus {
   outline: 2px solid var(--vscode-focusBorder);
@@ -1664,4 +1555,9 @@ body {
 
 .index-status-spinner {
   animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
