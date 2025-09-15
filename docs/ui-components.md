@@ -14,22 +14,29 @@ Kiro Constellation uses a modern Preact-based webview UI with Vite build system.
 - **Dependencies**: All view components and services
 
 #### `GraphDashboard.tsx`
-- **Purpose**: Main graph visualization container
-- **Responsibilities**: Graph data management, focus mode integration, impact analysis
+- **Purpose**: Enhanced graph visualization container with metrics and zoom controls
+- **Responsibilities**: Graph data management, focus mode integration, impact analysis, UI orchestration
 - **Key Features**:
   - Graph data loading and transformation
-  - Focus mode state management
-  - Impact analysis integration
+  - Focus mode state management with breadcrumb integration
+  - Impact analysis integration and highlighting
+  - Git metrics integration and display
+  - Mini-map panel integration for viewport navigation
+  - Zoom control stack for graph interaction
+  - File info panel coordination and state management
   - Performance monitoring and optimization
 
 #### `GraphCanvas.tsx`
-- **Purpose**: Cytoscape.js integration and graph rendering
-- **Responsibilities**: Graph visualization, user interactions, layout management
+- **Purpose**: Enhanced Cytoscape.js integration with viewport and zoom management
+- **Responsibilities**: Graph visualization, user interactions, layout management, viewport tracking
 - **Key Features**:
-  - Cytoscape.js lifecycle management
-  - Node/edge styling and interactions
-  - Performance optimizations for large graphs
-  - Event handling (click, double-click, hover)
+  - Cytoscape.js lifecycle management with proper cleanup
+  - Advanced node/edge styling and interactions
+  - Viewport change handling and bounds calculation
+  - Zoom functionality with programmatic control
+  - Delayed single-click handling to prevent conflicts with double-click
+  - Performance optimizations for large graphs (1000+ nodes)
+  - Event handling (click, double-click, hover, viewport changes)
 
 #### `GraphToolbar.tsx`
 - **Purpose**: Graph control interface
@@ -66,22 +73,88 @@ Kiro Constellation uses a modern Preact-based webview UI with Vite build system.
   - Completion status
 
 #### `Button.tsx`
-- **Purpose**: Reusable button component
-- **Responsibilities**: Consistent styling, accessibility, interaction states
+- **Purpose**: Reusable button component with enhanced event handling
+- **Responsibilities**: Consistent styling, accessibility, interaction states, event delegation
 - **Key Features**:
   - Multiple style variants (primary, secondary, etc.)
   - Loading and disabled states
-  - Accessibility attributes
+  - Enhanced event handling with proper delegation
+  - Accessibility attributes and keyboard navigation
+
+#### `FileInfoPanel.tsx`
+- **Purpose**: File details and metrics display panel
+- **Responsibilities**: File information display, Git metrics integration, dependency visualization
+- **Key Features**:
+  - File path and metadata display
+  - Git metrics integration (commits, churn, authors)
+  - Dependency degree visualization (in/out connections)
+  - Relative time formatting for last modified dates
+  - Loading states and error handling
+
+### Atomic Design Components
+
+#### Molecules (`webview-ui/src/components/molecules/`)
+
+##### `ZoomControlStack.tsx`
+- **Purpose**: Grouped zoom controls for graph interaction
+- **Responsibilities**: Zoom in/out/fit functionality with consistent UI
+- **Key Features**:
+  - Vertical stack layout with accessibility grouping
+  - Customizable button sizing and disabled states
+  - ARIA labels and keyboard navigation support
+
+##### `MiniMapPanel.tsx`
+- **Purpose**: Mini-map visualization with viewport indicator
+- **Responsibilities**: Graph overview display and viewport tracking
+- **Key Features**:
+  - Viewport rectangle calculation and positioning
+  - Responsive scaling based on graph bounds
+  - Visual feedback for current view area
+  - Graceful handling of missing bounds data
+
+##### `MetricsInline.tsx`
+- **Purpose**: Horizontal display of multiple metrics with separators
+- **Responsibilities**: Metric visualization with consistent formatting
+- **Key Features**:
+  - Automatic separator insertion between items
+  - Support for color-coded metric variants (purple, green, neutral)
+  - Responsive layout adaptation
+
+##### `DataStatusCard.tsx`
+- **Purpose**: Status display for data loading, errors, and empty states
+- **Responsibilities**: User feedback for data operations
+- **Key Features**:
+  - Visual status indicators with appropriate icons
+  - Error state with retry functionality
+  - Loading animations and progress feedback
+
+#### Atoms (`webview-ui/src/components/atoms/`)
+
+##### `ButtonIcon.tsx`
+- **Purpose**: Icon-based button with enhanced size handling
+- **Responsibilities**: Consistent icon button interactions
+- **Key Features**:
+  - Customizable sizing with proper scaling
+  - Accessibility attributes and ARIA labels
+  - Multiple visual variants and states
+
+##### `MetricBullet.tsx`
+- **Purpose**: Small metric display with color-coded variants
+- **Responsibilities**: Compact metric visualization
+- **Key Features**:
+  - Color-coded variants (purple, green, neutral)
+  - Consistent typography and spacing
+  - Semantic meaning through color coding
 
 ### View Components
 
 #### `SidePanelView.tsx`
-- **Purpose**: Main side panel interface
-- **Responsibilities**: Layout management, component orchestration
+- **Purpose**: Main side panel interface with enhanced component integration
+- **Responsibilities**: Layout management, component orchestration, state coordination
 - **Key Features**:
-  - Responsive layout
-  - Component integration
-  - State coordination
+  - Responsive layout with atomic design components
+  - Enhanced component integration patterns
+  - Improved state coordination between molecules and organisms
 
 ## Service Layer Architecture
 
@@ -98,6 +171,91 @@ Kiro Constellation uses a modern Preact-based webview UI with Vite build system.
 #### `focus-mode.service.ts`
 - **Purpose**: Focus mode logic and algorithms
 - **Responsibilities**: BFS traversal, adjacency management, performance optimization
+
+#### `file-type.service.ts`
+- **Purpose**: File type detection and icon mapping
+- **Responsibilities**: File extension analysis, icon assignment, type categorization
+
+#### `graph-styles.service.ts`
+- **Purpose**: Cytoscape.js styling and layout configuration
+- **Responsibilities**: Node/edge styling, layout algorithms, theme integration
+
+#### `extension-config.service.ts`
+- **Purpose**: Extension configuration access and management
+- **Responsibilities**: Settings retrieval, configuration validation, defaults management
+
+## Integration Patterns
+
+### Git Metrics Integration
+
+The UI components integrate with the Git metrics service to provide enhanced file information:
+
+```typescript
+// FileInfoPanel integration example
+interface FileInfoPanelProps {
+  nodeId: string
+  node: { id: string; label: string; path: string } | null
+  inDegree: number
+  outDegree: number
+  metrics?: FileGitMetrics90d    // Git metrics integration
+  metricsReady?: boolean         // Loading state management
+  onOpenFile: () => void
+  onClose: () => void
+}
+```
+
+**Key Integration Points:**
+- **Metrics Display**: File commit count, churn, and author information
+- **Relative Time Formatting**: Human-readable last modified timestamps
+- **Loading States**: Graceful handling of metrics loading and errors
+- **Visual Indicators**: Color-coded metrics based on activity levels
+
+### Viewport and Zoom Integration
+
+Enhanced graph interaction through coordinated viewport and zoom management:
+
+```typescript
+// GraphCanvas viewport integration
+interface ViewportBounds {
+  x1: number; y1: number; x2: number; y2: number
+  w: number; h: number
+}
+
+// MiniMapPanel viewport display
+interface MiniMapPanelProps {
+  bounds?: ViewportBounds | null     // Graph bounds
+  viewport?: ViewportBounds | null   // Current viewport
+}
+```
+
+**Coordination Patterns:**
+- **Viewport Tracking**: Real-time viewport bounds calculation and updates
+- **Mini-map Synchronization**: Viewport rectangle display in mini-map
+- **Zoom Control Integration**: Programmatic zoom with UI feedback
+- **Performance Optimization**: Efficient viewport change handling
+
+### Atomic Design Composition
+
+Components follow atomic design principles for maintainable architecture:
+
+```typescript
+// Molecule composition example
+export function ZoomControlStack({ onZoomIn, onZoomOut, onFit }: ZoomProps) {
+  return (
+    <div role="group" aria-label="Zoom controls">
+      <ButtonIcon iconName="plus" ariaLabel="Zoom in" onClick={onZoomIn} />
+      <ButtonIcon iconName="minus" ariaLabel="Zoom out" onClick={onZoomOut} />
+      <ButtonIcon iconName="fullscreen" ariaLabel="Fit to screen" onClick={onFit} />
+    </div>
+  )
+}
+```
+
+**Composition Benefits:**
+- **Reusability**: Atoms can be composed into different molecules
+- **Consistency**: Shared styling and behavior patterns
+- **Accessibility**: Built-in accessibility at the atomic level
+- **Maintainability**: Clear component hierarchy and responsibilities
 - **Key Features**:
   - Graph adjacency building
   - Visibility computation with depth limiting
