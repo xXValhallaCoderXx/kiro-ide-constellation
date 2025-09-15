@@ -389,10 +389,16 @@ body {
 
 /* Special positioning for mode help tooltip to avoid cutoff */
 .mode-help-icon .tooltip-content {
-  left: -120px; /* Position to show fully within sidebar */
+  left: -140px; /* Position to fit within sidebar width */
   right: auto;
   top: calc(100% + 6px);
   transform: none;
+  white-space: normal; /* Allow text wrapping if needed */
+  max-width: 160px; /* Constrain width to fit in sidebar */
+  width: 160px; /* Fixed width for consistent sizing */
+  font-size: 11px; /* Smaller text */
+  line-height: 1.3; /* Tighter line spacing */
+  padding: 4px 6px; /* Smaller padding */
 }
 
 .divider-line { background: rgba(255,255,255,0.08); }
@@ -689,15 +695,20 @@ body {
 .mode-toggle-header {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
   margin-bottom: var(--kiro-space-2);
+}
+
+.mode-label-with-help {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .mode-toggle-label {
   font-size: 12px;
   font-weight: 500;
   color: var(--vscode-foreground);
-  flex: 1;
 }
 
 .mode-toggle-controls {

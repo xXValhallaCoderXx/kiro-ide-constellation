@@ -153,17 +153,19 @@ export function AgentModeToggle({
   return (
     <div className="onboarding-mode-toggle">
       <div className="mode-toggle-header">
-        <label className="mode-toggle-label">Modes</label>
-        <Tooltip content={MODE_DESCRIPTIONS[selectedMode]}>
-          <div 
-            className="mode-help-icon"
-            tabIndex={0}
-            role="button"
-            aria-label={`Help for ${selectedMode} mode`}
-          >
-            <Icon name="info" size={16} colorToken="--text-secondary" />
-          </div>
-        </Tooltip>
+        <div className="mode-label-with-help">
+          <label className="mode-toggle-label">Modes</label>
+          <Tooltip content={MODE_DESCRIPTIONS[selectedMode]} placement="bottom">
+            <div 
+              className="mode-help-icon"
+              tabIndex={0}
+              role="button"
+              aria-label={`Help for ${selectedMode} mode`}
+            >
+              <Icon name="info" size={16} colorToken="--text-secondary" />
+            </div>
+          </Tooltip>
+        </div>
         {(isLoading || isProcessing) && (
           <div className="mode-toggle-spinner">
             <span className="spinner">⟳</span>
