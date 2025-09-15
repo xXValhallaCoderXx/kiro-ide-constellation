@@ -1,40 +1,44 @@
-# Kiro Constellation
+# Kiro Constellation — Judge Guide
 
-A bare-bones Kiro/VS Code extension that installs a tiny local MCP (Model Context Protocol) server and auto-registers it in Kiro. It includes tools and a side panel UI (Preact webview):
+A Kiro Code extension that brings an AI-assisted code graph to your IDE: interactive dependency visualization, impact analysis, and a guided onboarding tour. This is a short, judge-friendly guide to install, run, and see the highlights.
 
-- ping → responds with "pong"
-- constellation_impactAnalysis → analyzes the dependency impact of changing a source file
-- constellation_onboarding.finalize → finalizes onboarding walkthrough with cleanup
+Install the extension (VSIX)
+- In Kiro Code: Extensions panel → "…" menu → Install from VSIX…
+- Select the packaged file: kiro-constellation-<version>.vsix
+- Reload when prompted
 
-On activation the extension:
-1. Verifies Node.js 18+.
-2. Upserts ~/.kiro/settings/mcp.json with an entry named `constellation-mcp` (or a namespaced dev ID).
-3. Smoke-tests the server (fast `--selftest`).
-4. Runs a background dependency scan with dependency-cruiser and writes results to ./.constellation/data/codebase-dependencies.json.
-5. Shows a toast with quick actions to reload or open the MCP config.
+Open the Constellation panels
+- Side panel: click the Constellation icon in the Activity Bar
+- Graph view: Command Palette → "Constellation: Open Graph View" (or use the side panel button)
 
-Quick start (with side panel UI)
+Key features (1–2 minutes)
+- Dependency Graph (Preact webview) - Graph was a side idea from using dep-cruiser to provide context to the Agent
+  - Interactive graph of your workspace with zoom, mini-map, and file info
+  - Focus Mode: double‑click a node to spotlight its neighborhood; breadcrumb trail to navigate
+  - Git activity overlays (recent churn, authorship) when available
+- Guided Onboarding (Agent Mode)
+  - Ask the AI to create a short tour for a topic; it opens files and highlights key ranges step‑by‑step
+  - On the final step, the graph opens pre‑focused on the files you just visited- Guided Onboarding (Agent Mode)
+- Open Source (Agent Mode)
+  - Just a repo you want to contribute to
+  - Select bootstrap MCP tool and run to setup project
+  - Provide the URL of the issue you want to fix
+  - The AI will create a PRD for you to provide the spec to Kiro to develop
 
+- Impact Analysis (Broken)
+  - Command: the system can compute all files impacted by a change to a given file and focus the graph on them
+  - Paths are normalized to workspace ids so the graph always shows the right nodes
+
+
+Quick start (optional, if you want to run from source)
 ```bash
 npm install
 npm run build
-# Press F5 → choose "Run Extension (Dev MCP)" for namespaced dev ID
+# Press F5 in VS Code to launch the Extension Development Host
 ```
 
-Verify in Kiro and open the side panel
-- Open MCP panel → `constellation-mcp` (or `constellation-mcp-dev`) should be running
-- Try: `#[constellation-mcp] ping` → pong
-- Optionally: call `#[constellation-mcp] constellation_impactAnalysis { "filePath": "src/index.ts" }` to visualize impact in the Graph view.
-- Click the Constellation icon in the Activity Bar to open the side panel (webview).
-- Dependency scan output: ./.constellation/data/codebase-dependencies.json (re-run via "Constellation: Scan Dependencies").
-
-Docs
-- docs/README.md — overview and layout (including UI layer)
-- docs/usage.md — build/run/verify and open the side panel UI
-- docs/configuration.md — user vs workspace config, settings
-- docs/development.md — dev loop, watchers (tsc + Vite), debug profiles
-- docs/events.md — event/messaging patterns (webview messaging + HTTP bridge)
-- docs/troubleshooting.md — common issues (including blank side panel)
+Note
+- There may be some bugs swapping between modes as i did best effort to retain old user steering docs etc, and if you cancel the dialogue that pops up 
 
 License
-- MIT (or your preferred license)
+MIT

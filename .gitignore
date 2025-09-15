@@ -2,7 +2,6 @@ node_modules/
 out/
 .constellation
 .ai-content-media
-*.vsix
 .vscode-test/
 docs/_reports/
 .kiro/steering/_reports/

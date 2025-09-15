@@ -21,7 +21,7 @@ function parseArgs() {
   const args = process.argv.slice(2);
   return {
     workspace: args.includes('--workspace'),
-    serverId: process.env.CONSTELLATION_SERVER_ID || process.env.SERVER_ID || 'constellation-mcp',
+    serverId: process.env.CONSTELLATION_SERVER_ID || process.env.SERVER_ID || 'constellation-mcp-dev',
     mode: args.includes('--delete') ? 'delete' : 'backup',
   };
 }
