@@ -771,9 +771,19 @@ export async function startHttpBridge(context: vscode.ExtensionContext, walkthro
           const readme = fs.existsSync(readmePath) ? fs.readFileSync(readmePath, 'utf8').slice(0, 65536) : null;
           const tsconfig = fs.existsSync(tsconfigPath) ? JSON.parse(fs.readFileSync(tsconfigPath, 'utf8')) : null;
 
+          // Steering doc existence detection
+          const steeringDir = path.join(workspaceRoot, '.kiro', 'steering');
+          const exists = (p: string) => fs.existsSync(path.join(steeringDir, p));
+          const steering = {
+            structure: exists('project-structure.md'),
+            tech: exists('project-tech.md'),
+            product: exists('project-product.md'),
+            standings: exists('project-standings.md')
+          };
+
           res.statusCode = 200;
           res.setHeader('Content-Type', 'application/json');
-          res.end(JSON.stringify({ status: 'ok', analysis, pkg, readme, tsconfig }));
+          res.end(JSON.stringify({ status: 'ok', analysis, pkg, readme, tsconfig, steering }));
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Collect context failed';
           res.statusCode = 500; res.setHeader('Content-Type', 'application/json'); res.end(JSON.stringify({ error: message }));

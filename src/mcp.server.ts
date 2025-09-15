@@ -1057,25 +1057,44 @@ server.registerTool(
       }).catch(()=>{});
 
       // Collect steering context
-      const ctxResp = await fetch(`http://127.0.0.1:${port}/oss/collect-steering-context`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (!ctxResp.ok) {
-        const t = await ctxResp.text();
-        return { content: [{ type: "text", text: JSON.stringify({ error: `collect-steering-context failed: ${t}` }) }] };
-      }
-      const ctx = await ctxResp.json() as { analysis?: unknown; pkg?: unknown; readme?: string; tsconfig?: unknown };
+      // Fetch with one retry to avoid the initial 'fetch failed' the first time the bridge starts
+      const doCollect = async () => {
+        const resp = await fetch(`http://127.0.0.1:${port}/oss/collect-steering-context`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (!resp.ok) {
+          throw new Error(await resp.text());
+        }
+        return resp;
+      };
 
-      // Package instructions so the agent can reply in a single message with both docs and issueUrl
-const payload = {
-instructions: `Author four thorough steering docs tailored to a large monorepo. Use the analysis, package.json, README excerpt, and tsconfig to produce:
+      let ctxResp: Response;
+      try {
+        ctxResp = await doCollect();
+      } catch (e) {
+        // small backoff and retry once
+        await new Promise(r => setTimeout(r, 600));
+        ctxResp = await doCollect();
+      }
+
+      const ctx = await ctxResp.json() as { analysis?: unknown; pkg?: unknown; readme?: string; tsconfig?: unknown; steering?: { structure?: boolean; tech?: boolean; product?: boolean; standings?: boolean } };
+
+      // Decide whether to skip steering doc generation if already present
+      const haveAllSteering = !!(ctx?.steering?.structure && ctx?.steering?.tech && ctx?.steering?.product && ctx?.steering?.standings);
+
+      const instructions = haveAllSteering
+        ? `Steering docs already exist in .kiro/steering (project-structure.md, project-tech.md, project-product.md, project-standings.md). Skip doc generation. Ask the user for the GitHub issue URL to work on, then call 'constellation_opensource.processIssue' with { issueUrl }.`
+        : `Author four thorough steering docs tailored to a large monorepo. Use the analysis, package.json, README excerpt, and tsconfig to produce:
 - project-structure.md: Outline monorepo layout (apps/*, packages/*), key top-level dirs, notable subpackages, and their roles. Include a table of top modules from analysis.keyDirs with counts, and call out any frameworks (Next.js, Vite) where they live.
 - project-tech.md: Detailed tech stack including package manager, build orchestration (Turbo), bundlers, frameworks, styling (Tailwind), testing (Vitest/Puppeteer), linting/formatting. Describe how to run builds per workspace and how CI might be structured.
 - project-product.md: Who the project serves, core value prop, main artifacts (docs site, CLI, registry), primary workflows (adding a component, building docs), and how contributions translate into product outcomes.
 - project-standings.md: Concrete coding standards, PR workflow, commit/message/changesets conventions, accessibility requirements, test expectations, and performance guidelines specific to this repo.
 Each doc should be specific (no generic filler), reference directories found in analysis.keyDirs and monorepo fields if present. Keep clarity high for a new contributor.
-Then call 'constellation_opensource.writeRichSteering' with the 4 docs. After writing, ask the user for the GitHub issue URL to work on. When they provide it, call 'constellation_opensource.processIssue' with { issueUrl }.`,
+Then call 'constellation_opensource.writeRichSteering' with the 4 docs. After writing, ask the user for the GitHub issue URL to work on. When they provide it, call 'constellation_opensource.processIssue' with { issueUrl }.`;
+
+      const payload = {
+        instructions,
         analysis: ctx.analysis,
         packageJson: ctx.pkg,
         readme: ctx.readme,
