@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import { renderHtml } from "./services/webview.service.js";
+import { AgentModeService } from "./services/agent-mode.service.js";
 
 export class SidePanelViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = "constellation.sidePanel";
@@ -9,7 +10,8 @@ export class SidePanelViewProvider implements vscode.WebviewViewProvider {
     private readonly extensionUri: vscode.Uri,
     private readonly extensionContext?: vscode.ExtensionContext,
     private readonly onboardingModeService?: any,
-    private readonly onboardingWalkthroughService?: any
+    private readonly onboardingWalkthroughService?: any,
+    private readonly agentModeService?: any
   ) {}
 
   public postMessage(message: any): void {
@@ -47,7 +49,8 @@ export class SidePanelViewProvider implements vscode.WebviewViewProvider {
         await runScan(this.getExtensionContext());
       },
       onboardingModeService: this.onboardingModeService,
-      onboardingWalkthroughService: this.onboardingWalkthroughService
+      onboardingWalkthroughService: this.onboardingWalkthroughService,
+      agentModeService: this.agentModeService
     });
     webview.options = {
       enableScripts: true,

@@ -8,8 +8,9 @@ import { getWorkspaceRoot } from './workspace.service.js';
 export class SecurityService {
   private static readonly ALLOWED_CONSTELLATION_SUBDIRS = [
     'onboarding',
-    'steering/.backups',
-    'data'
+    'steering/backup',
+    'data',
+    'oss'
   ];
 
   private static readonly MAX_PATH_LENGTH = 260; // Windows MAX_PATH limit

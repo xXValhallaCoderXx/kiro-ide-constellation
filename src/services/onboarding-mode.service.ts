@@ -2,8 +2,9 @@ import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
 import { getWorkspaceRoot } from "./workspace.service.js";
+import { agentModeService, type AgentMode } from "./agent-mode.service.js";
 
-export type OnboardingMode = 'Default' | 'Onboarding';
+export type OnboardingMode = 'Default' | 'Onboarding'; // Deprecated in favor of AgentMode, kept for compatibility
 
 interface BackupMetadata {
   timestamp: string;
@@ -129,22 +130,9 @@ export class OnboardingModeService {
    * Get the current onboarding mode
    */
   public async getCurrentMode(): Promise<OnboardingMode> {
-    const workspaceRoot = getWorkspaceRoot();
-    if (!workspaceRoot) {
-      return this.currentMode;
-    }
-
-    const steeringDir = path.join(workspaceRoot, this.STEERING_DIR);
-    const onboardingPersonaPath = path.join(steeringDir, this.ONBOARDING_PERSONA_FILE);
-
-    try {
-      // Check if onboarding persona file exists to determine mode
-      await fs.promises.access(onboardingPersonaPath, fs.constants.F_OK);
-      this.currentMode = 'Onboarding';
-    } catch {
-      this.currentMode = 'Default';
-    }
-
+    // Delegate to AgentModeService for unified logic
+    const currentAgentMode: AgentMode = await agentModeService.getCurrentMode();
+    this.currentMode = currentAgentMode === 'Onboarding' ? 'Onboarding' : 'Default';
     return this.currentMode;
   }
 
@@ -152,69 +140,23 @@ export class OnboardingModeService {
    * Switch to Onboarding mode by backing up steering docs and writing persona file
    */
   public async switchToOnboarding(): Promise<void> {
-    const workspaceRoot = getWorkspaceRoot();
-    if (!workspaceRoot) {
-      throw new Error('No workspace folder open. Cannot switch to Onboarding mode.');
-    }
-
-    try {
-      // Create backup of current steering documents
-      const backupPath = await this.backupSteeringDocs();
-
-      // Write the onboarding persona file
-      await this.writeOnboardingPersona();
-
-      this.currentMode = 'Onboarding';
-
-      vscode.window.showInformationMessage(
-        `Switched to Onboarding mode. Steering documents backed up to: ${path.relative(workspaceRoot, backupPath)}`
-      );
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      vscode.window.showErrorMessage(`Failed to switch to Onboarding mode: ${errorMessage}`);
-      throw error;
-    }
+    await agentModeService.switchToOnboarding();
+    this.currentMode = 'Onboarding';
   }
 
   /**
    * Switch to Default mode by restoring the most recent backup and cleaning up backups
    */
   public async switchToDefault(): Promise<void> {
-    const workspaceRoot = getWorkspaceRoot();
-    if (!workspaceRoot) {
-      throw new Error('No workspace folder open. Cannot switch to Default mode.');
-    }
-
-    try {
-      // Restore steering documents from the most recent backup
-      await this.restoreSteeringDocs();
-
-      // Best-effort cleanup of all backups
-      const backupBaseDir = path.join(workspaceRoot, this.BACKUP_BASE_DIR);
-      try {
-        await fs.promises.rm(backupBaseDir, { recursive: true, force: true });
-      } catch {
-        // non-fatal
-      }
-
-      this.currentMode = 'Default';
-      vscode.window.showInformationMessage('Switched to Default mode. Steering documents restored from backup.');
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      // Fallback: ensure steering directory exists and still mark as Default
-      try {
-        await fs.promises.mkdir(path.join(workspaceRoot, this.STEERING_DIR), { recursive: true });
-      } catch { /* ignore */ }
-      this.currentMode = 'Default';
-      vscode.window.showWarningMessage(`Switched to Default mode with limited restore: ${errorMessage}`);
-    }
+    await agentModeService.switchToDefault();
+    this.currentMode = 'Default';
   }
 
   /**
    * Create a timestamped backup of the entire .kiro/steering directory
    * Returns the backup directory path
    */
-  public async backupSteeringDocs(): Promise<string> {
+  public async backupSteeringDocs(): Promise<string> { // Deprecated in favor of AgentModeService
     const workspaceRoot = getWorkspaceRoot();
     if (!workspaceRoot) {
       throw new Error('No workspace folder open. Cannot create backup.');
@@ -269,7 +211,7 @@ export class OnboardingModeService {
   /**
    * Restore steering documents from the most recent backup
    */
-  public async restoreSteeringDocs(): Promise<void> {
+  public async restoreSteeringDocs(): Promise<void> { // Deprecated in favor of AgentModeService
     const workspaceRoot = getWorkspaceRoot();
     if (!workspaceRoot) {
       throw new Error('No workspace folder open. Cannot restore backup.');

@@ -987,95 +987,180 @@ server.registerTool(
 
 
 // constellation_onboarding.plan -> generates structured onboarding plans with graph context integration
+
+
+
+
+
+// constellation_opensource.writeRichSteering (persist AI-authored docs)
 server.registerTool(
-  "constellation_onboarding.plan",
+  "constellation_opensource.writeRichSteering",
   {
-    title: "Generate Onboarding Plan",
-    description: "Generates a structured walkthrough plan for onboarding users to specific codebase topics",
+    title: "OSS Write Rich Steering",
+    description: "Writes the agent's generated steering docs into .kiro/steering",
     inputSchema: {
-      request: z.string().describe("The user's request describing what they want to learn about the codebase"),
-      seedFile: z.string().optional().describe("Optional specific file to focus on")
+      structure: z.string().optional(),
+      tech: z.string().optional(),
+      product: z.string().optional(),
+      standings: z.string().optional(),
     },
   },
-  async ({ request, seedFile }) => {
-    // Initialize empty context as fallback
-    // Requirements: 7.1, 7.2
-    let context: GraphContext = {
-      seedId: null,
-      relatedFiles: [],
-      depth: 1,
-      limit: 30
-    };
-
+  async ({ structure, tech, product, standings }) => {
     try {
-      // Read workspace root from environment variable injected by MCP config service
-      // Requirement: 3.1
-      const workspaceRoot = graphContextService.getWorkspaceRoot();
-      
-      if (!workspaceRoot) {
-        console.warn('MCP server: No workspace root available for graph context');
-        // Continue with empty context - Requirement: 7.1
-      } else {
-        // Attempt to load graph data with automatic scan triggering
-        // Requirements: 2.1, 2.2
-        try {
-          await loadGraphWithScanFallback();
-          
-          // If graph is loaded, compute context
-          if (graphContextService.isLoaded()) {
-            context = await computeGraphContext(request, seedFile);
-          }
-        } catch (error) {
-          console.warn('MCP server: Graph context computation failed:', error);
-          // Continue with empty context - graceful fallback per Requirements: 7.1, 7.2
-        }
+      const port = process.env.CONSTELLATION_BRIDGE_PORT;
+      const token = process.env.CONSTELLATION_BRIDGE_TOKEN;
+      if (!port || !token) {
+        return { content: [{ type: "text", text: JSON.stringify({ error: "Extension bridge not available" }) }] };
       }
-
-      // Generate plan structure based on the request and context
-      const plan = generateEnhancedPlan(request, context);
-
-      // Generate user-friendly summary
-      const userSummary = generatePlanSummary(request, plan, context);
-
-      // Enrich response format to include both plan and context fields
-      // Requirement: 6.1, 6.2
-      return {
-        content: [{
-          type: "text",
-          text: JSON.stringify({
-            plan,
-            context,
-            userSummary
-          })
-        }]
-      };
-
+      const resp = await fetch(`http://127.0.0.1:${port}/oss/write-steering`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ structure, tech, product, standings })
+      });
+      const text = await resp.text();
+      return { content: [{ type: "text", text }] };
     } catch (error) {
-      console.error('MCP server: Plan generation failed:', error);
-      
-      let errorMessage = "Failed to generate onboarding plan";
-      if (error instanceof Error) {
-        errorMessage = error.message;
+      return { content: [{ type: "text", text: JSON.stringify({ error: (error as Error).message || 'writeRichSteering failed' }) }] };
+    }
+  }
+);
+
+// constellation_opensource.bootstrap -> one call to prep graph, analysis, and return steering context and prompt for issue URL
+server.registerTool(
+  "constellation_opensource.bootstrap",
+  {
+    title: "OSS Bootstrap",
+    description: "Ensures dependency graph and analysis exist, then returns context for steering docs plus prompt for issue URL",
+    inputSchema: {},
+  },
+  async () => {
+    try {
+      // Ensure dependency graph exists (runs dep scan if missing)
+      try {
+        await loadGraphWithScanFallback();
+      } catch (e) {
+        // Even if scan fallback fails, continue to try HTTP scan directly
+        await triggerScanViaHttpBridge();
       }
-      
-      // Handle all error scenarios gracefully with empty relatedFiles fallback
-      // Requirements: 7.1, 7.2
-      return {
-        content: [{
-          type: "text",
-          text: JSON.stringify({
-            error: errorMessage,
-            plan: null,
-            context: {
-              seedId: null,
-              relatedFiles: [],
-              depth: 1,
-              limit: 30
-            },
-            userSummary: "Sorry, I couldn't generate a plan for your request. Please try again with a different topic."
-          })
-        }]
+
+      // Run OSS analysis to produce project-analysis.json
+      const port = process.env.CONSTELLATION_BRIDGE_PORT;
+      const token = process.env.CONSTELLATION_BRIDGE_TOKEN;
+      if (!port || !token) {
+        return { content: [{ type: "text", text: JSON.stringify({ error: "Extension bridge not available" }) }] };
+      }
+
+      // Kick analysis (best-effort)
+      await fetch(`http://127.0.0.1:${port}/oss/analyze`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` }
+      }).catch(()=>{});
+
+      // Collect steering context
+      // Fetch with one retry to avoid the initial 'fetch failed' the first time the bridge starts
+      const doCollect = async () => {
+        const resp = await fetch(`http://127.0.0.1:${port}/oss/collect-steering-context`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (!resp.ok) {
+          throw new Error(await resp.text());
+        }
+        return resp;
       };
+
+      let ctxResp: Response;
+      try {
+        ctxResp = await doCollect();
+      } catch (e) {
+        // small backoff and retry once
+        await new Promise(r => setTimeout(r, 600));
+        ctxResp = await doCollect();
+      }
+
+      const ctx = await ctxResp.json() as { analysis?: unknown; pkg?: unknown; readme?: string; tsconfig?: unknown; steering?: { structure?: boolean; tech?: boolean; product?: boolean; standings?: boolean } };
+
+      // Decide whether to skip steering doc generation if already present
+      const haveAllSteering = !!(ctx?.steering?.structure && ctx?.steering?.tech && ctx?.steering?.product && ctx?.steering?.standings);
+
+      const instructions = haveAllSteering
+        ? `Steering docs already exist in .kiro/steering (project-structure.md, project-tech.md, project-product.md, project-standings.md). Skip doc generation. Ask the user for the GitHub issue URL to work on, then call 'constellation_opensource.processIssue' with { issueUrl }.`
+        : `Author four thorough steering docs tailored to a large monorepo. Use the analysis, package.json, README excerpt, and tsconfig to produce:
+- project-structure.md: Outline monorepo layout (apps/*, packages/*), key top-level dirs, notable subpackages, and their roles. Include a table of top modules from analysis.keyDirs with counts, and call out any frameworks (Next.js, Vite) where they live.
+- project-tech.md: Detailed tech stack including package manager, build orchestration (Turbo), bundlers, frameworks, styling (Tailwind), testing (Vitest/Puppeteer), linting/formatting. Describe how to run builds per workspace and how CI might be structured.
+- project-product.md: Who the project serves, core value prop, main artifacts (docs site, CLI, registry), primary workflows (adding a component, building docs), and how contributions translate into product outcomes.
+- project-standings.md: Concrete coding standards, PR workflow, commit/message/changesets conventions, accessibility requirements, test expectations, and performance guidelines specific to this repo.
+Each doc should be specific (no generic filler), reference directories found in analysis.keyDirs and monorepo fields if present. Keep clarity high for a new contributor.
+Then call 'constellation_opensource.writeRichSteering' with the 4 docs. After writing, ask the user for the GitHub issue URL to work on. When they provide it, call 'constellation_opensource.processIssue' with { issueUrl }.`;
+
+      const payload = {
+        instructions,
+        analysis: ctx.analysis,
+        packageJson: ctx.pkg,
+        readme: ctx.readme,
+        tsconfig: ctx.tsconfig
+      };
+
+      return { content: [{ type: "text", text: JSON.stringify(payload) }] };
+    } catch (error) {
+      return { content: [{ type: "text", text: JSON.stringify({ error: (error as Error).message || 'bootstrap failed' }) }] };
+    }
+  }
+);
+
+
+// constellation_opensource.processIssue -> only takes issueUrl, fetches issue and generates PRD
+server.registerTool(
+  "constellation_opensource.processIssue",
+  {
+    title: "OSS Process Issue",
+    description: "Fetches the GitHub issue and generates a PRD using existing analysis and graph",
+    inputSchema: {
+      issueUrl: z.string(),
+    },
+  },
+  async ({ issueUrl }) => {
+    try {
+      const port = process.env.CONSTELLATION_BRIDGE_PORT;
+      const token = process.env.CONSTELLATION_BRIDGE_TOKEN;
+      if (!port || !token) {
+        return { content: [{ type: "text", text: JSON.stringify({ error: "Extension bridge not available" }) }] };
+      }
+
+      // Fetch issue (saves to workspace)
+      const fetchIssueResp = await fetch(`http://127.0.0.1:${port}/oss/fetch-issue`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: issueUrl })
+      });
+      const fetchIssueText = await fetchIssueResp.text();
+      if (!fetchIssueResp.ok) {
+        return { content: [{ type: "text", text: JSON.stringify({ error: `fetch-issue failed: ${fetchIssueText}` }) }] };
+      }
+
+      // Parse owner/repo/number from the issue URL
+      const match = issueUrl.match(/https:\/\/github\.com\/(.+?)\/(.+?)\/issues\/(\d+)/i);
+      if (!match) {
+        return { content: [{ type: "text", text: JSON.stringify({ error: "Invalid GitHub issue URL format" }) }] };
+      }
+      const owner = match[1];
+      const repo = match[2];
+      const issueNumber = Number(match[3]);
+
+      // Generate PRD
+      const prdResp = await fetch(`http://127.0.0.1:${port}/oss/generate-prd`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ owner, repo, issueNumber })
+      });
+      const prdText = await prdResp.text();
+      if (!prdResp.ok) {
+        return { content: [{ type: "text", text: JSON.stringify({ error: `generate-prd failed: ${prdText}` }) }] };
+      }
+
+      return { content: [{ type: "text", text: prdText }] };
+    } catch (error) {
+      return { content: [{ type: "text", text: JSON.stringify({ error: (error as Error).message || 'processIssue failed' }) }] };
     }
   }
 );

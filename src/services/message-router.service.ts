@@ -9,6 +9,7 @@ export type WebviewContext = {
   triggerScan: () => Promise<void>;
   onboardingModeService?: any;
   onboardingWalkthroughService?: any;
+  agentModeService?: any;
 };
 
 export function configureGraphMessaging(webview: vscode.Webview, ctx: WebviewContext) {

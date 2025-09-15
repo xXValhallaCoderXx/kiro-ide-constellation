@@ -60,13 +60,24 @@ export type FinalizeCompletePayload = {
   }
 }
 
+// Agent-mode generic messages
+export type AgentModeInboundMessage =
+  | { type: 'agent-mode/change'; mode: 'Default' | 'Onboarding' | 'OpenSource' }
+  | { type: 'agent-mode/get' };
+
+export type AgentModeOutboundMessage =
+  | { type: 'agent-mode/current'; mode: 'Default' | 'Onboarding' | 'OpenSource' }
+  | { type: 'agent-mode/changed'; mode: 'Default' | 'Onboarding' | 'OpenSource' }
+  | { type: 'agent-mode/error'; message: string };
+
 export type InboundMessage =
   | { type: 'open-graph-view' }
   | { type: 'ping' }
   | GraphInboundMessage
   | OnboardingInboundMessage
+  | AgentModeInboundMessage
 
-export type OutboundMessage = GraphOutboundMessage | OnboardingOutboundMessage
+export type OutboundMessage = GraphOutboundMessage | OnboardingOutboundMessage | AgentModeOutboundMessage
 
 export function handleWebviewMessage(
   msg: unknown, 
@@ -79,6 +90,7 @@ export function handleWebviewMessage(
     triggerScan?: () => Promise<void>;
     onboardingModeService?: any;
     onboardingWalkthroughService?: any;
+    agentModeService?: any;
   }
 ) {
   if (!msg || typeof (msg as any).type !== 'string') {return;}
@@ -108,6 +120,14 @@ export function handleWebviewMessage(
       break;
     case 'onboarding/get-mode':
       void handleOnboardingGetMode(ctx);
+      break;
+    case 'agent-mode/change':
+      if ('mode' in m && typeof m.mode === 'string') {
+        void handleAgentModeChange(m.mode as 'Default' | 'Onboarding' | 'OpenSource', ctx as any);
+      }
+      break;
+    case 'agent-mode/get':
+      void handleAgentModeGet(ctx as any);
       break;
     case 'onboarding/get-status':
       void handleOnboardingGetStatus(ctx);
@@ -311,6 +331,47 @@ export function sendOnboardingWalkthroughError(
   message: string
 ) {
   postMessage({ type: 'onboarding/walkthrough-error', message });
+}
+
+async function handleAgentModeChange(
+  mode: 'Default' | 'Onboarding' | 'OpenSource',
+  ctx: {
+    postMessage?: (message: AgentModeOutboundMessage) => void;
+    agentModeService?: any;
+    log: (s: string) => void;
+  }
+) {
+  if (!ctx.postMessage || !ctx.agentModeService) {
+    ctx.log('Agent mode change failed: missing context');
+    return;
+  }
+  try {
+    await ctx.agentModeService.switchTo(mode);
+    ctx.postMessage({ type: 'agent-mode/changed', mode });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Failed to change agent mode';
+    ctx.log(`Agent mode change error: ${message}`);
+    ctx.postMessage({ type: 'agent-mode/error', message });
+  }
+}
+
+async function handleAgentModeGet(ctx: {
+  postMessage?: (message: AgentModeOutboundMessage) => void;
+  agentModeService?: any;
+  log: (s: string) => void;
+}) {
+  if (!ctx.postMessage || !ctx.agentModeService) {
+    ctx.log('Agent mode get failed: missing context');
+    return;
+  }
+  try {
+    const mode = await ctx.agentModeService.getCurrentMode();
+    ctx.postMessage({ type: 'agent-mode/current', mode });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Failed to get agent mode';
+    ctx.log(`Agent mode get error: ${message}`);
+    ctx.postMessage({ type: 'agent-mode/error', message });
+  }
 }
 
 export function sendOnboardingFinalizeComplete(

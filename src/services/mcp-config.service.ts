@@ -30,7 +30,11 @@ export async function upsertUserMcpConfig(nodeBin: string, serverJs: string, ser
       "constellation_onboarding.plan",
       "constellation_onboarding.commitPlan",
       "constellation_onboarding.nextStep",
-      "constellation_onboarding.finalize"
+      "constellation_onboarding.finalize",
+      // OSS tools (POC minimal flow)
+      "constellation_opensource.bootstrap",
+      "constellation_opensource.writeRichSteering",
+      "constellation_opensource.processIssue"
     ],
   };
 
@@ -76,7 +80,11 @@ export async function maybeWriteWorkspaceConfig(nodeBin: string, serverJs: strin
         "constellation_onboarding.plan",
         "constellation_onboarding.commitPlan",
         "constellation_onboarding.nextStep",
-        "constellation_onboarding.finalize"
+        "constellation_onboarding.finalize",
+        // OSS tools (POC minimal flow)
+        "constellation_opensource.bootstrap",
+        "constellation_opensource.writeRichSteering",
+        "constellation_opensource.processIssue"
       ],
     };
 
