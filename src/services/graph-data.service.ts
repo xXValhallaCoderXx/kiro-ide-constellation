@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
+import { builtinModules } from 'module';
 import { runScan } from './dependency-cruiser.service.js';
 import { getWorkspaceRoot } from './workspace.service.js';
 
@@ -112,12 +113,42 @@ export function transformDepCruise(depResult: DepCruiseResult, workspaceRoot: st
   const nodeSet = new Set<string>();
   const edgeMap = new Map<string, number>(); // Track edge counts for collision handling
 
+  // External filtering helpers
+  const CORE_SET = new Set<string>([
+    ...builtinModules.map(m => m.replace(/^node:/, '')),
+    ...builtinModules.map(m => `node:${m}`)
+  ]);
+  const isAbsolutePath = (p: string) => path.isAbsolute(p) || /^[A-Za-z]:[\\\/]/.test(p);
+  const isBareSpecifier = (p: string) => !p.includes('/') && !p.includes('\\') && !isAbsolutePath(p);
+  const isOutsideWorkspace = (abs: string) => {
+    try {
+      const rel = path.relative(workspaceRoot, abs).replace(/\\/g, '/');
+      return rel.startsWith('..');
+    } catch { return false; }
+  };
+  const isExternalModule = (resolvedPath: string): boolean => {
+    if (!resolvedPath) return true;
+    if (CORE_SET.has(resolvedPath)) return true;
+    if (resolvedPath.startsWith('node:')) return true;
+    if (isBareSpecifier(resolvedPath)) return true; // e.g. 'react'
+    if (isAbsolutePath(resolvedPath)) {
+      if (resolvedPath.includes(`${path.sep}node_modules${path.sep}`)) return true;
+      if (isOutsideWorkspace(resolvedPath)) return true;
+    }
+    return false;
+  };
+
   // Process modules to create nodes and edges
   for (const module of depResult.depcruise.modules) {
     const sourcePath = module.source;
+
+    // Skip modules that are clearly external or outside workspace
+    if (isExternalModule(sourcePath)) {
+      continue;
+    }
     
     // Create workspace-relative path for node ID
-    const sourceId = path.relative(workspaceRoot, sourcePath);
+    const sourceId = path.relative(workspaceRoot, sourcePath).replace(/\\/g, '/');
     
     // Add source node if not already added
     if (!nodeSet.has(sourceId)) {
@@ -133,7 +164,10 @@ export function transformDepCruise(depResult: DepCruiseResult, workspaceRoot: st
     // Process dependencies to create edges and target nodes
     for (const dep of module.dependencies) {
       const targetPath = dep.resolved;
-      const targetId = path.relative(workspaceRoot, targetPath);
+      if (isExternalModule(targetPath)) {
+        continue; // skip externals (node core, bare packages, node_modules, outside workspace)
+      }
+      const targetId = path.relative(workspaceRoot, targetPath).replace(/\\/g, '/');
       
       // Add target node if not already added
       if (!nodeSet.has(targetId)) {

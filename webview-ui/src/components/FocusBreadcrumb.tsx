@@ -28,7 +28,7 @@ export function FocusBreadcrumb({ crumbs, onJump, onReset, onDepthChange, curren
               label={crumb.label}
               onClick={() => onJump(index)}
               title={crumb.root}
-              type="button"
+           
             />
             {index < crumbs.length - 1 && (
               <span class="focus-crumb-sep" aria-hidden="true">▶</span>
@@ -51,7 +51,7 @@ export function FocusBreadcrumb({ crumbs, onJump, onReset, onDepthChange, curren
           <ButtonLink 
             class="focus-reset" 
             onClick={onImpactReset}
-            type="button"
+         
             title="Reset Impact View"
           >
             Reset Impact
@@ -60,7 +60,7 @@ export function FocusBreadcrumb({ crumbs, onJump, onReset, onDepthChange, curren
         <ButtonLink 
           class="focus-reset" 
           onClick={onReset}
-          type="button"
+         
           title="Reset Focus"
         >
           Reset

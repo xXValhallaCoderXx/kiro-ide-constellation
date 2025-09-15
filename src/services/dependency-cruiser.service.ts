@@ -80,9 +80,22 @@ function detectDepCruiserConfig(wsRoot: string): string | null {
 }
 
 function buildCLIArguments(workspace: WorkspaceInfo): string[] {
+    // Base excludes: common build and VCS folders
+    const baseExclude = 'node_modules|dist|out|build|coverage|\\.git|\\.vscode|\\.constellation'
+
+    // Exclude Node core modules and bare specifiers (e.g., 'react', 'lodash') so they don't appear in the graph
+    // - Core modules sometimes appear as 'node:fs' or bare 'fs'
+    // - Bare package specifiers have no slashes: ^[^/\\]+$ (safe for workspace ids which always include '/')
+    const coreExclude = '(^node:|^fs$|^path$|^os$|^child_process$|^http$|^https$|^stream$|^events$)'
+    const barePackageExclude = '^[^/\\]+$'
+
+    const combinedExclude = `${baseExclude}|${coreExclude}|${barePackageExclude}`
+
     const args = [
         '--output-type', 'json',
-        '--exclude', 'node_modules|dist|out|build|coverage|\\.git|\\.vscode|\\.constellation'
+        '--exclude', combinedExclude,
+        // Do not follow into node_modules or node: core modules at all (further shrinks the crawl)
+        '--do-not-follow', 'node_modules|^node:'
     ];
 
     // Respect a project config if present; otherwise run with --no-config
