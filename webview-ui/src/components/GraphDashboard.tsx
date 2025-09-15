@@ -5,6 +5,8 @@ import { GraphCanvas, GraphCanvasRef } from './GraphCanvas'
 import { Button } from './Button'
 import { FileInfoPanel } from './FileInfoPanel'
 import { FocusBreadcrumb } from './FocusBreadcrumb'
+import { ZoomControlStack } from './molecules/ZoomControlStack'
+import { OPTIONAL_UI_FLAGS } from '../services/extension-config.service'
 import { 
   buildAdjacency, 
   computeVisible, 
@@ -803,6 +805,19 @@ export function GraphDashboard() {
               onNodeDrill={handleNodeDrill}
               onNodeSelect={(id) => setSelectedNodeId(id)}
             />
+
+            {/* Optional floating zoom controls */}
+            {OPTIONAL_UI_FLAGS.zoomControlsEnabled && (
+              <ZoomControlStack
+                onZoomIn={() => graphCanvasRef.current?.centerOn(focusState.root || (impactState.isActive ? impactState.data?.sourceFile || '' : ''), { animate: true })}
+                onZoomOut={() => graphCanvasRef.current?.centerOn(focusState.root || (impactState.isActive ? impactState.data?.sourceFile || '' : ''), { animate: true })}
+                onFit={() => {
+                  // fallback: re-center root if available
+                  const rootId = focusState.root || (impactState.isActive ? impactState.data?.sourceFile : null)
+                  if (rootId) graphCanvasRef.current?.centerOn(rootId, { animate: true })
+                }}
+              />
+            )}
 
             {/* File info panel in top-right */}
             {selectedNodeId && (

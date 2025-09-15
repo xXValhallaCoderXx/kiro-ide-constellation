@@ -51,7 +51,7 @@ export function FileInfoPanel({ nodeId, node, inDegree, outDegree, metrics, metr
           <div className="file-info-path" title={pathText}>{pathText}</div>
         </div>
         <span className="file-info-close">
-          <ButtonIcon iconName="close" ariaLabel="Close" onClick={onClose} />
+<ButtonIcon iconName="close" ariaLabel="Close" onClick={onClose} size={28} />
         </span>
       </div>
 

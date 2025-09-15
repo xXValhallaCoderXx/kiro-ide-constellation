@@ -519,6 +519,8 @@ body {
 .file-info-close {
   line-height: 1;
 }
+.file-info-close .button-icon { width: 28px; height: 28px; }
+.file-info-close .button-icon svg { width: 16px; height: 16px; }
 
 .file-info-section {
   padding: 8px 10px;
