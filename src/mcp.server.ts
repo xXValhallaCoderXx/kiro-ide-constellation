@@ -1068,8 +1068,14 @@ server.registerTool(
       const ctx = await ctxResp.json() as { analysis?: unknown; pkg?: unknown; readme?: string; tsconfig?: unknown };
 
       // Package instructions so the agent can reply in a single message with both docs and issueUrl
-      const payload = {
-        instructions: "Using the provided context (analysis, package.json, README excerpt, tsconfig), generate 4 concise Markdown steering docs: project-structure.md, project-tech.md, project-product.md, project-standings.md. Then, call the tool 'constellation_opensource.writeRichSteering' to persist them. After persistence succeeds, ask the user for the GitHub issue URL they want to work on. When the user provides the URL, call 'constellation_opensource.processIssue' with { issueUrl } to fetch issue data and generate the PRD.",
+const payload = {
+instructions: `Author four thorough steering docs tailored to a large monorepo. Use the analysis, package.json, README excerpt, and tsconfig to produce:
+- project-structure.md: Outline monorepo layout (apps/*, packages/*), key top-level dirs, notable subpackages, and their roles. Include a table of top modules from analysis.keyDirs with counts, and call out any frameworks (Next.js, Vite) where they live.
+- project-tech.md: Detailed tech stack including package manager, build orchestration (Turbo), bundlers, frameworks, styling (Tailwind), testing (Vitest/Puppeteer), linting/formatting. Describe how to run builds per workspace and how CI might be structured.
+- project-product.md: Who the project serves, core value prop, main artifacts (docs site, CLI, registry), primary workflows (adding a component, building docs), and how contributions translate into product outcomes.
+- project-standings.md: Concrete coding standards, PR workflow, commit/message/changesets conventions, accessibility requirements, test expectations, and performance guidelines specific to this repo.
+Each doc should be specific (no generic filler), reference directories found in analysis.keyDirs and monorepo fields if present. Keep clarity high for a new contributor.
+Then call 'constellation_opensource.writeRichSteering' with the 4 docs. After writing, ask the user for the GitHub issue URL to work on. When they provide it, call 'constellation_opensource.processIssue' with { issueUrl }.`,
         analysis: ctx.analysis,
         packageJson: ctx.pkg,
         readme: ctx.readme,
