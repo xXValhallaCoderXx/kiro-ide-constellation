@@ -153,7 +153,7 @@ export function AgentModeToggle({
   return (
     <div className="onboarding-mode-toggle">
       <div className="mode-toggle-header">
-        <label className="mode-toggle-label">Mode:</label>
+        <label className="mode-toggle-label">Modes:</label>
         <div className="mode-toggle-controls">
           <div style={{ flex: 1 }}>
             <SelectDropdown

@@ -62,6 +62,18 @@ body {
   background: var(--vscode-editor-background);
 }
 
+/* Override background for sidebar view - force sidebar background everywhere */
+#root[data-view="sidepanel"],
+#root[data-view="sidepanel"] *,
+body {
+  background-color: var(--vscode-sideBar-background) !important;
+}
+
+/* Ensure proper height for sidebar */
+#root[data-view="sidepanel"] {
+  min-height: 100vh;
+}
+
 .button {
   display: inline-flex;
   align-items: center;
