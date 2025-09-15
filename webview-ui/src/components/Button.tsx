@@ -3,8 +3,10 @@ import type { JSX } from 'preact'
 
 interface ButtonProps extends Omit<JSX.HTMLAttributes<HTMLButtonElement>, 'type'> {
   children?: ComponentChildren
-  onClick?: () => void
+  onClick?: (e?: MouseEvent) => void
   type?: 'button' | 'submit' | 'reset'
+  disabled?: boolean
+  className?: string
 }
 
 export function Button({ children, onClick, type = 'button', ...rest }: ButtonProps) {
@@ -15,7 +17,7 @@ export function Button({ children, onClick, type = 'button', ...rest }: ButtonPr
   const props = { ...rest } as any
   delete props.className
   return (
-    <button class={merged} type={type} onClick={onClick} {...props}>
+    <button class={merged} type={type} onClick={onClick as any} {...props}>
       {children}
     </button>
   )

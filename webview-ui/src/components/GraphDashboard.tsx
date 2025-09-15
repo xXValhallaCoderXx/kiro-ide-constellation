@@ -6,6 +6,7 @@ import { Button } from './Button'
 import { FileInfoPanel } from './FileInfoPanel'
 import { FocusBreadcrumb } from './FocusBreadcrumb'
 import { ZoomControlStack } from './molecules/ZoomControlStack'
+import { MiniMapPanel } from './molecules/MiniMapPanel'
 import { OPTIONAL_UI_FLAGS } from '../services/extension-config.service'
 import { 
   buildAdjacency, 
@@ -817,6 +818,13 @@ export function GraphDashboard() {
                   if (rootId) graphCanvasRef.current?.centerOn(rootId, { animate: true })
                 }}
               />
+            )}
+
+            {/* Optional Mini-map panel */}
+            {OPTIONAL_UI_FLAGS.miniMapEnabled && (
+              <div className="graph-minimap-container">
+                <MiniMapPanel title="Mini-map" hasViewport={false} />
+              </div>
             )}
 
             {/* File info panel in top-right */}

@@ -68,6 +68,6 @@ export function getPlaceholderAttributes(enabled: boolean) {
 
 /** Feature flags for optional UI elements */
 export const OPTIONAL_UI_FLAGS = {
-  zoomControlsEnabled: false,
-  miniMapEnabled: false,
+  zoomControlsEnabled: true,
+  miniMapEnabled: true,
 }
