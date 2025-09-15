@@ -121,6 +121,8 @@ export function GraphDashboard() {
   const forwardAdjRef = useRef<Map<string, string[]>>(new Map())
   const reverseAdjRef = useRef<Map<string, string[]>>(new Map())
   const graphCanvasRef = useRef<GraphCanvasRef>(null)
+  // Flag to apply focus after rendering/layout completes
+  const needsFocusApplyRef = useRef<boolean>(false)
 
   // Helper function to rebuild adjacency maps for the active graph
   const rebuildAdjacencyMaps = useCallback((activeGraph: GraphData) => {
@@ -161,6 +163,29 @@ export function GraphDashboard() {
       }
     }
   }, [])
+
+  // Align visible edge IDs with actual graph edge IDs (handles '-1' suffix collisions)
+  const getAlignedVisibleEdges = useCallback((activeGraph: GraphData, visibleNodes: Set<string>): Set<string> => {
+    const aligned = new Set<string>()
+    for (const e of activeGraph.edges) {
+      if (visibleNodes.has(e.source) && visibleNodes.has(e.target)) {
+        aligned.add(e.id)
+      }
+    }
+    return aligned
+  }, [])
+
+  // Helper to apply the current focus to the canvas and center on root
+  const applyFocus = useCallback((activeGraph: GraphData, visibleNodes: Set<string>, rootId: string) => {
+    if (!graphCanvasRef.current) return
+    const alignedEdges = getAlignedVisibleEdges(activeGraph, visibleNodes)
+    graphCanvasRef.current.applyFocusView({
+      visibleNodes,
+      visibleEdges: alignedEdges,
+      rootId
+    })
+    graphCanvasRef.current.centerOn(rootId, { animate: true })
+  }, [getAlignedVisibleEdges])
 
   // Function to reset impact view and restore full graph
   const handleResetImpactView = useCallback(() => {
@@ -284,12 +309,9 @@ export function GraphDashboard() {
 
       // Apply focus view showing only the root node
       if (graphCanvasRef.current) {
-        graphCanvasRef.current.applyFocusView({
-          visibleNodes: new Set([nodeId]),
-          visibleEdges: new Set(),
-          rootId: nodeId
-        })
-        graphCanvasRef.current.centerOn(nodeId, { animate: true })
+        applyFocus(activeGraph, new Set([nodeId]), nodeId)
+      } else {
+        needsFocusApplyRef.current = true
       }
       return
     }
@@ -336,13 +358,10 @@ export function GraphDashboard() {
       }))
 
       // Apply focus view to canvas
-      if (graphCanvasRef.current) {
-        graphCanvasRef.current.applyFocusView({
-          visibleNodes: visibilityResult.visibleNodes,
-          visibleEdges: visibilityResult.visibleEdges,
-          rootId: nodeId
-        })
-        graphCanvasRef.current.centerOn(nodeId, { animate: true })
+      if (graphCanvasRef.current && !isRendering) {
+        applyFocus(activeGraph, visibilityResult.visibleNodes, nodeId)
+      } else {
+        needsFocusApplyRef.current = true
       }
 
       // Log extreme fan-out warning
@@ -419,13 +438,10 @@ export function GraphDashboard() {
       }))
 
       // Apply focus view to canvas
-      if (graphCanvasRef.current) {
-        graphCanvasRef.current.applyFocusView({
-          visibleNodes: visibilityResult.visibleNodes,
-          visibleEdges: visibilityResult.visibleEdges,
-          rootId: targetCrumb.root
-        })
-        graphCanvasRef.current.centerOn(targetCrumb.root, { animate: true })
+      if (graphCanvasRef.current && !isRendering) {
+        applyFocus(activeGraph, visibilityResult.visibleNodes, targetCrumb.root)
+      } else {
+        needsFocusApplyRef.current = true
       }
 
     } catch (error) {
@@ -481,6 +497,44 @@ export function GraphDashboard() {
               
               setImpactState((prev) => ({ ...prev, filteredGraph }))
               setState({ type: 'data', data: filteredGraph })
+
+              // Compute and apply initial focus for deferred impact
+              const sourceId = impactRef.current.data.sourceFile
+              if (filteredGraph.nodes.some(n => n.id === sourceId)) {
+                const visibilityResult = computeVisible({
+                  forwardAdj: forwardAdjRef.current,
+                  reverseAdj: reverseAdjRef.current,
+                  root: sourceId,
+                  depth: Number.MAX_SAFE_INTEGER,
+                  lens: 'children',
+                  maxChildren: 100
+                })
+
+                const childrenCount = countChildren(forwardAdjRef.current, reverseAdjRef.current, sourceId, 'children')
+                const maxChildren = 100
+                const hasMore = childrenCount > maxChildren
+                const displayCount = Math.min(childrenCount, maxChildren)
+
+                setFocusState({
+                  isActive: true,
+                  root: sourceId,
+                  depth: Number.MAX_SAFE_INTEGER,
+                  lens: 'children',
+                  visibleNodes: visibilityResult.visibleNodes,
+                  visibleEdges: visibilityResult.visibleEdges,
+                  crumbs: [formatCrumb(filteredGraph, sourceId, Number.MAX_SAFE_INTEGER, 'children')],
+                  positionCache: {},
+                  error: null,
+                  childrenInfo: { count: childrenCount, hasMore, displayCount }
+                })
+
+                // Try to apply immediately; otherwise defer until render completes
+                if (graphCanvasRef.current && !isRendering) {
+                  applyFocus(filteredGraph, visibilityResult.visibleNodes, sourceId)
+                } else {
+                  needsFocusApplyRef.current = true
+                }
+              }
             } catch (error) {
               console.error('Failed to compute filtered graph or build adjacency maps:', error)
               // Fallback to full graph
@@ -576,6 +630,13 @@ export function GraphDashboard() {
                     displayCount
                   }
                 })
+
+                // Try to apply immediately; otherwise defer until render completes
+                if (graphCanvasRef.current && !isRendering) {
+                  applyFocus(filteredGraph, visibilityResult.visibleNodes, impactData.sourceFile)
+                } else {
+                  needsFocusApplyRef.current = true
+                }
               } catch (error) {
                 console.error('Failed to compute focus view for impact source:', error)
                 // Fall back to showing the filtered graph without focus
@@ -644,6 +705,23 @@ export function GraphDashboard() {
     return () => clearInterval(cleanupInterval)
   }, [fullGraphData, focusState.positionCache])
 
+  // Apply deferred focus once rendering/layout completes
+  useEffect(() => {
+    if (state.type !== 'data') return
+    if (isRendering) return
+    if (!focusState.isActive || !focusState.root) return
+    if (!needsFocusApplyRef.current) return
+
+    const activeGraph = impactState.isActive && impactState.filteredGraph
+      ? impactState.filteredGraph
+      : fullGraphData
+
+    if (activeGraph) {
+      applyFocus(activeGraph, focusState.visibleNodes, focusState.root)
+      needsFocusApplyRef.current = false
+    }
+  }, [state.type, isRendering, focusState.isActive, focusState.root, impactState.isActive, fullGraphData, applyFocus])
+
   const handleRescan = useCallback(() => {
     // Reset rendering state when starting a new scan
     setIsRendering(false)
@@ -675,6 +753,8 @@ export function GraphDashboard() {
             onJump={handleBreadcrumbJump}
             onReset={handleReset}
             currentDepth={focusState.depth === Number.MAX_SAFE_INTEGER ? 0 : focusState.depth}
+            impactLabel={impactState.isActive ? (focusState.crumbs[0]?.label ?? impactState.data?.sourceFile) : undefined}
+            onImpactReset={impactState.isActive ? handleResetImpactView : undefined}
             onDepthChange={(delta) => {
               // Implement true +/- depth control with clamping
               const last = focusState.crumbs[focusState.crumbs.length - 1]
@@ -749,13 +829,7 @@ export function GraphDashboard() {
           </div>
         )}
 
-        {/* Impact banner */}
-        {impactState.isActive && (
-          <div className="banner-impact" role="status" aria-live="polite">
-            <span className="banner-text">Impact View — source: {impactState.data?.sourceFile}</span>
-            <Button class="btn-secondary btn-sm" onClick={handleResetImpactView} data-testid="graph-reset-banner-button">↺ Reset View</Button>
-          </div>
-        )}
+        {/* Impact banner consolidated into breadcrumbs chip; no separate banner */}
 
         {/* Loading State */}
         {state.type === 'loading' && (
