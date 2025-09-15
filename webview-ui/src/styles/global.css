@@ -425,7 +425,8 @@ body {
 .graph-minimap-container { position:absolute; right:12px; bottom: 160px; width: 220px; }
 .mini-map { background: var(--surface-card); border: 1px solid var(--border-strong); border-radius: var(--radius-card); padding: 8px; }
 .mini-map-title { color: var(--text-secondary); font-size: 12px; margin-bottom: 8px; }
-.mini-map-viewport { width: 100%; height: 120px; border: 2px solid var(--border-strong); background: var(--surface-overlay-04); border-radius: 8px; }
+.mini-map-viewport { position: relative; width: 100%; height: 120px; border: 2px solid var(--border-strong); background: var(--surface-overlay-04); border-radius: 8px; overflow:hidden; }
+.mini-map-rect { position:absolute; border: 2px solid var(--border-strong); background: var(--surface-overlay-04); box-shadow: inset 0 0 0 1px var(--border-subtle); }
 
 /* Impact banner */
 .banner-impact {

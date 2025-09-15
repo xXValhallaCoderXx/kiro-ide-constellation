@@ -810,20 +810,20 @@ export function GraphDashboard() {
             {/* Optional floating zoom controls */}
             {OPTIONAL_UI_FLAGS.zoomControlsEnabled && (
               <ZoomControlStack
-                onZoomIn={() => graphCanvasRef.current?.centerOn(focusState.root || (impactState.isActive ? impactState.data?.sourceFile || '' : ''), { animate: true })}
-                onZoomOut={() => graphCanvasRef.current?.centerOn(focusState.root || (impactState.isActive ? impactState.data?.sourceFile || '' : ''), { animate: true })}
-                onFit={() => {
-                  // fallback: re-center root if available
-                  const rootId = focusState.root || (impactState.isActive ? impactState.data?.sourceFile : null)
-                  if (rootId) graphCanvasRef.current?.centerOn(rootId, { animate: true })
-                }}
+                onZoomIn={() => graphCanvasRef.current?.zoomIn()}
+                onZoomOut={() => graphCanvasRef.current?.zoomOut()}
+                onFit={() => graphCanvasRef.current?.fitView()}
               />
             )}
 
             {/* Optional Mini-map panel */}
             {OPTIONAL_UI_FLAGS.miniMapEnabled && (
               <div className="graph-minimap-container">
-                <MiniMapPanel title="Mini-map" hasViewport={false} />
+                <MiniMapPanel
+                  title="Mini-map"
+                  bounds={graphCanvasRef.current?.getBoundsAndViewport()?.bounds || null}
+                  viewport={graphCanvasRef.current?.getBoundsAndViewport()?.viewport || null}
+                />
               </div>
             )}
 
