@@ -1,0 +1,51 @@
+.action-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background-color: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  transition: background-color var(--duration-fast) var(--ease-ui),
+    box-shadow var(--duration-fast) var(--ease-ui);
+}
+
+.action-card.clickable {
+  cursor: pointer;
+}
+
+.action-card.clickable:hover {
+  background-color: color-mix(in srgb, var(--surface-overlay-04), var(--surface-card));
+}
+
+.action-card.clickable:active {
+  background-color: color-mix(in srgb, var(--surface-overlay-08), var(--surface-card));
+}
+
+.action-card.clickable:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+}
+
+.action-card[aria-disabled='true'] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.action-card-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.action-card-title {
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.action-card-subtitle {
+  color: var(--text-secondary);
+  font-size: 13px;
+}

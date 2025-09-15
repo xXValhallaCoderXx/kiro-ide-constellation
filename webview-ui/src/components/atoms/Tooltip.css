@@ -1,0 +1,59 @@
+/* TODO: This is a simple CSS tooltip. A more robust solution would use a portal. */
+.tooltip-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.tooltip-content {
+  position: absolute;
+  z-index: 10;
+  padding: 8px 12px;
+  background-color: var(--surface-card);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  color: #EDEAF8;
+  font-size: 12px;
+  line-height: 1.4;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--duration-fast) var(--ease-ui),
+    visibility var(--duration-fast) var(--ease-ui);
+  pointer-events: none;
+}
+
+.tooltip-wrapper:hover .tooltip-content,
+.tooltip-wrapper:focus-within .tooltip-content {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Positioning */
+.tooltip-content.placement-top {
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 8px;
+}
+
+.tooltip-content.placement-bottom {
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 8px;
+}
+
+.tooltip-content.placement-left {
+  right: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-right: 8px;
+}
+
+.tooltip-content.placement-right {
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-left: 8px;
+}

@@ -47,6 +47,49 @@
   --kiro-node-jsx: #FFBD45;
   --kiro-node-json: #8DC891;
   --kiro-node-other: #B180D7;
+
+  /* Constellation UI Kit Tokens */
+  /* Surfaces */
+  --surface-canvas: var(--vscode-editor-background, #15131E);
+  --surface-card: var(--vscode-editorWidget-background, #201A2C);
+  --surface-input: var(--vscode-input-background, #1D1926);
+  --surface-tint-brand: rgba(139, 92, 246, 0.18);
+  --surface-tint-success: rgba(34, 197, 94, 0.18);
+  --surface-overlay-04: rgba(255, 255, 255, 0.04);
+  --surface-overlay-08: rgba(255, 255, 255, 0.08);
+
+  /* Borders */
+  --border-subtle: rgba(255, 255, 255, 0.10);
+  --border-strong: rgba(255, 255, 255, 0.18);
+  --border-focus: var(--vscode-focusBorder, #8B5CF6);
+
+  /* Text */
+  --text-primary: var(--vscode-foreground, #E8E6F3);
+  --text-secondary: var(--vscode-descriptionForeground, #B8B4C9);
+  --text-muted: var(--vscode-disabledForeground, #8E8AA0);
+  --text-link: #A78BFA;
+  --text-inverse: #0B0A10;
+
+  /* Accents */
+  --accent-brand: #8B5CF6;
+  --accent-brand-hover: #7C3AED;
+  --accent-success: #22C55E;
+  --accent-purple-soft-text: #C7B7FF;
+  --accent-green-soft-text: #7EE28C;
+
+  /* Shadows */
+  --shadow-card: 0 0 0 1px rgba(255,255,255,0.06), 0 8px 24px rgba(0,0,0,0.35);
+  --shadow-float: 0 6px 18px rgba(0,0,0,0.45);
+
+  /* Radii */
+  --radius-chip: 9999px;
+  --radius-input: 12px;
+  --radius-card: 16px;
+  --radius-tile: 12px;
+
+  /* Motion */
+  --ease-ui: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --duration-fast: 160ms;
 }
 
 html, body, #root {

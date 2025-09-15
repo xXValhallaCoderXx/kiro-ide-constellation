@@ -1,0 +1,29 @@
+.metric-bullet {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.metric-bullet-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.metric-bullet-dot.variant-purple {
+  background-color: #A78BFA;
+}
+
+.metric-bullet-dot.variant-green {
+  background-color: #22C55E;
+}
+
+.metric-bullet-dot.variant-neutral {
+  background-color: var(--text-secondary);
+}
+
+.metric-bullet-text {
+  color: var(--text-secondary);
+  font-size: 13px;
+}

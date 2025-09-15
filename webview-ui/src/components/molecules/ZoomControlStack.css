@@ -1,0 +1,6 @@
+.zoom-control-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  filter: drop-shadow(var(--shadow-float));
+}
