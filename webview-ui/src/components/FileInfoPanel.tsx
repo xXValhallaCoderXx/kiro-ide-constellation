@@ -35,7 +35,13 @@ function formatRelative(ts: number | null): string {
 
 export function FileInfoPanel({ nodeId, node, inDegree, outDegree, metrics, metricsReady, onOpenFile, onClose }: NodeInfoPanelProps) {
   const title = node?.label || nodeId.split('/').slice(-1)[0]
-  const pathText = node?.id || nodeId
+  const rawId = node?.id || nodeId
+  const isAbsolute = rawId.startsWith('/') || /^[A-Za-z]:[\\\/]/.test(rawId)
+  const looksOutside = rawId.startsWith('..')
+  const displayPath = (!isAbsolute && !looksOutside)
+    ? rawId
+    : (node?.label || rawId.split(/[\\\/]/).slice(-1)[0] || rawId)
+  const tooltipPath = node?.path || rawId
 
   const metricItems = useMemo(() => {
     if (!metricsReady) return 'loading'
@@ -48,7 +54,7 @@ export function FileInfoPanel({ nodeId, node, inDegree, outDegree, metrics, metr
       <div className="file-info-header">
         <div className="file-info-titles">
           <div className="file-info-title">{title}</div>
-          <div className="file-info-path" title={pathText}>{pathText}</div>
+          <div className="file-info-path" title={tooltipPath}>{displayPath}{(isAbsolute || looksOutside) && '  (outside workspace)'}</div>
         </div>
         <span className="file-info-close">
 <ButtonIcon iconName="close" ariaLabel="Close" onClick={onClose} size={28} />

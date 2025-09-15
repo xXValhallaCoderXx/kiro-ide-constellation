@@ -753,6 +753,8 @@ export function GraphDashboard() {
             onJump={handleBreadcrumbJump}
             onReset={handleReset}
             currentDepth={focusState.depth === Number.MAX_SAFE_INTEGER ? 0 : focusState.depth}
+            impactLabel={impactState.isActive ? (focusState.crumbs[0]?.label ?? impactState.data?.sourceFile) : undefined}
+            onImpactReset={impactState.isActive ? handleResetImpactView : undefined}
             onDepthChange={(delta) => {
               // Implement true +/- depth control with clamping
               const last = focusState.crumbs[focusState.crumbs.length - 1]
@@ -827,13 +829,7 @@ export function GraphDashboard() {
           </div>
         )}
 
-        {/* Impact banner */}
-        {impactState.isActive && (
-          <div className="banner-impact" role="status" aria-live="polite">
-            <span className="banner-text">Impact View — source: {impactState.data?.sourceFile}</span>
-            <Button class="btn-secondary btn-sm" onClick={handleResetImpactView} data-testid="graph-reset-banner-button">↺ Reset View</Button>
-          </div>
-        )}
+        {/* Impact banner consolidated into breadcrumbs chip; no separate banner */}
 
         {/* Loading State */}
         {state.type === 'loading' && (

@@ -13,18 +13,28 @@ export function MiniMapPanel({ title = 'Mini-map', bounds, viewport, ...rest }: 
   const props = { ...rest } as any
   delete props.class
 
-  // Calculate viewport rectangle relative to bounds and viewport container size (CSS fixed height)
+  // Calculate viewport rectangle relative to a world rect that covers both graph bounds and current viewport
   let rectStyle: JSX.CSSProperties | undefined
-  if (bounds && viewport && bounds.w > 0 && bounds.h > 0) {
+  if (bounds && viewport) {
+    // Build a world rectangle that is the union of bounds and viewport extents
+    const worldX1 = Math.min(bounds.x1, viewport.x1)
+    const worldY1 = Math.min(bounds.y1, viewport.y1)
+    const worldX2 = Math.max(bounds.x2, viewport.x2)
+    const worldY2 = Math.max(bounds.y2, viewport.y2)
+    const worldW = Math.max(1, worldX2 - worldX1)
+    const worldH = Math.max(1, worldY2 - worldY1)
+
     const pad = 8 // inner padding of container if any (approx)
     const containerWidth = 220 - pad * 2
     const containerHeight = 120 - pad * 2
-    const scaleX = containerWidth / bounds.w
-    const scaleY = containerHeight / bounds.h
-    const left = Math.max(0, (viewport.x1 - bounds.x1) * scaleX)
-    const top = Math.max(0, (viewport.y1 - bounds.y1) * scaleY)
+    const scaleX = containerWidth / worldW
+    const scaleY = containerHeight / worldH
+
+    const left = (viewport.x1 - worldX1) * scaleX
+    const top = (viewport.y1 - worldY1) * scaleY
     const width = Math.max(6, viewport.w * scaleX)
     const height = Math.max(6, viewport.h * scaleY)
+
     rectStyle = { left: `${left}px`, top: `${top}px`, width: `${width}px`, height: `${height}px` }
   }
 
