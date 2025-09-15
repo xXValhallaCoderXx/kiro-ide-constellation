@@ -44,6 +44,10 @@ export interface GraphCanvasRef {
   centerOn: (rootId: string, options?: { animate?: boolean }) => void;
   getPositions: () => Record<string, { x: number; y: number }>;
   setPositions: (positions: Record<string, { x: number; y: number }>) => void;
+  zoomIn: () => void;
+  zoomOut: () => void;
+  fitView: () => void;
+  getBoundsAndViewport: () => { bounds: { x1: number; y1: number; x2: number; y2: number; w: number; h: number }; viewport: { x1: number; y1: number; x2: number; y2: number; w: number; h: number } } | null;
 }
 
 interface GraphCanvasProps {
@@ -53,12 +57,14 @@ interface GraphCanvasProps {
   impactSourceId?: string
   onNodeDrill?: (nodeId: string) => void
   onNodeSelect?: (nodeId: string) => void
+  onViewportChange?: (payload: { bounds: { x1: number; y1: number; x2: number; y2: number; w: number; h: number }; viewport: { x1: number; y1: number; x2: number; y2: number; w: number; h: number } }) => void
 }
 
 export const GraphCanvas = forwardRef<GraphCanvasRef, GraphCanvasProps>(
-  ({ data, isRendering, onRenderingChange, impactSourceId, onNodeDrill, onNodeSelect }, ref) => {
+  ({ data, isRendering, onRenderingChange, impactSourceId, onNodeDrill, onNodeSelect, onViewportChange }, ref) => {
     const containerRef = useRef<HTMLDivElement>(null)
     const cyRef = useRef<Core | null>(null)
+    const lastFitRef = useRef<number>(Date.now())
     const tapTimeoutRef = useRef<number | null>(null)
     // Keep a stable reference to the callback so the effect below doesn't re-run
     const onRenderingChangeRef = useRef(onRenderingChange)
@@ -168,6 +174,32 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, GraphCanvasProps>(
             }
           })
         })
+      },
+
+      zoomIn: () => {
+        if (!cyRef.current) return
+        const z = cyRef.current.zoom()
+        cyRef.current.zoom({ level: z * 1.2, renderedPosition: { x: cyRef.current.width() / 2, y: cyRef.current.height() / 2 } })
+      },
+
+      zoomOut: () => {
+        if (!cyRef.current) return
+        const z = cyRef.current.zoom()
+        cyRef.current.zoom({ level: z / 1.2, renderedPosition: { x: cyRef.current.width() / 2, y: cyRef.current.height() / 2 } })
+      },
+
+      fitView: () => {
+        if (!cyRef.current) return
+        try {
+          cyRef.current.fit(undefined, 30)
+        } catch {/* noop */}
+      },
+
+      getBoundsAndViewport: () => {
+        if (!cyRef.current) return null
+        const bb = cyRef.current.elements().boundingBox()
+        const vp = cyRef.current.extent() // {x1,y1,x2,y2,w,h}
+        return { bounds: { ...bb, w: bb.w, h: bb.h }, viewport: vp as any }
       }
     }), [])
 
@@ -271,6 +303,15 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, GraphCanvasProps>(
             layout: layoutConfig
           })
 
+          // Emit viewport helper
+          const emitViewport = () => {
+            try {
+              const bb = cyRef.current!.elements().boundingBox()
+              const vp = cyRef.current!.extent()
+              onViewportChange?.({ bounds: { ...bb, w: bb.w, h: bb.h }, viewport: vp as any })
+            } catch {/* ignore */}
+          }
+
           // Inject a synthetic data property on nodes so the label outline can reference the webview background
           // We re-use Cytoscape's data API to expose a runtime-derived color without re-creating the stylesheet
           const bg = getComputedStyle(document.documentElement).getPropertyValue('--vscode-editor-background').trim() || '#1e1e1e'
@@ -319,8 +360,14 @@ export const GraphCanvas = forwardRef<GraphCanvasRef, GraphCanvasProps>(
           // Handle layout completion for performance monitoring
           cyRef.current.on('layoutstop', () => {
             onRenderingChangeRef.current?.(false)
+            emitViewport()
             console.log(`Graph layout completed for ${nodeCount} nodes`)
           })
+
+          // Track viewport changes for minimap
+          cyRef.current.on('viewport resize', emitViewport)
+          // Emit once after init
+          emitViewport()
 
         } catch (error) {
           console.error('Error creating Cytoscape instance:', error)

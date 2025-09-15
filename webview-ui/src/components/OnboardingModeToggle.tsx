@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'preact/hooks'
 import { Button } from './Button'
 import { messenger } from '../services/messenger'
+import { SelectDropdown } from './molecules/SelectDropdown'
 
 interface OnboardingModeToggleProps {
   currentMode?: 'Default' | 'Onboarding'
@@ -150,15 +151,17 @@ export function OnboardingModeToggle({
       <div className="mode-toggle-header">
         <label className="mode-toggle-label">Mode:</label>
         <div className="mode-toggle-controls">
-          <select
-            className="mode-toggle-dropdown"
-            value={selectedMode}
-            onChange={(e) => handleModeChange((e.target as HTMLSelectElement).value as 'Default' | 'Onboarding')}
-            disabled={isLoading || isProcessing}
-          >
-            <option value="Default">Default</option>
-            <option value="Onboarding">Onboarding</option>
-          </select>
+          <div style={{ flex: 1 }}>
+            <SelectDropdown
+              options={[
+                { label: 'Default', value: 'Default' },
+                { label: 'Onboarding', value: 'Onboarding' }
+              ]}
+              value={selectedMode}
+              onChange={(v) => handleModeChange(v as 'Default' | 'Onboarding')}
+              disabled={isLoading || isProcessing}
+            />
+          </div>
           {(isLoading || isProcessing) && (
             <div className="mode-toggle-spinner">
               <span className="spinner">⟳</span>

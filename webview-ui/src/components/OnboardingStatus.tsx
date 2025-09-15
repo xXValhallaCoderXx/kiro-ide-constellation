@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'preact/hooks'
 import { messenger } from '../services/messenger'
+import { StatusDot } from './atoms/StatusDot'
 
 interface OnboardingStatusProps {
   isActive?: boolean
@@ -117,7 +118,7 @@ export function OnboardingStatus({
         <div className="onboarding-status-active">
           <div className="onboarding-status-header">
             <div className="onboarding-status-indicator">
-              <span className="status-icon">📚</span>
+              <StatusDot status="healthy" size={10} />
               <span className="status-label">Walkthrough Active</span>
             </div>
             {status.currentStep !== undefined && status.totalSteps !== undefined && (

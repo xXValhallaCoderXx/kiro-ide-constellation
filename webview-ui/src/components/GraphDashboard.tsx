@@ -5,6 +5,9 @@ import { GraphCanvas, GraphCanvasRef } from './GraphCanvas'
 import { Button } from './Button'
 import { FileInfoPanel } from './FileInfoPanel'
 import { FocusBreadcrumb } from './FocusBreadcrumb'
+import { ZoomControlStack } from './molecules/ZoomControlStack'
+import { MiniMapPanel } from './molecules/MiniMapPanel'
+import { OPTIONAL_UI_FLAGS } from '../services/extension-config.service'
 import { 
   buildAdjacency, 
   computeVisible, 
@@ -96,6 +99,7 @@ export function GraphDashboard() {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
   const [gitMetrics, setGitMetrics] = useState<Record<string, FileGitMetrics90d>>({})
   const [gitMetricsReady, setGitMetricsReady] = useState(false)
+  const [miniMapState, setMiniMapState] = useState<{ bounds: { x1: number; y1: number; x2: number; y2: number; w: number; h: number }; viewport: { x1: number; y1: number; x2: number; y2: number; w: number; h: number } } | null>(null)
   const [focusState, setFocusState] = useState<FocusState>({
     isActive: false,
     root: null,
@@ -802,7 +806,28 @@ export function GraphDashboard() {
               impactSourceId={impactState.isActive ? impactState.data?.sourceFile : undefined}
               onNodeDrill={handleNodeDrill}
               onNodeSelect={(id) => setSelectedNodeId(id)}
+              onViewportChange={(payload) => setMiniMapState(payload)}
             />
+
+            {/* Optional floating zoom controls */}
+            {OPTIONAL_UI_FLAGS.zoomControlsEnabled && (
+              <ZoomControlStack
+                onZoomIn={() => graphCanvasRef.current?.zoomIn()}
+                onZoomOut={() => graphCanvasRef.current?.zoomOut()}
+                onFit={() => graphCanvasRef.current?.fitView()}
+              />
+            )}
+
+            {/* Optional Mini-map panel */}
+            {OPTIONAL_UI_FLAGS.miniMapEnabled && (
+              <div className="graph-minimap-container">
+                <MiniMapPanel
+                  title="Mini-map"
+                  bounds={miniMapState?.bounds || null}
+                  viewport={miniMapState?.viewport || null}
+                />
+              </div>
+            )}
 
             {/* File info panel in top-right */}
             {selectedNodeId && (
