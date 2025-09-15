@@ -3,6 +3,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { getWorkspaceRoot } from "./workspace.service.js";
 import { OPENSOURCE_AGENT_PERSONA } from "../personas/open-source.template.js";
+import { backupSteering, ensureDefaultBaseline, restoreSteering, pruneBackups } from "./steering-backup.service.js";
 
 export type AgentMode = 'Default' | 'Onboarding' | 'OpenSource';
 
@@ -84,6 +85,7 @@ export class AgentModeService {
   private currentMode: AgentMode = 'Default';
   private readonly STEERING_DIR = '.kiro/steering';
   private readonly BACKUP_BASE_DIR = '.constellation/steering/backup';
+  private readonly OSS_BASE = '.constellation/oss';
   private readonly ONBOARDING_PERSONA_FILE = 'onboarding-guide.md';
   private readonly OPEN_SOURCE_PERSONA_FILE = 'open-source-contributor.md';
 
@@ -136,23 +138,40 @@ export class AgentModeService {
     }
 
     try {
-      const backupPath = await this.backupSteeringDocs();
+      // Determine current mode from filesystem to decide baseline/backup behavior
+      const current = await this.getCurrentMode();
 
-      const steeringDir = path.join(workspaceRoot, this.STEERING_DIR);
-      await fs.promises.mkdir(steeringDir, { recursive: true });
+      // If leaving Default for the first time, capture user's original steering as the default baseline
+      if (current === 'Default') {
+        await ensureDefaultBaseline(workspaceRoot);
+      }
 
+      // Backup outgoing mode's docs into their own namespace before overwriting
+      if (current === 'Onboarding') {
+        await backupSteering({ workspaceRoot, namespace: 'onboarding' });
+      } else if (current === 'OpenSource') {
+        await backupSteering({ workspaceRoot, namespace: 'oss' });
+      }
+
+      // Restore target namespace if available; otherwise write initial persona
       if (mode === 'Onboarding') {
-        await this.writeOnboardingPersona();
+        const restored = await restoreSteering({ workspaceRoot, namespace: 'onboarding' });
+        // Ensure persona exists even if a (possibly empty) backup was restored
+        const personaPath = path.join(workspaceRoot, this.STEERING_DIR, this.ONBOARDING_PERSONA_FILE);
+        if (!restored || !(await this.pathExists(personaPath))) {
+          await this.writeOnboardingPersona();
+        }
       } else if (mode === 'OpenSource') {
-        await this.writeOpenSourcePersona();
+        const restored = await restoreSteering({ workspaceRoot, namespace: 'oss' });
+        const personaPath = path.join(workspaceRoot, this.STEERING_DIR, this.OPEN_SOURCE_PERSONA_FILE);
+        if (!restored || !(await this.pathExists(personaPath))) {
+          await this.writeOpenSourcePersona();
+        }
         await this.ensureOssWorkingDirs();
       }
 
       this.currentMode = mode;
-
-      vscode.window.showInformationMessage(
-        `Switched to ${mode} mode. Steering documents backed up to: ${path.relative(workspaceRoot, backupPath)}`
-      );
+      vscode.window.showInformationMessage(`Switched to ${mode} mode.`);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       vscode.window.showErrorMessage(`Failed to switch mode: ${errorMessage}`);
@@ -164,7 +183,7 @@ export class AgentModeService {
   public async switchToOnboarding(): Promise<void> { return this.switchTo('Onboarding'); }
   public async switchToOpenSource(): Promise<void> { return this.switchTo('OpenSource'); }
 
-  /** Switch to Default mode by restoring most recent backup */
+  /** Switch to Default mode by restoring user's original docs (default namespace) */
   public async switchToDefault(): Promise<void> {
     const workspaceRoot = getWorkspaceRoot();
     if (!workspaceRoot) {
@@ -172,14 +191,26 @@ export class AgentModeService {
     }
 
     try {
-      await this.restoreSteeringDocs();
+      // Persist outgoing mode's docs into its namespace, then restore default baseline
+      if (this.currentMode === 'Onboarding') {
+        await backupSteering({ workspaceRoot, namespace: 'onboarding' });
+      } else if (this.currentMode === 'OpenSource') {
+        await backupSteering({ workspaceRoot, namespace: 'oss' });
+        await this.cleanOssEphemeral(workspaceRoot);
+      }
 
-      // Best-effort cleanup of all backups
-      const backupBaseDir = path.join(workspaceRoot, this.BACKUP_BASE_DIR);
-      try { await fs.promises.rm(backupBaseDir, { recursive: true, force: true }); } catch {/* ignore */}
+      const restored = await restoreSteering({ workspaceRoot, namespace: 'default' });
+      if (!restored) {
+        // No baseline; ensure steering dir exists
+        await fs.promises.mkdir(path.join(workspaceRoot, this.STEERING_DIR), { recursive: true });
+      }
+
+      // Prune backups per namespace (retain last 3)
+      await pruneBackups({ workspaceRoot, namespace: 'onboarding', retain: 3 });
+      await pruneBackups({ workspaceRoot, namespace: 'oss', retain: 3 });
 
       this.currentMode = 'Default';
-      vscode.window.showInformationMessage('Switched to Default mode. Steering documents restored from backup.');
+      vscode.window.showInformationMessage('Switched to Default mode. Restored your original steering documents.');
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       try { await fs.promises.mkdir(path.join(workspaceRoot, this.STEERING_DIR), { recursive: true }); } catch {/* ignore */}
@@ -188,111 +219,17 @@ export class AgentModeService {
     }
   }
 
-  /** Backup the entire .kiro/steering directory (timestamped) */
-  public async backupSteeringDocs(): Promise<string> {
-    const workspaceRoot = getWorkspaceRoot();
-    if (!workspaceRoot) { throw new Error('No workspace folder open. Cannot create backup.'); }
+  // Deprecated: inline backup moved to steering-backup.service
 
-    const steeringDir = path.join(workspaceRoot, this.STEERING_DIR);
-    const backupBaseDir = path.join(workspaceRoot, this.BACKUP_BASE_DIR);
+  // Deprecated: inline restore moved to steering-backup.service
 
-    await fs.promises.mkdir(backupBaseDir, { recursive: true });
+  // Deprecated: inline restore moved to steering-backup.service
 
-    try {
-      await fs.promises.access(steeringDir, fs.constants.F_OK);
-    } catch {
-      const emptyTs = new Date().toISOString().replace(/[:.]/g, '-');
-      const emptyBackupDir = path.join(backupBaseDir, emptyTs);
-      await fs.promises.mkdir(emptyBackupDir, { recursive: true });
-      return emptyBackupDir;
-    }
+  // Deprecated: helpers moved to steering-backup.service
 
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const backupDir = path.join(backupBaseDir, timestamp);
+  // Deprecated: helpers moved to steering-backup.service
 
-    try {
-      await fs.promises.rename(steeringDir, backupDir);
-    } catch {
-      await fs.promises.mkdir(backupDir, { recursive: true });
-      await this.copyDirectoryRecursive(steeringDir, backupDir, []);
-      await fs.promises.rm(steeringDir, { recursive: true, force: true });
-    }
-
-    try {
-      const fileCount = await this.countFilesRecursive(backupDir);
-      const metadata: BackupMetadata = { timestamp, originalPath: steeringDir, backupPath: backupDir, fileCount };
-      const metadataPath = path.join(backupDir, '.backup-metadata.json');
-      await fs.promises.writeFile(metadataPath, JSON.stringify(metadata, null, 2));
-    } catch {/* ignore */}
-
-    return backupDir;
-  }
-
-  /** Restore steering docs from most recent backup */
-  public async restoreSteeringDocs(): Promise<void> {
-    const workspaceRoot = getWorkspaceRoot();
-    if (!workspaceRoot) { throw new Error('No workspace folder open. Cannot restore backup.'); }
-
-    const backupBaseDir = path.join(workspaceRoot, this.BACKUP_BASE_DIR);
-    const steeringDir = path.join(workspaceRoot, this.STEERING_DIR);
-
-    await this.restoreSteeringDocsWithFallback(steeringDir, backupBaseDir);
-  }
-
-  private async restoreSteeringDocsWithFallback(steeringDir: string, backupBaseDir: string): Promise<void> {
-    const mostRecentBackup = await this.findMostRecentBackup(backupBaseDir);
-
-    if (!mostRecentBackup) {
-      try { await fs.promises.mkdir(steeringDir, { recursive: true }); } catch { /* ignore */ }
-      return;
-    }
-
-    try {
-      try {
-        await fs.promises.access(steeringDir, fs.constants.F_OK);
-      } catch {/* ignore */}
-      await fs.promises.rm(steeringDir, { recursive: true, force: true });
-      await this.copyDirectoryRecursive(mostRecentBackup, steeringDir, ['.backup-metadata.json', '.backups']);
-    } catch {
-      try { await fs.promises.mkdir(steeringDir, { recursive: true }); } catch { /* ignore */ }
-    }
-  }
-
-  private async findMostRecentBackup(backupBaseDir: string): Promise<string | null> {
-    try {
-      const entries = await fs.promises.readdir(backupBaseDir, { withFileTypes: true });
-      const backupDirs = entries.filter(e => e.isDirectory()).map(e => e.name).sort().reverse();
-      return backupDirs.length > 0 ? path.join(backupBaseDir, backupDirs[0]) : null;
-    } catch { return null; }
-  }
-
-  private async copyDirectoryRecursive(src: string, dest: string, excludeFiles: string[] = []): Promise<void> {
-    await fs.promises.mkdir(dest, { recursive: true });
-    const entries = await fs.promises.readdir(src, { withFileTypes: true });
-    for (const entry of entries) {
-      if (excludeFiles.includes(entry.name)) continue;
-      const srcPath = path.join(src, entry.name);
-      const destPath = path.join(dest, entry.name);
-      if (entry.isDirectory()) {
-        await this.copyDirectoryRecursive(srcPath, destPath, excludeFiles);
-      } else {
-        await fs.promises.copyFile(srcPath, destPath);
-      }
-    }
-  }
-
-  private async countFilesRecursive(dir: string): Promise<number> {
-    let count = 0;
-    const processDirectory = async (current: string) => {
-      const entries = await fs.promises.readdir(current, { withFileTypes: true });
-      for (const entry of entries) {
-        if (entry.isDirectory()) { await processDirectory(path.join(current, entry.name)); }
-        else { count++; }
-      }
-    };
-    await processDirectory(dir);
-    return count;
-  }
+  // Deprecated: helpers moved to steering-backup.service
 
   private async writeOnboardingPersona(): Promise<void> {
     const workspaceRoot = getWorkspaceRoot();
@@ -314,12 +251,30 @@ export class AgentModeService {
     await fs.promises.writeFile(personaTargetPath, OPENSOURCE_AGENT_PERSONA, 'utf8');
   }
 
+  private async pathExists(p: string): Promise<boolean> {
+    try { await fs.promises.access(p, fs.constants.F_OK); return true; } catch { return false; }
+  }
+
   private async ensureOssWorkingDirs(): Promise<void> {
     const workspaceRoot = getWorkspaceRoot();
     if (!workspaceRoot) { return; }
     const base = path.join(workspaceRoot, '.constellation', 'oss');
-    const dirs = [base, path.join(base, 'analysis'), path.join(base, 'issues'), path.join(base, 'plans'), path.join(base, 'prds')];
+    const dirs = [
+      base,
+      path.join(base, 'analysis'),
+      path.join(base, 'issues'),
+      path.join(base, 'plans'),
+      path.join(base, 'prds'),
+      path.join(base, 'tmp'),
+      path.join(base, 'cache'),
+    ];
     for (const d of dirs) { try { await fs.promises.mkdir(d, { recursive: true }); } catch {/* ignore */} }
+  }
+
+  private async cleanOssEphemeral(workspaceRoot: string): Promise<void> {
+    const base = path.join(workspaceRoot, this.OSS_BASE);
+    const ephemeral = [path.join(base, 'issues'), path.join(base, 'prds'), path.join(base, 'tmp'), path.join(base, 'cache')];
+    for (const d of ephemeral) { try { await fs.promises.rm(d, { recursive: true, force: true }); } catch {/* ignore */} }
   }
 }
 
