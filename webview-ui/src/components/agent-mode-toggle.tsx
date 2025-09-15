@@ -153,36 +153,34 @@ export function AgentModeToggle({
   return (
     <div className="onboarding-mode-toggle">
       <div className="mode-toggle-header">
-        <label className="mode-toggle-label">Modes:</label>
-        <div className="mode-toggle-controls">
-          <div style={{ flex: 1 }}>
-            <SelectDropdown
-              options={[
-                { label: 'Default', value: 'Default' },
-                { label: 'Onboarding', value: 'Onboarding' },
-                { label: 'Open Source', value: 'OpenSource' },
-              ]}
-              value={selectedMode}
-              onChange={(v) => handleModeChange(v as 'Default' | 'Onboarding' | 'OpenSource')}
-              disabled={isLoading || isProcessing}
-            />
+        <label className="mode-toggle-label">Modes</label>
+        <Tooltip content={MODE_DESCRIPTIONS[selectedMode]}>
+          <div 
+            className="mode-help-icon"
+            tabIndex={0}
+            role="button"
+            aria-label={`Help for ${selectedMode} mode`}
+          >
+            <Icon name="info" size={16} colorToken="--text-secondary" />
           </div>
-          <Tooltip content={MODE_DESCRIPTIONS[selectedMode]}>
-            <div 
-              className="mode-help-icon"
-              tabIndex={0}
-              role="button"
-              aria-label={`Help for ${selectedMode} mode`}
-            >
-              <Icon name="info" size={16} colorToken="--text-secondary" />
-            </div>
-          </Tooltip>
-          {(isLoading || isProcessing) && (
-            <div className="mode-toggle-spinner">
-              <span className="spinner">⟳</span>
-            </div>
-          )}
-        </div>
+        </Tooltip>
+        {(isLoading || isProcessing) && (
+          <div className="mode-toggle-spinner">
+            <span className="spinner">⟳</span>
+          </div>
+        )}
+      </div>
+      <div className="mode-toggle-controls">
+        <SelectDropdown
+          options={[
+            { label: 'Default', value: 'Default' },
+            { label: 'Onboarding', value: 'Onboarding' },
+            { label: 'Open Source', value: 'OpenSource' },
+          ]}
+          value={selectedMode}
+          onChange={(v) => handleModeChange(v as 'Default' | 'Onboarding' | 'OpenSource')}
+          disabled={isLoading || isProcessing}
+        />
       </div>
       {error && (
         <div className="mode-toggle-error">

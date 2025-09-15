@@ -51,27 +51,55 @@
 
 html, body, #root {
   height: 100%;
+  overflow: hidden; /* Prevent scrolling */
 }
 
 body {
   margin: 0;
+  padding: 0;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
     Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", Arial,
     "Apple Color Emoji", "Segoe UI Emoji";
   color: var(--vscode-foreground);
   background: var(--vscode-editor-background);
+  overflow: hidden; /* Prevent scrolling */
 }
 
 /* Override background for sidebar view - force sidebar background everywhere */
 #root[data-view="sidepanel"],
-#root[data-view="sidepanel"] *,
 body {
   background-color: var(--vscode-sideBar-background) !important;
 }
 
+/* Restore proper button backgrounds in sidebar */
+#root[data-view="sidepanel"] .btn-primary,
+#root[data-view="sidepanel"] .button {
+  background: var(--vscode-button-background) !important;
+  color: var(--vscode-button-foreground) !important;
+}
+
+#root[data-view="sidepanel"] .btn-secondary {
+  background: var(--vscode-button-secondaryBackground, var(--vscode-button-background)) !important;
+  color: var(--vscode-button-secondaryForeground, var(--vscode-button-foreground)) !important;
+}
+
+#root[data-view="sidepanel"] .btn-ghost {
+  background: transparent !important;
+  color: var(--kiro-text) !important;
+  border-color: var(--kiro-border) !important;
+}
+
+/* Fix select dropdown background */
+#root[data-view="sidepanel"] .select-element {
+  background: var(--vscode-dropdown-background) !important;
+  color: var(--vscode-dropdown-foreground) !important;
+}
+
 /* Ensure proper height for sidebar */
 #root[data-view="sidepanel"] {
-  min-height: 100vh;
+  height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
 }
 
 .button {
@@ -359,6 +387,14 @@ body {
 .tooltip-left { right: calc(100% + 6px); top: 50%; transform: translateY(-50%); }
 .tooltip-right { left: calc(100% + 6px); top: 50%; transform: translateY(-50%); }
 
+/* Special positioning for mode help tooltip to avoid cutoff */
+.mode-help-icon .tooltip-content {
+  left: -120px; /* Position to show fully within sidebar */
+  right: auto;
+  top: calc(100% + 6px);
+  transform: none;
+}
+
 .divider-line { background: rgba(255,255,255,0.08); }
 .divider-horizontal { height:1px; width:100%; }
 .divider-vertical { width:1px; height:100%; }
@@ -391,7 +427,7 @@ body {
 .select-label { display:flex; align-items:center; gap:6px; color: var(--text-secondary); font-size: 12px; }
 .select-help { display:inline-flex; }
 .select-shell { position: relative; }
-.select-element { -webkit-appearance:none; appearance:none; width:100%; height:40px; border-radius: var(--radius-input); background: var(--surface-card); color: var(--text-primary); border: 1px solid var(--border-subtle); padding: 0 34px 0 12px; }
+.select-element { -webkit-appearance:none; appearance:none; width:100%; height: 32px; border-radius: var(--kiro-radius-1); background: var(--vscode-dropdown-background); color: var(--vscode-dropdown-foreground); border: 1px solid var(--vscode-dropdown-border); padding: 0 34px 0 12px; font-size: 12px; min-width: 0; /* Allow shrinking */ }
 .select-element:focus { outline: 2px solid var(--border-focus); outline-offset:2px; }
 .select-chevron { position:absolute; right:10px; top:50%; transform: translateY(-50%); pointer-events:none; }
 
@@ -654,21 +690,19 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 8px;
+  margin-bottom: var(--kiro-space-2);
 }
 
 .mode-toggle-label {
   font-size: 12px;
   font-weight: 500;
   color: var(--vscode-foreground);
-  min-width: 40px;
+  flex: 1;
 }
 
 .mode-toggle-controls {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex: 1;
+  width: 100%;
+  min-width: 0; /* Allow shrinking */
 }
 
 .mode-toggle-dropdown {
@@ -1435,12 +1469,15 @@ body {
   color: var(--vscode-foreground);
   display: flex;
   flex-direction: column;
+  overflow: hidden; /* Prevent all scrolling */
 }
 
 .constellation-content {
   flex: 1;
   padding: var(--kiro-space-3);
   background: var(--vscode-sideBar-background);
+  overflow: hidden; /* Prevent all scrolling */
+  min-height: 0; /* Allow flex child to shrink */
 }
 
 .constellation-header {
@@ -1474,6 +1511,7 @@ body {
   padding: var(--kiro-space-3);
   border-bottom: 1px solid var(--kiro-border);
   background: var(--vscode-sideBar-background);
+  overflow: hidden; /* Prevent all scrolling */
 }
 
 /* Constellation Button Specific Styles */
